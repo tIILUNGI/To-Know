@@ -1,0 +1,14 @@
+node_modules/
+dist/
+toknow.db
+.env
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.tsbuildinfo
+Tocomply360.png
+public/Tocomply360.png
+public/
+uploads/

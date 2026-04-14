@@ -1,0 +1,584 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-secondary: #64748b;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f1f5f9;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   DARK MODE - Premium Dark Theme
+   ============================================ */
+
+html.dark {
+  /* Core colors - Deep Navy Black */
+  --dm-bg-primary: #050505;
+  --dm-bg-secondary: #0a0a0a;
+  --dm-bg-tertiary: #111111;
+  --dm-bg-elevated: #1a1a1a;
+  --dm-bg-hover: #242424;
+  --dm-bg-active: #2d2d2d;
+  
+  /* Text colors - Clean whites */
+  --dm-text-primary: #fafafa;
+  --dm-text-secondary: #a1a1aa;
+  --dm-text-tertiary: #71717a;
+  --dm-text-muted: #52525b;
+  
+  /* Accent colors */
+  --dm-accent-blue: #3b82f6;
+  --dm-accent-blue-muted: #1e3a5f;
+  --dm-accent-green: #22c55e;
+  --dm-accent-green-muted: #14532d;
+  --dm-accent-red: #ef4444;
+  --dm-accent-red-muted: #450a0a;
+  --dm-accent-yellow: #eab308;
+  --dm-accent-yellow-muted: #451a03;
+  --dm-accent-orange: #f97316;
+  
+  /* Border colors */
+  --dm-border-default: #262626;
+  --dm-border-subtle: #333333;
+  --dm-border-accent: #404040;
+  
+  /* Shadows */
+  --dm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --dm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --dm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --dm-shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+html.dark body {
+  background-color: var(--dm-bg-primary);
+  color: var(--dm-text-primary);
+}
+
+/* ============================================
+   Background Classes
+   ============================================ */
+
+html.dark .bg-slate-100,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: var(--dm-bg-tertiary) !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-200 {
+  background-color: var(--dm-bg-elevated) !important;
+}
+
+html.dark .bg-white {
+  background-color: var(--dm-bg-secondary) !important;
+}
+
+html.dark .bg-gray-200 {
+  background-color: var(--dm-bg-hover) !important;
+}
+
+html.dark .bg-gray-300 {
+  background-color: var(--dm-bg-active) !important;
+}
+
+/* Gradient backgrounds */
+html.dark .bg-gradient-to-br {
+  background: linear-gradient(to bottom right, var(--dm-bg-secondary), var(--dm-bg-tertiary)) !important;
+}
+
+/* ============================================
+   Text Classes
+   ============================================ */
+
+html.dark .text-gray-950,
+html.dark .text-gray-900 {
+  color: var(--dm-text-primary) !important;
+}
+
+html.dark .text-gray-800 {
+  color: var(--dm-text-primary) !important;
+}
+
+html.dark .text-gray-700 {
+  color: var(--dm-text-secondary) !important;
+}
+
+html.dark .text-gray-600 {
+  color: var(--dm-text-tertiary) !important;
+}
+
+html.dark .text-gray-500 {
+  color: var(--dm-text-muted) !important;
+}
+
+html.dark .text-gray-400 {
+  color: var(--dm-text-muted) !important;
+}
+
+html.dark .text-gray-300 {
+  color: var(--dm-text-tertiary) !important;
+}
+
+html.dark .text-gray-200 {
+  color: var(--dm-text-muted) !important;
+}
+
+/* ============================================
+   Border Classes
+   ============================================ */
+
+html.dark .border,
+html.dark .border-gray-100,
+html.dark .border-gray-200 {
+  border-color: var(--dm-border-default) !important;
+}
+
+html.dark .border-gray-300 {
+  border-color: var(--dm-border-subtle) !important;
+}
+
+html.dark .border-gray-400 {
+  border-color: var(--dm-border-accent) !important;
+}
+
+/* ============================================
+   Card Component
+   ============================================ */
+
+html.dark .card {
+  background-color: var(--dm-bg-secondary);
+  border-color: var(--dm-border-default);
+  box-shadow: var(--dm-shadow-md);
+}
+
+html.dark .card:hover {
+  box-shadow: var(--dm-shadow-lg);
+}
+
+/* ============================================
+   Inputs & Forms
+   ============================================ */
+
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="search"],
+html.dark input[type="number"],
+html.dark select,
+html.dark textarea,
+html.dark .input,
+html.dark .input-with-icon {
+  background-color: var(--dm-bg-tertiary) !important;
+  border-color: var(--dm-border-default) !important;
+  color: var(--dm-text-primary) !important;
+}
+
+html.dark input::placeholder {
+  color: var(--dm-text-muted) !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: var(--dm-accent-blue) !important;
+  box-shadow: var(--dm-shadow-glow) !important;
+}
+
+/* Checkbox */
+html.dark input[type="checkbox"] {
+  accent-color: var(--dm-accent-blue);
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+html.dark .btn-primary {
+  background-color: var(--dm-accent-blue);
+}
+
+html.dark .btn-primary:hover {
+  background-color: #2563eb;
+}
+
+html.dark .btn-secondary {
+  background-color: var(--dm-bg-elevated);
+  color: var(--dm-text-primary);
+  border-color: var(--dm-border-default);
+}
+
+html.dark .btn-secondary:hover {
+  background-color: var(--dm-bg-hover);
+}
+
+html.dark .btn-outline {
+  background-color: transparent;
+  border-color: var(--dm-border-default);
+  color: var(--dm-text-primary);
+}
+
+html.dark .btn-outline:hover {
+  background-color: var(--dm-bg-elevated);
+}
+
+html.dark .btn-danger {
+  background-color: var(--dm-accent-red);
+}
+
+/* ============================================
+   Header & Navigation
+   ============================================ */
+
+html.dark header,
+html.dark nav,
+html.dark .sticky {
+  background-color: var(--dm-bg-secondary) !important;
+  border-color: var(--dm-border-default) !important;
+}
+
+/* ============================================
+   Tables
+   ============================================ */
+
+html.dark table,
+html.dark .overflow-x-auto {
+  background-color: var(--dm-bg-secondary);
+}
+
+html.dark thead,
+html.dark th {
+  background-color: var(--dm-bg-tertiary) !important;
+  color: var(--dm-text-secondary) !important;
+}
+
+html.dark td {
+  border-color: var(--dm-border-default) !important;
+  color: var(--dm-text-primary) !important;
+}
+
+html.dark tbody tr {
+  border-color: var(--dm-border-default) !important;
+}
+
+html.dark tbody tr:hover {
+  background-color: var(--dm-bg-hover) !important;
+}
+
+html.dark .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--dm-border-default);
+}
+
+/* ============================================
+   Badges
+   ============================================ */
+
+html.dark .badge {
+  background-color: var(--dm-bg-elevated) !important;
+  color: var(--dm-text-primary) !important;
+}
+
+html.dark .badge-success {
+  background-color: var(--dm-accent-green-muted) !important;
+  color: var(--dm-accent-green) !important;
+}
+
+html.dark .badge-warning {
+  background-color: var(--dm-accent-yellow-muted) !important;
+  color: var(--dm-accent-yellow) !important;
+}
+
+html.dark .badge-danger {
+  background-color: var(--dm-accent-red-muted) !important;
+  color: var(--dm-accent-red) !important;
+}
+
+html.dark .badge-neutral {
+  background-color: var(--dm-bg-elevated) !important;
+  color: var(--dm-text-secondary) !important;
+}
+
+/* ============================================
+   Alerts & Messages
+   ============================================ */
+
+html.dark .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+html.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+html.dark .bg-green-50 {
+  background-color: rgba(34, 197, 94, 0.08) !important;
+}
+
+html.dark .bg-yellow-50 {
+  background-color: rgba(234, 179, 8, 0.08) !important;
+}
+
+html.dark .text-red-600 {
+  color: var(--dm-accent-red) !important;
+}
+
+html.dark .text-blue-600 {
+  color: var(--dm-accent-blue) !important;
+}
+
+html.dark .text-green-600 {
+  color: var(--dm-accent-green) !important;
+}
+
+html.dark .text-yellow-600 {
+  color: var(--dm-accent-yellow) !important;
+}
+
+/* ============================================
+   Hover States
+   ============================================ */
+
+html.dark .hover\:bg-gray-50:hover {
+  background-color: var(--dm-bg-hover) !important;
+}
+
+html.dark .hover\:bg-gray-100:hover {
+  background-color: var(--dm-bg-elevated) !important;
+}
+
+/* ============================================
+   Dividers
+   ============================================ */
+
+html.dark hr,
+html.dark .border-t {
+  border-color: var(--dm-border-default) !important;
+}
+
+/* ============================================
+   Scrollbar - Premium Dark
+   ============================================ */
+
+html.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: var(--dm-bg-tertiary);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Firefox */
+html.dark {
+  scrollbar-color: #3f3f46 var(--dm-bg-tertiary);
+}
+
+/* ============================================
+   Focus Rings
+   ============================================ */
+
+html.dark .focus\:ring-blue-500:focus,
+html.dark .focus\:ring-blue-300:focus {
+  --tw-ring-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+/* ============================================
+   Shadows
+   ============================================ */
+
+html.dark .shadow-sm {
+  box-shadow: var(--dm-shadow-sm) !important;
+}
+
+html.dark .shadow-md {
+  box-shadow: var(--dm-shadow-md) !important;
+}
+
+html.dark .shadow-lg {
+  box-shadow: var(--dm-shadow-lg) !important;
+}
+
+html.dark .shadow-xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ============================================
+   Rounded Classes
+   ============================================ */
+
+html.dark .rounded-lg,
+html.dark .rounded-xl,
+html.dark .rounded-2xl {
+  background-color: var(--dm-bg-secondary);
+}
+
+/* ============================================
+   Logo
+   ============================================ */
+
+html.dark .site-logo {
+  filter: brightness(0) invert(1);
+}
+
+/* ============================================
+   Responsividade
+   ============================================ */
+
+.hide-mobile { display: none; }
+.hide-tablet { display: none; }
+.hide-desktop { display: none; }
+
+@media (min-width: 640px) {
+  .sm\:hide-mobile { display: none; }
+}
+
+@media (min-width: 768px) {
+  .md\:hide-mobile { display: none; }
+}
+
+@media (min-width: 1024px) {
+  .lg\:hide-mobile { display: none; }
+}
+
+/* Touch-friendly */
+@media (pointer: coarse) {
+  .btn, button, .card, a, input, select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .btn {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* Safe area */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Print */
+@media print {
+  header, nav, .no-print { display: none !important; }
+  body { background: white !important; }
+  .card { box-shadow: none; border: 1px solid #ddd; }
+}
+
+/* ============================================
+   Animações
+   ============================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.animate-slide-up { animation: slide-up 0.3s ease-out; }
+.animate-slide-down { animation: slide-down 0.3s ease-out; }
+.animate-scale-in { animation: scale-in 0.2s ease-out; }
+
+/* ============================================
+   Componentes Base
+   ============================================ */
+
+.card {
+  @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300;
+}
+
+.btn-outline {
+  @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700 active:bg-red-800;
+}
+
+.input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all;
+}
+
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success { @apply bg-green-100 text-green-800; }
+.badge-warning { @apply bg-yellow-100 text-yellow-800; }
+.badge-danger { @apply bg-red-100 text-red-800; }
+.badge-neutral { @apply bg-gray-100 text-gray-800; }
+
+.input-with-icon {
+  @apply w-full px-3 py-2.5 pl-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all;
+  padding-left: 2.5rem !important;
+}
+
+.input-icon {
+  @apply absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none flex-shrink-0;
+}
+
+input[type="checkbox"] { accent-color: #2563eb; }
+*:focus { outline: none; }
