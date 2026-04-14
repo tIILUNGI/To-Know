@@ -24,6 +24,7 @@ export default function Login() {
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   
@@ -47,6 +48,16 @@ export default function Login() {
         setError('Erro de conexão. Verifique sua rede.');
       }
     } else if (mode === 'register') {
+      if (password !== confirmPassword) {
+        setError('As senhas não coincidem.');
+        setLoading(false);
+        return;
+      }
+      if (password.length < 6) {
+        setError('A senha deve ter pelo menos 6 caracteres.');
+        setLoading(false);
+        return;
+      }
       setTimeout(() => {
         setLoading(false);
         addToast('Pedido enviado ao administrador para aprovação.', 'info');
@@ -198,6 +209,24 @@ export default function Login() {
                       required
                     />
                   </div>
+                  {mode === 'register' && (
+                    <div className="space-y-2 mt-3">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Confirmar Senha</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="h-5 w-5 text-gray-400" strokeWidth={2} />
+                        </div>
+                        <input
+                          type="password"
+                          className="input-with-icon block w-full bg-white dark:bg-[#374151] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
                   {mode === 'login' && (
                     <div className="text-right">
                       <button type="button" onClick={() => setMode('forgot')} className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
