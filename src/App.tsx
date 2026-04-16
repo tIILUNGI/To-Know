@@ -8,6 +8,12 @@ import EntityList from "./components/entities/EntityList";
 import EntityForm from "./components/entities/EntityForm";
 import ProcessWorkflow from "./components/processes/ProcessWorkflow";
 import ProcessDetail from "./components/processes/ProcessDetail";
+import ProcessCreate from "./components/processes/ProcessCreate";
+import ApprovalForm from "./components/processes/ApprovalForm";
+import ClientApprovalForm from "./components/processes/ClientApprovalForm";
+import EvaluationFormNew from "./components/evaluations/EvaluationFormNew";
+import ReevaluationForm from "./components/evaluations/ReevaluationForm";
+import ClientEvaluationForm from "./components/evaluations/ClientEvaluationForm";
 import EvaluationForm from "./components/evaluations/EvaluationForm";
 import EvaluationList from "./components/evaluations/EvaluationList";
 import CriteriaSettings from "./components/admin/CriteriaSettings";
@@ -43,9 +49,15 @@ export default function App() {
               <Route path="entities/new" element={<EntityForm />} />
               <Route path="entities/:id" element={<EntityForm />} />
               <Route path="processes" element={<ProcessWorkflow />} />
+              <Route path="processes/new" element={<ProcessCreate />} />
+              <Route path="processes/approval" element={<ApprovalForm />} />
+              <Route path="processes/client-approval" element={<ClientApprovalForm />} />
               <Route path="processes/:id" element={<ProcessDetail />} />
               <Route path="evaluations" element={<EvaluationList />} />
-              <Route path="evaluations/new" element={<EvaluationForm />} />
+              <Route path="evaluations/new" element={<EvaluationFormNew />} />
+              <Route path="evaluations/reevaluation" element={<ReevaluationForm />} />
+              <Route path="evaluations/client" element={<ClientEvaluationForm />} />
+              <Route path="evaluations/:id" element={<EvaluationForm />} />
               <Route path="reports" element={<ReportsView />} />
               <Route path="admin" element={<CriteriaSettings />} />
               <Route path="profile" element={<UserProfile />} />

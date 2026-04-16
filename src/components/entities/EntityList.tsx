@@ -69,7 +69,7 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Entidade"
@@ -79,108 +79,110 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-lg sm:text-xl font-bold text-gray-900">
             {type === "Supplier" ? "Fornecedores" : "Clientes"}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
             Gerencie sua base de {type === "Supplier" ? "parceiros de suprimentos" : "clientes comerciais"}.
           </p>
         </div>
         <Link
           to="/entities/new"
           state={{ type }}
-          className="btn btn-primary"
+          className="btn btn-primary text-sm"
         >
-          <Plus size={18} strokeWidth={2} /> Novo Registro
+          <Plus size={16} strokeWidth={2} /> Novo
         </Link>
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="input-icon" size={18} />
+        <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="flex-1 relative min-w-0">
+            <Search className="input-icon" size={16} />
             <input
               type="text"
-              placeholder="Pesquisar por nome ou código..."
-              className="input-with-icon block w-full"
+              placeholder="Pesquisar..."
+              className="input-with-icon block w-full text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <select
-            value={filterSector}
-            onChange={(e) => setFilterSector(e.target.value)}
-            className="input sm:w-48"
-          >
-            <option value="">Todos os setores</option>
-            {sectors.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <select
-            value={filterRisk}
-            onChange={(e) => setFilterRisk(e.target.value)}
-            className="input sm:w-40"
-          >
-            <option value="">Qualquer risco</option>
-            {risks.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <select
+              value={filterSector}
+              onChange={(e) => setFilterSector(e.target.value)}
+              className="input text-xs min-w-[100px]"
+            >
+              <option value="">Setor</option>
+              {sectors.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <select
+              value={filterRisk}
+              onChange={(e) => setFilterRisk(e.target.value)}
+              className="input text-xs min-w-[90px]"
+            >
+              <option value="">Risco</option>
+              {risks.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                <th className="px-4 py-3">Entidade</th>
-                <th className="px-4 py-3 hidden md:table-cell">Setor</th>
-                <th className="px-4 py-3 hidden lg:table-cell">NIF</th>
-                <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3">Risco</th>
-                <th className="px-4 py-3 text-right">Ações</th>
+              <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                <th className="px-3 sm:px-4 py-2.5">Entidade</th>
+                <th className="px-3 sm:px-4 py-2.5 hidden md:table-cell">Setor</th>
+                <th className="px-3 sm:px-4 py-2.5 hidden lg:table-cell">NIF</th>
+                <th className="px-3 sm:px-4 py-2.5">Estado</th>
+                <th className="px-3 sm:px-4 py-2.5">Risco</th>
+                <th className="px-3 sm:px-4 py-2.5 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={6} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
                     Carregando dados...
                   </td>
                 </tr>
               ) : filteredEntities.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={6} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
                     Nenhum registro encontrado.
                   </td>
                 </tr>
               ) : (
                 filteredEntities.map((entity) => (
                   <tr key={entity.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
+                    <td className="px-3 sm:px-4 py-2.5">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold text-white ${
+                          className={`w-8 sm:w-9 h-8 sm:h-9 rounded-lg flex items-center justify-center font-semibold text-white text-sm ${
                             type === "Supplier" ? "bg-blue-600" : "bg-indigo-600"
                           }`}
                         >
                           {entity.name.charAt(0)}
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{entity.name}</p>
-                          <p className="text-xs text-gray-500">{entity.code || `ID-${entity.id}`}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{entity.name}</p>
+                          <p className="text-[10px] text-gray-500">{entity.code || `ID-${entity.id}`}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
+                    <td className="px-3 sm:px-4 py-2.5 hidden md:table-cell">
                       <span className="text-sm text-gray-600">{entity.sector || "N/A"}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">
+                    <td className="px-3 sm:px-4 py-2.5 text-sm text-gray-500 hidden lg:table-cell">
                       {entity.tax_id || "-"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 sm:px-4 py-2.5">
                       <span
                         className={`badge ${
                           entity.status === "Active"
@@ -193,10 +195,10 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
                         {entity.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-3 sm:px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
                         <div
-                          className={`w-2.5 h-2.5 rounded-full ${
+                          className={`w-2 h-2 rounded-full ${
                             entity.final_risk_rating === "High"
                               ? "bg-red-500"
                               : entity.final_risk_rating === "Medium"
@@ -221,19 +223,19 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-3 sm:px-4 py-2.5 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <Link
                           to={`/entities/${entity.id}`}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         >
-                          <ExternalLink size={16} strokeWidth={2} />
+                          <ExternalLink size={14} strokeWidth={2} />
                         </Link>
                         <button
                           onClick={() => setDeleteTarget(entity)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
-                          <Trash2 size={16} strokeWidth={2} />
+                          <Trash2 size={14} strokeWidth={2} />
                         </button>
                       </div>
                     </td>
@@ -245,9 +247,9 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
         </div>
 
         {!loading && filteredEntities.length > 0 && (
-          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
+          <div className="px-3 sm:px-4 py-2.5 border-t border-gray-100 bg-gray-50">
             <span className="text-xs text-gray-500">
-              Mostrando {filteredEntities.length} de {entities.length} registros
+              {filteredEntities.length} de {entities.length} registros
             </span>
           </div>
         )}

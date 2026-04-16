@@ -82,6 +82,7 @@ const ENTITY_SAFE_COLUMNS = new Set([
   "resp_mobile", "resp_email", "is_pep", "has_sanctions", "money_laundering_risk",
   "default_risk", "judicial_history", "reputational_history", "fraud_risk",
   "financial_risk", "operational_risk", "final_risk_rating", "observations",
+  "created_at", "updated_at"
 ]);
 
 const paginate = (req: any) => {
@@ -479,7 +480,7 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
 
   const result = db.prepare(`
     INSERT INTO processes (process_number, entity_id, type, status, priority, area, justification, opener_id) 
-    VALUES (?, ?, ?, 'Draft', ?, ?, ?, ?)
+    VALUES (?, ?, ?, 'Rascunho', ?, ?, ?, ?)
   `).run(process_number, entity_id, type, priority || "Normal", area, justification, req.user.id);
 
   const processId = result.lastInsertRowid;
@@ -558,17 +559,25 @@ app.put("/api/processes/:id/score", authenticateToken, (req, res) => {
 });
 
 app.post("/api/processes/:id/submit", authenticateToken, (req: any, res) => {
-  db.prepare("UPDATE processes SET status = 'In Approval' WHERE id = ?").run(req.params.id);
+  db.prepare("UPDATE processes SET status = 'Em aprovação' WHERE id = ?").run(req.params.id);
   logAction(req.user.id, null, "SUBMIT_PROCESS", `Submitted process ID: ${req.params.id} for approval`);
   res.json({ message: "Processo submetido para aprovação" });
 });
 
 app.post("/api/processes/:id/approve", authenticateToken, requireRole("Administrator", "Compliance Manager"), (req: any, res: any) => {
-  const { decision, conditions, comments, validity_date } = req.body;
+  const { decision, conditions, comments, validity_date, next_reevaluation_date, result_percentage } = req.body;
 
-  if (!decision || !["Approved", "Rejected"].includes(decision)) {
-    return res.status(400).json({ message: "Decisão inválida. Use 'Approved' ou 'Rejected'." });
+  if (!decision || !["Aprovado", "Reprovado"].includes(decision)) {
+    return res.status(400).json({ message: "Decisão inválida. Use 'Aprovado' ou 'Reprovado'." });
   }
+
+  let compliance_level = "Não conforme";
+  if (result_percentage >= 90) compliance_level = "Conforme";
+  else if (result_percentage >= 60) compliance_level = "Parcialmente conforme";
+
+  let classification = "Reprovado";
+  if (result_percentage >= 90) classification = "Aprovado";
+  else if (result_percentage >= 75) classification = "Aprovado com restrições";
 
   db.prepare(`
     UPDATE processes SET 
@@ -576,21 +585,24 @@ app.post("/api/processes/:id/approve", authenticateToken, requireRole("Administr
       conditions = ?, 
       comments = ?, 
       validity_date = ?,
+      next_reevaluation_date = ?,
+      compliance_level = ?,
+      classification = ?,
       approver_id = ?,
       decision_date = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(decision, conditions || null, comments || null, validity_date || null, req.user.id, req.params.id);
+  `).run(decision, conditions || null, comments || null, validity_date || null, next_reevaluation_date || null, compliance_level, classification, req.user.id, req.params.id);
 
   // If approved, update entity status
-  if (decision === "Approved") {
+  if (decision === "Aprovado") {
     const proc: any = db.prepare("SELECT entity_id FROM processes WHERE id = ?").get(req.params.id);
     if (proc) {
-      db.prepare("UPDATE entities SET status = 'Active' WHERE id = ?").run(proc.entity_id);
+      db.prepare("UPDATE entities SET status = 'Ativo' WHERE id = ?").run(proc.entity_id);
     }
   }
 
   logAction(req.user.id, null, "DECIDE_PROCESS", `${decision} process ID: ${req.params.id}`);
-  res.json({ message: `Processo ${decision === "Approved" ? "aprovado" : "rejeitado"} com sucesso.` });
+  res.json({ message: `Processo ${decision === "Aprovado" ? "aprovado" : "rejeitado"} com sucesso.` });
 });
 
 app.delete("/api/processes/:id", authenticateToken, (req: any, res: any) => {
@@ -611,17 +623,17 @@ app.post("/api/evaluations", authenticateToken, (req: any, res) => {
   const error = validateRequired(req.body, ["entity_id", "type", "responses"]);
   if (error) return res.status(400).json({ message: error });
 
-  const { entity_id, type, period, product_service, unit, responses } = req.body;
+  const { entity_id, type, evaluation_type, periodicity, period, product_service, unit, responses, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id } = req.body;
 
   const result = db.prepare(`
-    INSERT INTO evaluations (entity_id, type, period, product_service, unit, evaluator_id) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(entity_id, type, period, product_service, unit, req.user.id);
+    INSERT INTO evaluations (entity_id, type, evaluation_type, periodicity, period, product_service, unit, evaluator_id, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, evaluation_date) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE)
+  `).run(entity_id, type, evaluation_type || "Nova", periodicity || "Anual", period, product_service, unit, req.user.id, action_plan || null, action_plan_deadline || null, action_plan_responsible || null, previous_evaluation_id || null);
 
   const evaluationId = result.lastInsertRowid;
 
   const insertResponse = db.prepare(`
-    INSERT INTO evaluation_responses (evaluation_id, group_name, criterion_name, score, observation) 
+    INSERT INTO evaluation_responses (evaluation_id, group_name, criterion_name, score, observation, evidence) 
     VALUES (?, ?, ?, ?, ?)
   `);
 
@@ -629,13 +641,13 @@ app.post("/api/evaluations", authenticateToken, (req: any, res) => {
   let count = 0;
 
   for (const r of responses) {
-    insertResponse.run(evaluationId, r.group_name, r.criterion_name, r.score, r.observation);
+    insertResponse.run(evaluationId, r.group_name, r.criterion_name, r.score, r.observation, r.evidence || null);
     totalScore += r.score;
     count++;
   }
 
   const average = count > 0 ? totalScore / count : 0;
-  const percentage = (average / 5) * 100;
+  const percentage = (average / 10) * 100;
 
   let classification = "Crítico";
   if (percentage >= 90) classification = "Excelente";
@@ -643,25 +655,35 @@ app.post("/api/evaluations", authenticateToken, (req: any, res) => {
   else if (percentage >= 60) classification = "Satisfatório";
   else if (percentage >= 40) classification = "Insatisfatório";
 
-  db.prepare("UPDATE evaluations SET overall_score = ?, percentage = ?, classification = ? WHERE id = ?").run(average, percentage, classification, evaluationId);
+  let recommended_action = "Reavaliar";
+  if (percentage >= 90) recommended_action = "Manter";
+  else if (percentage >= 75) recommended_action = "Melhorar";
+  else if (percentage < 40) recommended_action = "Suspender";
+  else if (percentage < 20) recommended_action = "Desqualificar";
 
-  logAction(req.user.id, entity_id, "CREATE_EVALUATION", `Created ${type} evaluation (${Math.round(percentage)}%)`);
-  res.status(201).json({ id: evaluationId, percentage, classification });
+  db.prepare("UPDATE evaluations SET overall_score = ?, percentage = ?, classification = ?, recommended_action = ? WHERE id = ?").run(average, percentage, classification, recommended_action, evaluationId);
+
+  logAction(req.user.id, entity_id, "CREATE_EVALUATION", `Created ${evaluation_type || "Nova"} ${type} avaliação (${Math.round(percentage)}%)`);
+  res.status(201).json({ id: evaluationId, percentage, classification, recommended_action });
 });
 
 app.get("/api/evaluations", authenticateToken, (req, res) => {
-  const { entity_id, type } = req.query;
+  const { entity_id, type, evaluation_type, periodicity } = req.query;
   let query = `
-    SELECT ev.*, e.name as entity_name, u.name as evaluator_name 
+    SELECT ev.*, e.name as entity_name, u.name as evaluator_name, prev.percentage as prev_percentage
     FROM evaluations ev 
     JOIN entities e ON ev.entity_id = e.id 
     LEFT JOIN users u ON ev.evaluator_id = u.id
+    LEFT JOIN evaluations prev ON ev.previous_evaluation_id = prev.id
   `;
   const params: any[] = [];
-  if (entity_id || type) {
+  if (entity_id || type || evaluation_type || periodicity) {
     query += " WHERE";
-    if (entity_id) { query += " ev.entity_id = ?"; params.push(entity_id); }
-    if (type) { if (entity_id) query += " AND"; query += " ev.type = ?"; params.push(type); }
+    let whereAdded = false;
+    if (entity_id) { query += " ev.entity_id = ?"; params.push(entity_id); whereAdded = true; }
+    if (type) { if (whereAdded) query += " AND"; query += " ev.type = ?"; params.push(type); whereAdded = true; }
+    if (evaluation_type) { if (whereAdded) query += " AND"; query += " ev.evaluation_type = ?"; params.push(evaluation_type); whereAdded = true; }
+    if (periodicity) { if (whereAdded) query += " AND"; query += " ev.periodicity = ?"; params.push(periodicity); }
   }
   query += " ORDER BY ev.created_at DESC";
 
@@ -719,7 +741,7 @@ const checkExpiringApprovals = () => {
     SELECT p.id, p.process_number, p.validity_date, e.name as entity_name 
     FROM processes p 
     JOIN entities e ON p.entity_id = e.id 
-    WHERE p.status = 'Approved' 
+    WHERE p.status = 'Aprovado' 
     AND p.validity_date IS NOT NULL 
     AND date(p.validity_date) <= date('now', '+30 days')
   `).all() as any[];
@@ -742,32 +764,63 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
   checkExpiringApprovals();
 
   const period = req.query.period as string;
+  const entityType = req.query.entityType as string;
+  const processType = req.query.processType as string;
+  const processStatus = req.query.processStatus as string;
+  const sector = req.query.sector as string;
+  const riskRating = req.query.riskRating as string;
+  const area = req.query.area as string;
+  const impact = req.query.impact as string;
+
   let dateFilter = "";
   if (period === "current_month") {
     dateFilter = " AND created_at >= date('now', 'start of month')";
   } else if (period === "last_quarter") {
     dateFilter = " AND created_at >= date('now', '-3 months')";
+  } else if (period === "last_year") {
+    dateFilter = " AND created_at >= date('now', '-12 months')";
   }
+
+  let entityFilter = "";
+  if (entityType) entityFilter += ` AND e.entity_type = '${entityType}'`;
+  if (sector) entityFilter += ` AND e.sector = '${sector}'`;
+  if (riskRating) entityFilter += ` AND e.final_risk_rating = '${riskRating}'`;
+  if (impact) entityFilter += ` AND e.operational_impact = '${impact}'`;
+
+  let processFilter = "";
+  if (processType) processFilter += ` AND p.type = '${processType}'`;
+  if (processStatus) processFilter += ` AND p.status = '${processStatus}'`;
+  if (area) processFilter += ` AND p.area = '${area}'`;
 
   const stats = {
     totals: {
       suppliers: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier'${dateFilter}`).get(),
       clients: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Client'${dateFilter}`).get(),
-      processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes WHERE status IN ('In Analysis', 'In Approval', 'Submitted')${dateFilter}`).get(),
-      approved: db.prepare(`SELECT COUNT(*) as count FROM processes WHERE status = 'Approved'${dateFilter}`).get(),
-      rejected: db.prepare(`SELECT COUNT(*) as count FROM processes WHERE status = 'Rejected'${dateFilter}`).get(),
-      eval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes WHERE type = 'Evaluation' AND status != 'Closed'${dateFilter}`).get(),
-      reeval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes WHERE type = 'Reevaluation' AND status != 'Closed'${dateFilter}`).get(),
-      critical_suppliers: db.prepare("SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND final_risk_rating = 'High'").get(),
+      processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status IN ('Em análise', 'Em aprovação', 'Submetido')${dateFilter}${entityFilter.includes('Supplier') ? entityFilter : ''}${entityFilter.includes('Client') ? entityFilter : ''}`).get(),
+      approved: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Aprovado'${dateFilter}${entityFilter}`).get(),
+      rejected: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Reprovado'${dateFilter}${entityFilter}`).get(),
+      eval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Avaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get(),
+      reeval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Reavaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get(),
+      critical_suppliers: db.prepare("SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND final_risk_rating = 'Alto'").get(),
       low_perf_clients: db.prepare("SELECT COUNT(*) as count FROM evaluations ev JOIN entities e ON ev.entity_id = e.id WHERE e.entity_type = 'Client' AND ev.percentage < 60").get(),
     },
     indices: {
       avg_client_satisfaction: db.prepare("SELECT AVG(percentage) as avg FROM evaluations WHERE type = 'Satisfaction'").get(),
       avg_supplier_performance: db.prepare("SELECT AVG(percentage) as avg FROM evaluations WHERE type = 'Performance'").get(),
     },
+    filters: {
+      sectors: db.prepare("SELECT DISTINCT sector FROM entities WHERE sector IS NOT NULL AND sector != ''").all(),
+      areas: db.prepare("SELECT DISTINCT area FROM processes WHERE area IS NOT NULL AND area != ''").all(),
+    },
+    processes_by_status: db.prepare(`
+      SELECT p.status, COUNT(*) as count 
+      FROM processes p 
+      GROUP BY p.status 
+      ORDER BY count DESC
+    `).all(),
     monthly_evolution: db.prepare(`
-      SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count 
-      FROM processes 
+      SELECT strftime('%Y-%m', p.created_at) as month, COUNT(*) as count 
+      FROM processes p 
       GROUP BY month 
       ORDER BY month DESC 
       LIMIT 12

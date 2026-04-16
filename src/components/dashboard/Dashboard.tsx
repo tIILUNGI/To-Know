@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import {
   Building2, Briefcase, FileText, CheckCircle, 
-  Clock, AlertTriangle, TrendingUp, Calendar
+  Clock, AlertTriangle, TrendingUp, Calendar,
+  Users, ClipboardList, AlertCircle, Filter
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -10,28 +11,28 @@ import {
 import { useToast } from "../../context/ToastContext";
 
 const KPICard = ({ title, value, icon: Icon, color, subtitle }: any) => (
-  <div className="card p-4 sm:p-5 hover:border-blue-200 dark:hover:border-blue-700 transition-colors">
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">{title}</p>
-        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
-        {subtitle && <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{subtitle}</p>}
+  <div className="card p-3 sm:p-4 hover:border-blue-200 dark:hover:border-blue-700 transition-colors">
+    <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0">
+        <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide truncate">{title}</p>
+        <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-0.5">{value}</p>
+        {subtitle && <p className="text-[9px] sm:text-[10px] text-gray-400 dark:text-slate-500 truncate">{subtitle}</p>}
       </div>
-      <div className={`p-2.5 sm:p-3 rounded-lg ${color}`}>
-        <Icon size={18} strokeWidth={2} className="text-white" />
+      <div className={`p-2 rounded-lg flex-shrink-0 ${color}`}>
+        <Icon size={14} strokeWidth={2} className="text-white" />
       </div>
     </div>
   </div>
 );
 
 const StatCard = ({ title, value, icon: Icon, color }: any) => (
-  <div className="card p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-    <div className={`p-2.5 sm:p-3 rounded-lg ${color}`}>
-      <Icon size={18} strokeWidth={2} className="text-white" />
+  <div className="card p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3">
+    <div className={`p-2 rounded-lg flex-shrink-0 ${color}`}>
+      <Icon size={14} strokeWidth={2} className="text-white" />
     </div>
-    <div>
-      <p className="text-xs text-gray-500 dark:text-slate-400">{title}</p>
-      <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{value}</p>
+    <div className="min-w-0">
+      <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 truncate">{title}</p>
+      <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{value}</p>
     </div>
   </div>
 );
@@ -39,13 +40,22 @@ const StatCard = ({ title, value, icon: Icon, color }: any) => (
 export default function Dashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [filterPeriod, setFilterPeriod] = useState("all");
+  const [filters, setFilters] = useState({
+    period: "all",
+    entityType: "",
+    processType: "",
+    processStatus: "",
+    sector: "",
+    riskRating: "",
+    impact: "",
+    opener: "",
+  });
   const { addToast } = useToast();
 
-  const fetchDashboard = (period: string) => {
+  const fetchDashboard = (filterParams: string) => {
     setLoading(true);
     let url = "/api/reports/dashboard";
-    if (period !== "all") url += `?period=${period}`;
+    if (filterParams) url += `?${filterParams}`;
 
     fetch(url, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -64,9 +74,17 @@ export default function Dashboard() {
       });
   };
 
+  const buildFilterParams = () => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.append(key, value);
+    });
+    return params.toString();
+  };
+
   useEffect(() => {
-    fetchDashboard(filterPeriod);
-  }, [filterPeriod]);
+    fetchDashboard(buildFilterParams());
+  }, [filters]);
 
   if (loading) {
     return (
@@ -91,105 +109,381 @@ export default function Dashboard() {
     ? Math.round((stats.totals.approved.count / (stats.totals.approved.count + stats.totals.rejected.count)) * 100)
     : 0;
 
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5 sm:mt-1">Visão geral do sistema de compliance</p>
-        </div>
-        <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-1">
-          <Calendar size={14} strokeWidth={2} className="text-gray-400 ml-2" />
-          <select
-            value={filterPeriod}
-            onChange={(e) => setFilterPeriod(e.target.value)}
-            className="px-2 sm:px-3 py-1.5 bg-transparent text-xs sm:text-sm text-gray-700 dark:text-slate-300 outline-none border-none cursor-pointer"
-          >
-            <option value="all">Todo o Período</option>
-            <option value="current_month">Mês Atual</option>
-            <option value="last_quarter">Último Trimestre</option>
-          </select>
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 mt-1">Visão geral do sistema de compliance</p>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KPICard title="Fornecedores" value={stats.totals.suppliers.count} icon={Building2} color="bg-blue-600" />
-        <KPICard title="Clientes" value={stats.totals.clients.count} icon={Briefcase} color="bg-indigo-600" />
-        <KPICard title="Em Análise" value={stats.totals.processes_pending.count} icon={Clock} color="bg-amber-500" />
-        <KPICard title="Taxa de Aprovação" value={`${approvalRate}%`} icon={CheckCircle} color="bg-green-600" subtitle="Dos últimos processos" />
-      </div>
-
-      {/* Secondary Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard title="Avaliações Pendentes" value={stats.totals.eval_pending.count} icon={FileText} color="bg-purple-500" />
-        <StatCard title="Reavaliações" value={stats.totals.reeval_pending.count} icon={TrendingUp} color="bg-orange-500" />
-        <StatCard title="Fornecedores Críticos" value={stats.totals.critical_suppliers.count} icon={AlertTriangle} color="bg-red-500" />
-        <StatCard title="Clientes Baixa Perf." value={stats.totals.low_perf_clients.count} icon={AlertTriangle} color="bg-rose-600" />
-      </div>
-
-      {/* Gauge Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-        <div className="card p-4 sm:p-5">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Satisfação de Clientes</h3>
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
-              <svg className="w-full h-full -rotate-90">
-                <circle cx="50%" cy="50%" r="40%" fill="none" stroke="#e2e8f0" strokeWidth="8" />
-                <circle
-                  cx="50%" cy="50%" r="40%" fill="none" stroke="#2563eb" strokeWidth="8"
-                  strokeDasharray="251" strokeDashoffset={251 * (1 - (stats.indices.avg_client_satisfaction.avg || 0) / 100)}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">
-                {Math.round(stats.indices.avg_client_satisfaction.avg || 0)}%
-              </span>
+      {/* Filters - Design Melhorado */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl p-0.5 shadow-lg shadow-blue-100 dark:shadow-none">
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-[22px] p-4 sm:p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+              <Filter size={14} className="text-blue-600 dark:text-blue-400" />
             </div>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Filtros</h2>
+            <button 
+              onClick={() => setFilters({period: "all", entityType: "", processType: "", processStatus: "", sector: "", riskRating: "", impact: "", opener: ""})}
+              className="ml-auto text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Limpar filtros
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Período */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Período</label>
+              <div className="relative">
+                <Calendar size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <select
+                  value={filters.period}
+                  onChange={(e) => handleFilterChange("period", e.target.value)}
+                  className="input-with-icon text-xs w-full"
+                >
+                  <option value="all">Todo Período</option>
+                  <option value="current_month">Mês Atual</option>
+                  <option value="last_quarter">Último Trimestre</option>
+                  <option value="last_year">Último Ano</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Tipo de Entidade */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Entidade</label>
+              <select
+                value={filters.entityType}
+                onChange={(e) => handleFilterChange("entityType", e.target.value)}
+                className="input text-xs w-full"
+              >
+                <option value="">Todas</option>
+                <option value="Supplier">Fornecedores</option>
+                <option value="Client">Clientes</option>
+              </select>
+            </div>
+
+            {/* Tipo de Processo */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Processo</label>
+              <select
+                value={filters.processType}
+                onChange={(e) => handleFilterChange("processType", e.target.value)}
+                className="input text-xs w-full"
+              >
+                <option value="">Todos</option>
+                <option value="Approval">Aprovação</option>
+                <option value="Evaluation">Avaliação</option>
+                <option value="Reevaluation">Reavaliação</option>
+              </select>
+            </div>
+
+            {/* Estado */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</label>
+              <select
+                value={filters.processStatus}
+                onChange={(e) => handleFilterChange("processStatus", e.target.value)}
+                className="input text-xs w-full"
+              >
+                <option value="">Todos</option>
+                <option value="Draft">Rascunho</option>
+                <option value="In Analysis">Em Análise</option>
+                <option value="In Approval">Em Aprovação</option>
+                <option value="Approved">Aprovado</option>
+                <option value="Rejected">Rejeitado</option>
+              </select>
+            </div>
+
+            {/* Risco */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Risco</label>
+              <select
+                value={filters.riskRating}
+                onChange={(e) => handleFilterChange("riskRating", e.target.value)}
+                className="input text-xs w-full"
+              >
+                <option value="">Todos</option>
+                <option value="Low">Baixo</option>
+                <option value="Medium">Médio</option>
+                <option value="High">Alto</option>
+              </select>
+            </div>
+
+            {/* Sector */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sector</label>
+              <select
+                value={filters.sector || ""}
+                onChange={(e) => handleFilterChange("sector", e.target.value)}
+                className="input text-xs w-full"
+              >
+                <option value="">Todos</option>
+                {stats?.filters?.sectors?.map((s: any) => (
+                  <option key={s.sector} value={s.sector}>{s.sector}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Responsável */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Responsável</label>
+              <select
+                value={filters.opener || ""}
+                onChange={(e) => handleFilterChange("opener", e.target.value)}
+                className="input text-xs w-full"
+              >
+                <option value="">Todos</option>
+                {stats?.filters?.openers?.map((o: any) => (
+                  <option key={o.opener_name} value={o.opener_name}>{o.opener_name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Impacto */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Impacto</label>
+              <select
+                value={filters.impact || ""}
+                onChange={(e) => handleFilterChange("impact", e.target.value)}
+                className="input text-xs w-full"
+              >
+                <option value="">Todos</option>
+                <option value="Low">Baixo</option>
+                <option value="Medium">Médio</option>
+                <option value="High">Alto</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Cards - Cadastros */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-blue-100 dark:border-blue-800">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs text-gray-500 dark:text-slate-400">Índice médio de satisfação</p>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1">Baseado em avaliações dos clientes</p>
+              <p className="text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider">Fornecedores</p>
+              <p className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-300 mt-1">{stats.totals.suppliers.count}</p>
+              <p className="text-[10px] text-blue-400 dark:text-blue-500 mt-1">cadastrados</p>
+            </div>
+            <div className="p-2.5 sm:p-3 bg-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-200">
+              <Building2 size={18} strokeWidth={2} className="text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card p-4 sm:p-5">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Performance de Fornecedores</h3>
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-indigo-100 dark:border-indigo-800">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">Clientes</p>
+              <p className="text-2xl sm:text-3xl font-black text-indigo-700 dark:text-indigo-300 mt-1">{stats.totals.clients.count}</p>
+              <p className="text-[10px] text-indigo-400 dark:text-indigo-500 mt-1">cadastrados</p>
+            </div>
+            <div className="p-2.5 sm:p-3 bg-indigo-600 rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-200">
+              <Briefcase size={18} strokeWidth={2} className="text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-amber-100 dark:border-amber-800">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Em Aprovação</p>
+              <p className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300 mt-1">{stats.totals.processes_pending.count}</p>
+              <p className="text-[10px] text-amber-500 dark:text-amber-500 mt-1">processos</p>
+            </div>
+            <div className="p-2.5 sm:p-3 bg-amber-500 rounded-xl sm:rounded-2xl shadow-lg shadow-amber-200">
+              <Clock size={18} strokeWidth={2} className="text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-green-100 dark:border-green-800">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Taxa Aprovação</p>
+              <p className="text-2xl sm:text-3xl font-black text-green-700 dark:text-green-300 mt-1">{approvalRate}%</p>
+              <p className="text-[10px] text-green-500 dark:text-green-500 mt-1">aprovados/rejeitados</p>
+            </div>
+            <div className="p-2.5 sm:p-3 bg-green-600 rounded-xl sm:rounded-2xl shadow-lg shadow-green-200">
+              <CheckCircle size={18} strokeWidth={2} className="text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Secondary Stats - Processos */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-green-100 dark:bg-green-900/40 rounded-xl">
+              <CheckCircle size={16} className="text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Processos Aprovados</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.approved.count}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-red-100 dark:bg-red-900/40 rounded-xl">
+              <AlertCircle size={16} className="text-red-600 dark:text-red-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Processos Rejeitados</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.rejected.count}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-purple-100 dark:bg-purple-900/40 rounded-xl">
+              <ClipboardList size={16} className="text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Avaliações Pendentes</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.eval_pending.count}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-orange-100 dark:bg-orange-900/40 rounded-xl">
+              <TrendingUp size={16} className="text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Reavaliações</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.reeval_pending.count}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Risk & Performance Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-red-100 dark:bg-red-900/40 rounded-xl">
+              <AlertTriangle size={16} className="text-red-600 dark:text-red-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Fornecedores Críticos</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.critical_suppliers.count}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-rose-100 dark:bg-rose-900/40 rounded-xl">
+              <AlertTriangle size={16} className="text-rose-600 dark:text-rose-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Clientes Baixa Perf.</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.low_perf_clients.count}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-100 dark:bg-blue-900/40 rounded-xl">
+              <Users size={16} className="text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Índice Satisfação</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{Math.round(stats.indices.avg_client_satisfaction.avg || 0)}%</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl">
+              <TrendingUp size={16} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Índice Performance</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{Math.round(stats.indices.avg_supplier_performance.avg || 0)}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Gauge Cards - Indices */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-blue-100 dark:border-blue-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Satisfação de Clientes</h3>
+              <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-1">Índice médio de satisfação</p>
+            </div>
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
               <svg className="w-full h-full -rotate-90">
-                <circle cx="50%" cy="50%" r="40%" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+                <circle cx="50%" cy="50%" r="40%" fill="none" stroke="#e2e8f0" strokeWidth="6" />
                 <circle
-                  cx="50%" cy="50%" r="40%" fill="none" stroke="#10b981" strokeWidth="8"
+                  cx="50%" cy="50%" r="40%" fill="none" stroke="#2563eb" strokeWidth="6"
+                  strokeDasharray="251" strokeDashoffset={251 * (1 - (stats.indices.avg_client_satisfaction.avg || 0) / 100)}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-black text-blue-600 dark:text-blue-400">
+                {Math.round(stats.indices.avg_client_satisfaction.avg || 0)}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-emerald-100 dark:border-emerald-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Performance de Fornecedores</h3>
+              <p className="text-[10px] text-emerald-500 dark:text-emerald-400 mt-1">Índice médio de performance</p>
+            </div>
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
+              <svg className="w-full h-full -rotate-90">
+                <circle cx="50%" cy="50%" r="40%" fill="none" stroke="#e2e8f0" strokeWidth="6" />
+                <circle
+                  cx="50%" cy="50%" r="40%" fill="none" stroke="#10b981" strokeWidth="6"
                   strokeDasharray="251" strokeDashoffset={251 * (1 - (stats.indices.avg_supplier_performance.avg || 0) / 100)}
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
+              <span className="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">
                 {Math.round(stats.indices.avg_supplier_performance.avg || 0)}%
               </span>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-slate-400">Média de performance</p>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1">Indicadores de prazo e qualidade</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2 card p-4 sm:p-5">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Fluxo de Processos</h3>
-          <div className="h-48 sm:h-56 lg:h-64">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="lg:col-span-2 bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Fluxo de Processos</h3>
+          <div className="h-40 sm:h-52">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={[...stats.monthly_evolution].reverse()}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                  contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgb(0 0 0 / 0.1)" }}
+                  labelStyle={{ fontSize: 11 }}
                 />
                 <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={24} />
               </BarChart>
@@ -197,16 +491,16 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card p-4 sm:p-5">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Status de Processos</h3>
-          <div className="h-32 sm:h-40">
+        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Status de Processos</h3>
+          <div className="h-28 sm:h-36">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%" cy="50%"
-                  innerRadius={35} outerRadius={55}
-                  paddingAngle={5}
+                  innerRadius={30} outerRadius={50}
+                  paddingAngle={4}
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
@@ -217,14 +511,14 @@ export default function Dashboard() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="space-y-2 mt-3 sm:mt-4">
+          <div className="space-y-2 mt-3">
             {pieData.map((entry, index) => (
               <div key={entry.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }}></div>
-                  <span className="text-xs text-gray-600 dark:text-slate-400">{entry.name}</span>
+                  <span className="text-xs font-medium text-gray-600 dark:text-slate-400">{entry.name}</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">{entry.value}</span>
+                <span className="text-xs font-bold text-gray-900 dark:text-white">{entry.value}</span>
               </div>
             ))}
           </div>
