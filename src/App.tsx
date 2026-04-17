@@ -6,11 +6,10 @@ import Login from "./components/Login";
 import Dashboard from "./components/dashboard/Dashboard";
 import EntityList from "./components/entities/EntityList";
 import EntityForm from "./components/entities/EntityForm";
+import EntityHistory from "./components/entities/EntityHistory";
 import ProcessWorkflow from "./components/processes/ProcessWorkflow";
 import ProcessDetail from "./components/processes/ProcessDetail";
 import ProcessCreate from "./components/processes/ProcessCreate";
-import ApprovalForm from "./components/processes/ApprovalForm";
-import ClientApprovalForm from "./components/processes/ClientApprovalForm";
 import EvaluationFormNew from "./components/evaluations/EvaluationFormNew";
 import ReevaluationForm from "./components/evaluations/ReevaluationForm";
 import ClientEvaluationForm from "./components/evaluations/ClientEvaluationForm";
@@ -19,6 +18,11 @@ import EvaluationList from "./components/evaluations/EvaluationList";
 import CriteriaSettings from "./components/admin/CriteriaSettings";
 import ReportsView from "./components/reports/ReportsView";
 import UserProfile from "./components/profile/UserProfile";
+import SettingsSelection from "./components/admin/SettingsSelection";
+import UserList from "./components/users/UserList";
+import UserForm from "./components/users/UserForm";
+import RolesInfo from "./components/users/RolesInfo";
+import ProcessTypesSettings from "./components/settings/ProcessTypesSettings";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -48,18 +52,34 @@ export default function App() {
               <Route path="entities/clients" element={<EntityList type="Client" />} />
               <Route path="entities/new" element={<EntityForm />} />
               <Route path="entities/:id" element={<EntityForm />} />
-              <Route path="processes" element={<ProcessWorkflow />} />
-              <Route path="processes/new" element={<ProcessCreate />} />
-              <Route path="processes/approval" element={<ApprovalForm />} />
-              <Route path="processes/client-approval" element={<ClientApprovalForm />} />
-              <Route path="processes/:id" element={<ProcessDetail />} />
-              <Route path="evaluations" element={<EvaluationList />} />
-              <Route path="evaluations/new" element={<EvaluationFormNew />} />
-              <Route path="evaluations/reevaluation" element={<ReevaluationForm />} />
-              <Route path="evaluations/client" element={<ClientEvaluationForm />} />
-              <Route path="evaluations/:id" element={<EvaluationForm />} />
-              <Route path="reports" element={<ReportsView />} />
-              <Route path="admin" element={<CriteriaSettings />} />
+              <Route path="entities/:id/history" element={<EntityHistory />} />
+              
+              {/* Processos */}
+              <Route path="processos" element={<ProcessWorkflow />} />
+              <Route path="processos/novo" element={<ProcessCreate />} />
+              <Route path="processos/:id" element={<ProcessDetail />} />
+              
+              {/* Avaliações */}
+              <Route path="avaliacoes" element={<EvaluationList />} />
+              <Route path="avaliacoes/nova" element={<EvaluationFormNew />} />
+              <Route path="avaliacoes/reevaluation" element={<ReevaluationForm />} />
+              <Route path="avaliacoes/cliente" element={<ClientEvaluationForm />} />
+              <Route path="avaliacoes/:id" element={<EvaluationForm />} />
+              
+
+              
+              {/* Relatórios */}
+              <Route path="relatorios" element={<ReportsView />} />
+              
+               {/* Configurações */}
+               <Route path="configuracoes" element={<SettingsSelection />} />
+               <Route path="admin" element={<CriteriaSettings />} />
+               <Route path="configuracoes/utilizadores" element={<UserList />} />
+               <Route path="configuracoes/utilizadores/novo" element={<UserForm />} />
+               <Route path="configuracoes/utilizadores/:id" element={<UserForm />} />
+               <Route path="configuracoes/perfis" element={<RolesInfo />} />
+               <Route path="configuracoes/tipos-processo" element={<ProcessTypesSettings />} />
+              
               <Route path="profile" element={<UserProfile />} />
             </Route>
           </Routes>

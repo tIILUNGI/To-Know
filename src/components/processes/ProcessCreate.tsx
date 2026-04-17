@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Save, FileText, User, AlertCircle } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
-const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
+const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "", required = false, error }) => (
   <div className={`space-y-2 ${gridSpan}`}>
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
     {options ? (
-      <select name={name} value={value || ""} onChange={onChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+      <select name={name} value={value || ""} onChange={onChange} className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all ${error ? 'border-red-500' : 'border-gray-200'}`}>
         <option value="">Selecione...</option>
         {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
       </select>
@@ -18,37 +20,78 @@ const FormField = ({ label, name, value, onChange, type = "text", options = null
         value={value || ""} 
         onChange={onChange} 
         placeholder={placeholder}
-        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+        className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all ${error ? 'border-red-500' : 'border-gray-200'}`} 
       />
     )}
+    {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
   </div>
 );
 
 export default function ProcessCreate() {
-  const navigate = useNavigate();
-  const { addToast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    process_number: "",
-    process_type: "Aprovação",
-    open_date: new Date().toISOString().split('T')[0],
-    status: "Rascunho",
-    responsible_name: "",
-    responsible_position: "",
-    responsible_mobile: "",
-    responsible_email: "",
-    requesting_area: "",
-    justification: "",
-    priority: "Normal"
-  });
+   const navigate = useNavigate();
+   const [searchParams] = useSearchParams();
+   const { addToast } = useToast();
+   const [loading, setLoading] = useState(false);
+   const [errors, setErrors] = useState<Record<string, string>>({});
+   const [processTypes, setProcessTypes] = useState<{value: string, label: string}[]>([]);
+
+   // Get defaults from query params
+   const entityType = searchParams.get('entity') === 'Client' ? 'Cliente' : 'Fornecedor';
+   const defaultType = searchParams.get('type') === 'approval' ? 'Aprovação' : 'Avaliação';
+
+   const [formData, setFormData] = useState({
+     process_number: "",
+     process_type: defaultType,
+     open_date: new Date().toISOString().split('T')[0],
+     status: "Rascunho",
+     responsible_name: "",
+     responsible_position: "",
+     responsible_mobile: "",
+     responsible_email: "",
+     requesting_area: "",
+     justification: "",
+     priority: "Normal"
+   });
+
+   useEffect(() => {
+     fetch("/api/process-types", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => {
+         const options = data.map((t: any) => ({ value: t.name, label: t.name }));
+         setProcessTypes(options);
+       })
+       .catch(() => addToast("Erro ao carregar tipos de processo.", "error"));
+   }, [addToast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error on change
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.process_type?.trim()) newErrors.process_type = "Tipo de processo é obrigatório";
+    if (!formData.open_date?.trim()) newErrors.open_date = "Data é obrigatória";
+    if (!formData.responsible_name?.trim()) newErrors.responsible_name = "Responsável é obrigatório";
+    if (!formData.requesting_area?.trim()) newErrors.requesting_area = "Área requisitante é obrigatória";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      addToast("Preencha todos os campos obrigatórios.", "error");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -64,7 +107,7 @@ export default function ProcessCreate() {
       if (res.ok) {
         const data = await res.json();
         addToast("Processo criado com sucesso!", "success");
-        navigate(`/processes/${data.id}`);
+         navigate(`/processos/${data.id}`);
       } else {
         addToast("Erro ao criar processo.", "error");
       }
@@ -74,34 +117,29 @@ export default function ProcessCreate() {
     setLoading(false);
   };
 
-  const statusOptions = [
-    { value: 'Rascunho', label: 'Rascunho' },
-    { value: 'Em análise', label: 'Em análise' },
-    { value: 'Submetido', label: 'Submetido' },
-    { value: 'Em aprovação', label: 'Em aprovação' },
-    { value: 'Aprovado', label: 'Aprovado' },
-    { value: 'Reprovado', label: 'Reprovado' },
-    { value: 'Pendente de informação', label: 'Pendente de informação' },
-    { value: 'Encerrado', label: 'Encerrado' }
-  ];
+   const statusOptions = [
+     { value: 'Rascunho', label: 'Rascunho' },
+     { value: 'Em análise', label: 'Em Análise' },
+     { value: 'Pendente', label: 'Pendente' },
+     { value: 'Submetido', label: 'Submetido' },
+     { value: 'Em aprovação', label: 'Em Aprovação' },
+     { value: 'Aprovado', label: 'Aprovado' },
+     { value: 'Aprovado com restrições', label: 'Aprovado c/ Restrições' },
+     { value: 'Reprovado', label: 'Reprovar' },
+     { value: 'Encerrado', label: 'Encerrado' }
+   ];
 
-  const processTypeOptions = [
-    { value: 'Aprovação', label: 'Aprovação' },
-    { value: 'Avaliação', label: 'Avaliação' },
-    { value: 'Reavaliação', label: 'Reavaliação' }
-  ];
-
-  const priorityOptions = [
-    { value: 'Normal', label: 'Normal' },
-    { value: 'Alta', label: 'Alta' },
-    { value: 'Crítica', label: 'Crítica' }
-  ];
+   const priorityOptions = [
+     { value: 'Normal', label: 'Normal' },
+     { value: 'Alta', label: 'Alta' },
+     { value: 'Crítica', label: 'Crítica' }
+   ];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/processes")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+           <button onClick={() => navigate("/processos")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
@@ -134,34 +172,41 @@ export default function ProcessCreate() {
               value={formData.process_number} 
               onChange={handleChange} 
               placeholder="Ex: PROC-2024-001" 
+              error={undefined}
             />
-            <FormField 
-              label="Tipo de Processo" 
-              name="process_type" 
-              value={formData.process_type} 
-              onChange={handleChange} 
-              options={processTypeOptions} 
-            />
+             <FormField 
+               label="Tipo de Processo" 
+               name="process_type" 
+               value={formData.process_type} 
+               onChange={handleChange} 
+               options={processTypes} 
+               required={true}
+               error={errors.process_type}
+             />
             <FormField 
               label="Data de Abertura" 
               name="open_date" 
               value={formData.open_date} 
               onChange={handleChange} 
               type="date" 
+              required={true}
+              error={errors.open_date}
             />
             <FormField 
               label="Estado do Processo" 
               name="status" 
               value={formData.status} 
               onChange={handleChange} 
-              options={statusOptions} 
+              options={statusOptions}
+              error={undefined}
             />
             <FormField 
               label="Prioridade" 
               name="priority" 
               value={formData.priority} 
               onChange={handleChange} 
-              options={priorityOptions} 
+              options={priorityOptions}
+              error={undefined}
             />
             <FormField 
               label="Área Requisitante" 
@@ -169,6 +214,8 @@ export default function ProcessCreate() {
               value={formData.requesting_area} 
               onChange={handleChange} 
               placeholder="Ex: Compras, Engenharia..." 
+              required={true}
+              error={errors.requesting_area}
             />
           </div>
 
@@ -200,21 +247,26 @@ export default function ProcessCreate() {
               name="responsible_name" 
               value={formData.responsible_name} 
               onChange={handleChange} 
-              placeholder="Nome completo" 
+              placeholder="Nome completo"
+              required={true}
+              error={errors.responsible_name}
             />
             <FormField 
               label="Cargo" 
               name="responsible_position" 
               value={formData.responsible_position} 
               onChange={handleChange} 
-              placeholder="Ex: Gestor de Compras" 
+              placeholder="Ex: Gestor de Compras"
+              error={undefined}
             />
             <FormField 
               label="Telemóvel" 
               name="responsible_mobile" 
               value={formData.responsible_mobile} 
               onChange={handleChange} 
-              placeholder="+244 XXX XXX XXX" 
+              placeholder="+244 XXX XXX XXX"
+              required={true}
+              error={errors.responsible_mobile}
             />
             <FormField 
               label="Email" 
@@ -222,7 +274,9 @@ export default function ProcessCreate() {
               value={formData.responsible_email} 
               onChange={handleChange} 
               type="email" 
-              placeholder="email@empresa.co.ao" 
+              placeholder="email@empresa.co.ao"
+              required={true}
+              error={errors.responsible_email}
             />
           </div>
         </div>

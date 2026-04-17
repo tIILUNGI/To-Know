@@ -181,7 +181,7 @@ export default function ApprovalForm() {
 
       if (res.ok) {
         addToast("Aprovação salva com sucesso!", "success");
-        navigate("/processes");
+        navigate("/processos");
       } else {
         addToast("Erro ao salvar aprovação.", "error");
       }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { Save, ArrowLeft, History, FileText, Globe, MapPin, DollarSign, ShieldAlert, Upload, File, UserCircle } from "lucide-react";
+import { useToast } from "../../context/ToastContext";
 
 const TabButton = ({ active, onClick, icon: Icon, label }) => (
   <button
@@ -14,11 +15,13 @@ const TabButton = ({ active, onClick, icon: Icon, label }) => (
   </button>
 );
 
-const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "" }) => (
+const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", required = false, error }) => (
   <div className="space-y-2">
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
     {options ? (
-      <select name={name} value={value || ""} onChange={onChange} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+      <select name={name} value={value || ""} onChange={onChange} className={`w-full px-4 py-2 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all ${error ? 'border-red-500' : 'border-gray-200'}`}>
         <option value="">Selecione...</option>
         {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
       </select>
@@ -29,9 +32,10 @@ const FormField = ({ label, name, value, onChange, type = "text", options = null
         value={value || ""} 
         onChange={onChange} 
         placeholder={placeholder}
-        className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+        className={`w-full px-4 py-2 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all ${error ? 'border-red-500' : 'border-gray-200'}`} 
       />
     )}
+    {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
   </div>
 );
 
@@ -39,14 +43,17 @@ export default function EntityForm() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState("identificacao");
   const [formData, setFormData] = useState<any>({
     entity_type: location.state?.type || "Supplier",
-    status: "In Analysis",
+    status: "Em análise",
+    relationship_status: "Elegível",
     country: "Angola",
     currency: "AOA"
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (id && id !== "new") {
@@ -65,10 +72,48 @@ export default function EntityForm() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? (checked ? 1 : 0) : value }));
+    // Clear error on change
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    const isSupplier = formData.entity_type === "Supplier";
+
+    // Campos obrigatórios comuns a ambos
+    if (!formData.name?.trim()) newErrors.name = "Nome é obrigatório";
+    if (!formData.sub_type?.trim()) newErrors.sub_type = "Tipo é obrigatório";
+    if (!formData.tax_id?.trim()) newErrors.tax_id = "NIF é obrigatório";
+    if (!formData.address?.trim()) newErrors.address = "Endereço é obrigatório";
+    if (!formData.resp_name?.trim()) newErrors.resp_name = "Responsável de contacto é obrigatório";
+    if (!formData.resp_mobile?.trim()) newErrors.resp_mobile = "Telemóvel do responsável é obrigatório";
+    if (!formData.resp_email?.trim()) newErrors.resp_email = "Email do responsável é obrigatório";
+    if (!formData.mobile?.trim()) newErrors.mobile = "Telemóvel principal é obrigatório";
+    if (!formData.email_main?.trim()) newErrors.email_main = "Email principal é obrigatório";
+
+    if (isSupplier) {
+      if (!formData.sector?.trim()) newErrors.sector = "Sector é obrigatório";
+      if (!formData.supply_type?.trim()) newErrors.supply_type = "Tipo de fornecimento é obrigatório";
+      if (!formData.operational_impact?.trim()) newErrors.operational_impact = "Impacto na operação é obrigatório";
+    } else {
+      // Cliente
+      if (!formData.segment?.trim()) newErrors.segment = "Segmento/sector é obrigatório";
+      if (!formData.criticality?.trim()) newErrors.criticality = "Potencial/importância é obrigatório";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      addToast("Preencha todos os campos obrigatórios.", "error");
+      return;
+    }
+    
     const method = id && id !== "new" ? "PUT" : "POST";
     const url = id && id !== "new" ? `/api/entities/${id}` : "/api/entities";
     
@@ -126,102 +171,115 @@ export default function EntityForm() {
           {id && id !== "new" && (
             <TabButton active={activeTab === "documentos"} onClick={() => setActiveTab("documentos")} icon={File} label="Documentos" />
           )}
-          {id && id !== "new" && (
-            <TabButton active={activeTab === "historico"} onClick={() => setActiveTab("historico")} icon={History} label="Histórico" />
-          )}
+           {id && id !== "new" && (
+             <Link to={`/entities/${id}/history`} className="flex items-center gap-2 px-6 py-4 text-sm font-bold border-b-2 transition-all whitespace-nowrap border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+               <History size={18} />
+               <span>Histórico</span>
+             </Link>
+           )}
         </div>
 
-        <form id="entity-form" onSubmit={handleSubmit} className="p-10">
-          {activeTab === "identificacao" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
-              <FormField label="Código" name="code" value={formData.code} onChange={handleChange} placeholder="GER-001" />
-              <div className="lg:col-span-2">
-                <FormField label="Razão Social / Nome Completo" name="name" value={formData.name} onChange={handleChange} />
+          <form id="entity-form" onSubmit={handleSubmit} className="p-10">
+           {activeTab === "identificacao" && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
+                <FormField label="Código" name="code" value={formData.code} onChange={handleChange} placeholder="GER-001" error={undefined} />
+                <div className="lg:col-span-2">
+                  <FormField label="Razão Social / Nome Completo" name="name" value={formData.name} onChange={handleChange} required={true} error={errors.name} />
+                </div>
+                <FormField label="Nome Comercial" name="trade_name" value={formData.trade_name} onChange={handleChange} error={undefined} />
+                <FormField label="Tipo de Entidade" name="sub_type" value={formData.sub_type} onChange={handleChange} options={[
+                  { value: 'Company', label: 'Empresa' },
+                  { value: 'Individual', label: 'Individual' },
+                  { value: 'Public', label: 'Pública/Estado' }
+                ]} required={true} error={errors.sub_type} />
+                <FormField label="NIF / Identificação Fiscal" name="tax_id" value={formData.tax_id} onChange={handleChange} required={true} error={errors.tax_id} />
+                <FormField label="Registo Comercial / Alvará" name="registration_number" value={formData.registration_number} onChange={handleChange} error={undefined} />
+                <FormField label="Estado" name="status" value={formData.status} onChange={handleChange} options={[
+                  { value: 'Ativo', label: 'Ativo' },
+                  { value: 'Em análise', label: 'Em Análise' },
+                  { value: 'Inativo', label: 'Inativo' },
+                  { value: 'Suspenso', label: 'Suspenso' },
+                  { value: 'Bloqueado', label: 'Bloqueado' },
+                  { value: 'Em revisão', label: 'Em Revisão' }
+                ]} error={undefined} />
+             </div>
+           )}
+
+            {activeTab === "localizacao" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
+                <div className="lg:col-span-2">
+                  <FormField label="Endereço Completo" name="address" value={formData.address} onChange={handleChange} required={true} error={errors.address} />
+                </div>
+                <FormField label="Província" name="province" value={formData.province} onChange={handleChange} error={undefined} />
+                <FormField label="Município" name="municipality" value={formData.municipality} onChange={handleChange} error={undefined} />
+                <FormField label="País" name="country" value={formData.country} onChange={handleChange} error={undefined} />
+                <FormField label="Telefone Fixo" name="phone" value={formData.phone} onChange={handleChange} error={undefined} />
+                <FormField label="Telemóvel" name="mobile" value={formData.mobile} onChange={handleChange} required={true} error={errors.mobile} />
+                <FormField label="Email Principal" name="email_main" value={formData.email_main} onChange={handleChange} type="email" required={true} error={errors.email_main} />
+                <FormField label="Website" name="website" value={formData.website} onChange={handleChange} error={undefined} />
               </div>
-              <FormField label="Nome Comercial" name="trade_name" value={formData.trade_name} onChange={handleChange} />
-              <FormField label="Tipo de Entidade" name="sub_type" value={formData.sub_type} onChange={handleChange} options={[
-                { value: 'Company', label: 'Empresa' },
-                { value: 'Individual', label: 'Individual' },
-                { value: 'Public', label: 'Pública/Estado' }
-              ]} />
-              <FormField label="NIF / Identificação Fiscal" name="tax_id" value={formData.tax_id} onChange={handleChange} />
-              <FormField label="Registo Comercial / Alvará" name="registration_number" value={formData.registration_number} onChange={handleChange} />
-              <FormField label="Estado" name="status" value={formData.status} onChange={handleChange} options={[
-                { value: 'Active', label: 'Ativo' },
-                { value: 'In Analysis', label: 'Em Análise' },
-                { value: 'Inactive', label: 'Inativo' },
-                { value: 'Suspended', label: 'Suspenso' }
-              ]} />
-            </div>
-          )}
+            )}
 
-          {activeTab === "localizacao" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
-              <div className="lg:col-span-2">
-                <FormField label="Endereço Completo" name="address" value={formData.address} onChange={handleChange} />
+            {activeTab === "responsavel" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-2">
+                <FormField label="Nome do Responsável" name="resp_name" value={formData.resp_name} onChange={handleChange} required={true} error={errors.resp_name} />
+                <FormField label="Cargo" name="resp_position" value={formData.resp_position} onChange={handleChange} error={undefined} />
+                <FormField label="Telemóvel" name="resp_mobile" value={formData.resp_mobile} onChange={handleChange} required={true} error={errors.resp_mobile} />
+                <FormField label="Email" name="resp_email" value={formData.resp_email} onChange={handleChange} type="email" required={true} error={errors.resp_email} />
               </div>
-              <FormField label="Província" name="province" value={formData.province} onChange={handleChange} />
-              <FormField label="Município" name="municipality" value={formData.municipality} onChange={handleChange} />
-              <FormField label="País" name="country" value={formData.country} onChange={handleChange} />
-              <FormField label="Telefone Fixo" name="phone" value={formData.phone} onChange={handleChange} />
-              <FormField label="Telemóvel" name="mobile" value={formData.mobile} onChange={handleChange} />
-              <FormField label="Email Principal" name="email_main" value={formData.email_main} onChange={handleChange} type="email" />
-              <FormField label="Website" name="website" value={formData.website} onChange={handleChange} />
-            </div>
-          )}
+            )}
 
-          {activeTab === "responsavel" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-2">
-              <FormField label="Nome do Responsável" name="resp_name" value={formData.resp_name} onChange={handleChange} />
-              <FormField label="Cargo" name="resp_position" value={formData.resp_position} onChange={handleChange} />
-              <FormField label="Telemóvel" name="resp_mobile" value={formData.resp_mobile} onChange={handleChange} />
-              <FormField label="Email" name="resp_email" value={formData.resp_email} onChange={handleChange} type="email" />
-            </div>
-          )}
+           {activeTab === "classificacao" && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
+               <FormField label="Sector de Atividade" name="sector" value={formData.sector} onChange={handleChange} required={true} error={errors.sector} />
+                <FormField label="Impacto Operacional" name="operational_impact" value={formData.operational_impact} onChange={handleChange} options={[
+                 { value: 'Baixo', label: 'Baixo' },
+                 { value: 'Médio', label: 'Médio' },
+                 { value: 'Alto', label: 'Alto' }
+               ]} required={isClient ? false : true} error={isClient ? undefined : errors.operational_impact} />
+                <FormField label="Criticidade" name="criticality" value={formData.criticality} onChange={handleChange} options={[
+                  { value: 'Baixa', label: 'Baixa' },
+                  { value: 'Média', label: 'Média' },
+                  { value: 'Alta', label: 'Alta' }
+                ]} required={isClient ? true : false} error={isClient ? errors.criticality : undefined} />
+                <FormField label="Estado do Relacionamento" name="relationship_status" value={formData.relationship_status || 'Elegível'} onChange={handleChange} options={[
+                  { value: 'Elegível', label: 'Elegível' },
+                  { value: 'Homologado', label: 'Homologado' },
+                  { value: 'Em observação', label: 'Em Observação' },
+                  { value: 'Restrito', label: 'Restrito' },
+                  { value: 'Suspenso', label: 'Suspenso' },
+                  { value: 'Desqualificado', label: 'Desqualificado' }
+                ]} error={undefined} />
+                <FormField label="Área Solicitante" name="requesting_area" value={formData.requesting_area} onChange={handleChange} error={undefined} />
+               <FormField label="Unidade de Negócio" name="business_unit" value={formData.business_unit} onChange={handleChange} error={undefined} />
+               {!isClient && <FormField label="Tipo de Fornecimento" name="supply_type" value={formData.supply_type} onChange={handleChange} options={[
+                 { value: 'Material', label: 'Material' },
+                 { value: 'Service', label: 'Serviço' },
+                 { value: 'Both', label: 'Ambos' }
+               ]} required={true} error={errors.supply_type} />}
+             </div>
+           )}
 
-          {activeTab === "classificacao" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
-              <FormField label="Sector de Atividade" name="sector" value={formData.sector} onChange={handleChange} />
-              <FormField label="Impacto Operacional" name="operational_impact" value={formData.operational_impact} onChange={handleChange} options={[
-                { value: 'Low', label: 'Baixo' },
-                { value: 'Medium', label: 'Médio' },
-                { value: 'High', label: 'Alto' }
-              ]} />
-              <FormField label="Criticidade" name="criticality" value={formData.criticality} onChange={handleChange} options={[
-                { value: 'Low', label: 'Baixa' },
-                { value: 'Medium', label: 'Média' },
-                { value: 'High', label: 'Alta' }
-              ]} />
-              <FormField label="Área Solicitante" name="requesting_area" value={formData.requesting_area} onChange={handleChange} />
-              <FormField label="Unidade de Negócio" name="business_unit" value={formData.business_unit} onChange={handleChange} />
-              {!isClient && <FormField label="Tipo de Fornecimento" name="supply_type" value={formData.supply_type} onChange={handleChange} options={[
-                { value: 'Material', label: 'Material' },
-                { value: 'Service', label: 'Serviço' },
-                { value: 'Both', label: 'Ambos' }
-              ]} />}
-            </div>
-          )}
-
-          {activeTab === "financeiro" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
-              <FormField label="Condição de Pagamento" name="payment_condition" value={formData.payment_condition} onChange={handleChange} />
-              <FormField label="Moeda" name="currency" value={formData.currency} onChange={handleChange} />
-              <FormField label="Banco" name="bank" value={formData.bank} onChange={handleChange} />
-              <div className="lg:col-span-2">
-                <FormField label="IBAN" name="iban" value={formData.iban} onChange={handleChange} />
-              </div>
-              <FormField label={isClient ? "Limite de Crédito" : "Limite Contratual"} name={isClient ? "credit_limit" : "contract_limit"} value={isClient ? formData.credit_limit : formData.contract_limit} onChange={handleChange} type="number" />
-              <FormField label="Volume Anual Estimado" name="estimated_annual_volume" value={formData.estimated_annual_volume} onChange={handleChange} type="number" />
-              {isClient && (
-                <>
-                  <FormField label="Segmento" name="segment" value={formData.segment} onChange={handleChange} />
-                  <FormField label="Canal de Relacionamento" name="relationship_channel" value={formData.relationship_channel} onChange={handleChange} />
-                  <FormField label="Frequência de Compras" name="purchase_frequency" value={formData.purchase_frequency} onChange={handleChange} />
-                  <FormField label="Ticket Médio" name="average_ticket" value={formData.average_ticket} onChange={handleChange} type="number" />
-                </>
-              )}
-            </div>
-          )}
+           {activeTab === "financeiro" && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
+               <FormField label="Condição de Pagamento" name="payment_condition" value={formData.payment_condition} onChange={handleChange} error={undefined} />
+               <FormField label="Moeda" name="currency" value={formData.currency} onChange={handleChange} error={undefined} />
+               <FormField label="Banco" name="bank" value={formData.bank} onChange={handleChange} error={undefined} />
+               <div className="lg:col-span-2">
+                 <FormField label="IBAN" name="iban" value={formData.iban} onChange={handleChange} error={undefined} />
+               </div>
+               <FormField label={isClient ? "Limite de Crédito" : "Limite Contratual"} name={isClient ? "credit_limit" : "contract_limit"} value={isClient ? formData.credit_limit : formData.contract_limit} onChange={handleChange} type="number" error={undefined} />
+               <FormField label="Volume Anual Estimado" name="estimated_annual_volume" value={formData.estimated_annual_volume} onChange={handleChange} type="number" error={undefined} />
+               {isClient && (
+                 <>
+                   <FormField label="Segmento" name="segment" value={formData.segment} onChange={handleChange} required={true} error={errors.segment} />
+                   <FormField label="Canal de Relacionamento" name="relationship_channel" value={formData.relationship_channel} onChange={handleChange} error={undefined} />
+                   <FormField label="Frequência de Compras" name="purchase_frequency" value={formData.purchase_frequency} onChange={handleChange} error={undefined} />
+                   <FormField label="Ticket Médio" name="average_ticket" value={formData.average_ticket} onChange={handleChange} type="number" error={undefined} />
+                 </>
+               )}
+             </div>
+           )}
 
           {activeTab === "compliance" && (
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2">
@@ -242,12 +300,12 @@ export default function EntityForm() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <FormField label="Risco Fraude" name="fraud_risk" value={formData.fraud_risk} onChange={handleChange} options={[{value:'Low', label:'Baixo'},{value:'Medium', label:'Médio'},{value:'High', label:'Alto'}]} />
-                <FormField label="Risco Financeiro" name="financial_risk" value={formData.financial_risk} onChange={handleChange} options={[{value:'Low', label:'Baixo'},{value:'Medium', label:'Médio'},{value:'High', label:'Alto'}]} />
-                <FormField label="Risco Operacional" name="operational_risk" value={formData.operational_risk} onChange={handleChange} options={[{value:'Low', label:'Baixo'},{value:'Medium', label:'Médio'},{value:'High', label:'Alto'}]} />
-                <FormField label="Classificação Final" name="final_risk_rating" value={formData.final_risk_rating} onChange={handleChange} options={[{value:'Low', label:'Baixo'},{value:'Medium', label:'Médio'},{value:'High', label:'Alto'}]} />
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                 <FormField label="Risco Fraude" name="fraud_risk" value={formData.fraud_risk} onChange={handleChange} options={[{value:'Baixo', label:'Baixo'},{value:'Médio', label:'Médio'},{value:'Alto', label:'Alto'}]} error={undefined} />
+                 <FormField label="Risco Financeiro" name="financial_risk" value={formData.financial_risk} onChange={handleChange} options={[{value:'Baixo', label:'Baixo'},{value:'Médio', label:'Médio'},{value:'Alto', label:'Alto'}]} error={undefined} />
+                 <FormField label="Risco Operacional" name="operational_risk" value={formData.operational_risk} onChange={handleChange} options={[{value:'Baixo', label:'Baixo'},{value:'Médio', label:'Médio'},{value:'Alto', label:'Alto'}]} error={undefined} />
+                 <FormField label="Classificação Final" name="final_risk_rating" value={formData.final_risk_rating} onChange={handleChange} options={[{value:'Baixo', label:'Baixo'},{value:'Médio', label:'Médio'},{value:'Alto', label:'Alto'}]} error={undefined} />
+               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Observações / Due Diligence</label>
@@ -256,9 +314,8 @@ export default function EntityForm() {
             </div>
           )}
 
-          {activeTab === "documentos" && id && <DocumentSection entityId={id} />}
-          {activeTab === "historico" && id && <HistoryList entityId={id} />}
-        </form>
+           {activeTab === "documentos" && id && <DocumentSection entityId={id} />}
+         </form>
       </div>
     </div>
   );
@@ -331,43 +388,6 @@ function DocumentSection({ entityId }) {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function HistoryList({ entityId }) {
-  const [history, setHistory] = useState<any[]>([]);
-  
-  useEffect(() => {
-    fetch(`/api/entities/${entityId}/history`, {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    })
-    .then(res => res.json())
-    .then(data => setHistory(data));
-  }, [entityId]);
-
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 max-w-3xl">
-      {history.length === 0 ? (
-        <p className="text-gray-500 font-medium italic">Nenhum histórico disponível para esta entidade.</p>
-      ) : history.map((item) => (
-        <div key={item.id} className="flex gap-6 items-start border-l-2 border-blue-100 pl-8 pb-8 relative">
-          <div className="absolute w-4 h-4 bg-blue-600 rounded-full -left-[9px] top-0 border-4 border-white shadow-sm shadow-blue-200"></div>
-          <div className="bg-gray-50 p-6 rounded-2xl flex-1 border border-gray-100">
-            <div className="flex justify-between items-start mb-2">
-               <p className="text-sm font-bold text-gray-900 uppercase tracking-wide">{item.action}</p>
-               <span className="text-[10px] font-bold text-gray-400">{new Date(item.timestamp).toLocaleString('pt-BR')}</span>
-            </div>
-            <p className="text-sm text-gray-600 leading-relaxed">{item.details}</p>
-            <div className="mt-4 flex items-center gap-2">
-               <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-[8px] font-bold">
-                 {item.user_name?.charAt(0)}
-               </div>
-               <span className="text-xs font-bold text-gray-500">{item.user_name}</span>
-            </div>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

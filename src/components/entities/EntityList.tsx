@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, ExternalLink, Trash2 } from "lucide-react";
+import { Plus, Search, ExternalLink, Trash2, Clock } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 
@@ -57,7 +57,7 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
   };
 
   const sectors = [...new Set(entities.map((e) => e.sector).filter(Boolean))];
-  const risks = ["Low", "Medium", "High"];
+  const risks = ["Baixo", "Médio", "Alto"];
 
   const filteredEntities = entities.filter((e) => {
     const matchesSearch =
@@ -136,28 +136,29 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                <th className="px-3 sm:px-4 py-2.5">Entidade</th>
-                <th className="px-3 sm:px-4 py-2.5 hidden md:table-cell">Setor</th>
-                <th className="px-3 sm:px-4 py-2.5 hidden lg:table-cell">NIF</th>
-                <th className="px-3 sm:px-4 py-2.5">Estado</th>
-                <th className="px-3 sm:px-4 py-2.5">Risco</th>
-                <th className="px-3 sm:px-4 py-2.5 text-right">Ações</th>
-              </tr>
+                <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                  <th className="px-3 sm:px-4 py-2.5">Entidade</th>
+                  <th className="px-3 sm:px-4 py-2.5 hidden md:table-cell">Setor</th>
+                  <th className="px-3 sm:px-4 py-2.5 hidden lg:table-cell">NIF</th>
+                  <th className="px-3 sm:px-4 py-2.5">Estado</th>
+                  <th className="px-3 sm:px-4 py-2.5">Relacionamento</th>
+                  <th className="px-3 sm:px-4 py-2.5">Risco</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Ações</th>
+                </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
                     Carregando dados...
                   </td>
                 </tr>
-              ) : filteredEntities.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
-                    Nenhum registro encontrado.
-                  </td>
-                </tr>
+               ) : filteredEntities.length === 0 ? (
+                 <tr>
+                   <td colSpan={7} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
+                     Nenhum registro encontrado.
+                   </td>
+                 </tr>
               ) : (
                 filteredEntities.map((entity) => (
                   <tr key={entity.id} className="hover:bg-gray-50 transition-colors">
@@ -185,10 +186,14 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
                     <td className="px-3 sm:px-4 py-2.5">
                       <span
                         className={`badge ${
-                          entity.status === "Active"
+                          entity.status === "Ativo"
                             ? "badge-success"
-                            : entity.status === "In Analysis"
+                            : entity.status === "Em análise"
                             ? "bg-blue-100 text-blue-800"
+                            : entity.status === "Bloqueado"
+                            ? "bg-red-100 text-red-800"
+                            : entity.status === "Em revisão"
+                            ? "bg-yellow-100 text-yellow-800"
                             : "badge-neutral"
                         }`}
                       >
@@ -196,25 +201,46 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
                       </span>
                     </td>
                     <td className="px-3 sm:px-4 py-2.5">
+                      <span
+                        className={`badge ${
+                          entity.relationship_status === "Homologado"
+                            ? "badge-success"
+                            : entity.relationship_status === "Elegível"
+                            ? "bg-green-100 text-green-800"
+                            : entity.relationship_status === "Em observação"
+                            ? "bg-amber-100 text-amber-800"
+                            : entity.relationship_status === "Restrito"
+                            ? "bg-orange-100 text-orange-800"
+                            : entity.relationship_status === "Suspenso"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : entity.relationship_status === "Desqualificado"
+                            ? "bg-red-100 text-red-800"
+                            : "badge-neutral"
+                        }`}
+                      >
+                        {entity.relationship_status || "Elegível"}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            entity.final_risk_rating === "High"
+                            entity.final_risk_rating === "Alto"
                               ? "bg-red-500"
-                              : entity.final_risk_rating === "Medium"
+                              : entity.final_risk_rating === "Médio"
                               ? "bg-amber-500"
-                              : entity.final_risk_rating === "Low"
+                              : entity.final_risk_rating === "Baixo"
                               ? "bg-green-500"
                               : "bg-gray-300"
                           }`}
                         ></div>
                         <span
                           className={`text-xs font-medium ${
-                            entity.final_risk_rating === "High"
+                            entity.final_risk_rating === "Alto"
                               ? "text-red-600"
-                              : entity.final_risk_rating === "Medium"
+                              : entity.final_risk_rating === "Médio"
                               ? "text-amber-600"
-                              : entity.final_risk_rating === "Low"
+                              : entity.final_risk_rating === "Baixo"
                               ? "text-green-600"
                               : "text-gray-400"
                           }`}
@@ -223,22 +249,29 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 sm:px-4 py-2.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          to={`/entities/${entity.id}`}
-                          className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <ExternalLink size={14} strokeWidth={2} />
-                        </Link>
-                        <button
-                          onClick={() => setDeleteTarget(entity)}
-                          className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={14} strokeWidth={2} />
-                        </button>
-                      </div>
-                    </td>
+                     <td className="px-3 sm:px-4 py-2.5 text-right">
+                       <div className="flex items-center justify-end gap-1">
+                         <Link
+                           to={`/entities/${entity.id}`}
+                           className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                         >
+                           <ExternalLink size={14} strokeWidth={2} />
+                         </Link>
+                         <Link
+                           to={`/entities/${entity.id}/history`}
+                           className="p-1.5 sm:p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                           title="Histórico"
+                         >
+                           <Clock size={14} strokeWidth={2} />
+                         </Link>
+                         <button
+                           onClick={() => setDeleteTarget(entity)}
+                           className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                         >
+                           <Trash2 size={14} strokeWidth={2} />
+                         </button>
+                       </div>
+                     </td>
                   </tr>
                 ))
               )}

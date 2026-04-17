@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Save, FileText, User, Package, Scale, TrendingUp, Star, AlertCircle } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
@@ -26,20 +26,25 @@ const FormField = ({ label, name, value, onChange, type = "text", options = null
 
 export default function EvaluationFormNew() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [selectedSuppliers, setSelectedSuppliers] = useState<any[]>([]);
   const [showSupplierSelect, setShowSupplierSelect] = useState(false);
-
+  
+  // Parse query params
+  const evalType = searchParams.get('type') === 'Satisfaction' ? 'Satisfaction' : 'Performance';
+  
   const [formData, setFormData] = useState({
     evaluation_number: "",
-    evaluation_type: "Performance do fornecedor",
+    evaluation_type: evalType === 'Satisfaction' ? 'Satisfação do fornecedor' : 'Performance do fornecedor',
     periodicity: "Trimestral",
     evaluation_date: new Date().toISOString().split('T')[0],
     period_start: "",
     period_end: "",
-    evaluator_name: ""
+    evaluator_name: "",
+    evaluation_type_detail: evalType
   });
 
   const [criteria, setCriteria] = useState([
@@ -153,7 +158,7 @@ export default function EvaluationFormNew() {
 
       if (res.ok) {
         addToast("Avaliação salva com sucesso!", "success");
-        navigate("/evaluations");
+        navigate("/avaliacoes");
       } else {
         addToast("Erro ao salvar avaliação.", "error");
       }
@@ -187,12 +192,18 @@ export default function EvaluationFormNew() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/evaluations")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+          <button onClick={() => navigate("/avaliacoes")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Nova Avaliação de Fornecedores</h2>
-            <p className="text-sm text-gray-500 mt-1">Avalie a performance ou satisfação dos fornecedores.</p>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {evalType === 'Satisfaction' ? 'Nova Pesquisa de Satisfação - Fornecedor' : 'Nova Avaliação de Performance - Fornecedor'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {evalType === 'Satisfaction' 
+                ? 'Avalie o nível de satisfação com o desempenho dos fornecedores.' 
+                : 'Avalie a performance dos fornecedores conforme critérios estabelecidos.'}
+            </p>
           </div>
         </div>
         <button

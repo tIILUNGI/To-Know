@@ -143,7 +143,7 @@ export default function ClientApprovalForm() {
 
       if (res.ok) {
         addToast("Aprovação salva com sucesso!", "success");
-        navigate("/processes");
+        navigate("/processos");
       } else {
         addToast("Erro ao salvar aprovação.", "error");
       }
@@ -157,7 +157,7 @@ export default function ClientApprovalForm() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/processes")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+          <button onClick={() => navigate("/processos")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>

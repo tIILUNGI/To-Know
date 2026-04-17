@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, BarChart3, Settings, LogOut,
-  Search, User, Bell, Menu, ClipboardList, Moon, Sun, X
+  Search, User, Bell, Menu, ClipboardList, Moon, Sun, X, Building2,
+  ChevronRight, CheckSquare, Star, Scale, Shield, GitFork, ListFilter
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -44,9 +45,9 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [showNotifications, setShowNotifications] = useState(false);
+   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   const [notifications, setNotifications] = useState<any[]>([]);
+   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,19 +137,20 @@ export default function Layout() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   const navItems = [
-    { to: "/", icon: LayoutDashboard, label: "Dashboard", description: "Visão geral do sistema" },
-    { to: "/entities/suppliers", icon: Users, label: "Fornecedores", description: "Cadastro e gestão de fornecedores" },
-    { to: "/entities/clients", icon: Users, label: "Clientes", description: "Cadastro e gestão de clientes" },
-    { to: "/processes", icon: FileText, label: "Aprovação", description: "Processos de aprovação" },
-    { to: "/evaluations", icon: ClipboardList, label: "Avaliação", description: "Avaliação e reavaliação periódica" },
-    { to: "/reports", icon: BarChart3, label: "Relatórios", description: "Relatórios e histórico" },
+    { to: "/", icon: LayoutDashboard, label: "Dashboard", description: "Visão geral" },
+    { to: "/entities/suppliers", icon: Users, label: "Fornecedores", description: "Cadastro de fornecedores" },
+    { to: "/entities/clients", icon: Users, label: "Clientes", description: "Cadastro de clientes" },
+    { to: "/processos", icon: FileText, label: "Processos", description: "Selecione o tipo de processo" },
+    { to: "/avaliacoes", icon: ClipboardList, label: "Avaliações", description: "Avaliações e reavaliações" },
+
+    { to: "/relatorios", icon: BarChart3, label: "Relatórios", description: "Indicadores e históricos" },
   ];
 
   if (user?.role === "Administrator") {
-    navItems.push({ to: "/admin", icon: Settings, label: "Configurações", description: "Parametrização do sistema" });
+    navItems.push({ to: "/configuracoes", icon: Settings, label: "Configurações", description: "Parametrização do sistema" });
   }
 
-  const isActive = (path: string) => path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+   const isActive = (path: string) => path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 dark:bg-[#0a0f1a]">
@@ -174,6 +176,7 @@ export default function Layout() {
                 to={item.to}
                 icon={item.icon}
                 label={item.label}
+                description={item.description}
                 active={isActive(item.to)}
               />
             ))}
@@ -212,7 +215,7 @@ export default function Layout() {
                         <div>
                           <div className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 uppercase">Processos</div>
                           {searchResults.processes.map((p: any) => (
-                            <button key={`p-${p.id}`} onClick={() => { navigate(`/processes/${p.id}`); setShowSearch(false); setSearchQuery(""); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-left">
+                            <button key={`p-${p.id}`} onClick={() => { navigate(`/processos/${p.id}`); setShowSearch(false); setSearchQuery(""); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-left">
                               <div className="w-6 h-6 rounded bg-gray-100 text-gray-600 flex items-center justify-center"><FileText size={12} /></div>
                               <div className="flex-1 min-w-0"><p className="text-xs text-gray-900 truncate">{p.process_number}</p></div>
                             </button>
@@ -313,43 +316,43 @@ export default function Layout() {
         <div className="fixed inset-0 bg-gray-900/50 z-40 lg:hidden" onClick={closeMobileMenu} />
       )}
 
-      <div className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white dark:bg-[#1f2937] shadow-xl z-50 transform transition-transform duration-300 lg:hidden ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <Logo size="sm" />
-            <span className="font-bold text-gray-900 dark:text-white">TO KNOW</span>
-          </div>
-          <button onClick={closeMobileMenu} className="p-1.5 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
-            <X size={18} />
-          </button>
-        </div>
-        <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
-          {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={closeMobileMenu}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive(item.to)
-                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <item.icon size={18} />
-              <div className="flex flex-col">
-                <span>{item.label}</span>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-normal">{item.description}</span>
-              </div>
-            </Link>
-          ))}
-          <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-            <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 w-full">
-              <LogOut size={18} />
-              Sair
+        <div className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white dark:bg-[#1f2937] shadow-xl z-50 transform transition-transform duration-300 lg:hidden ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2">
+              <Logo size="sm" />
+              <span className="font-bold text-gray-900 dark:text-white">TO KNOW</span>
+            </div>
+            <button onClick={closeMobileMenu} className="p-1.5 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+              <X size={18} />
             </button>
           </div>
-        </nav>
-      </div>
+           <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
+             {navItems.map((item) => (
+               <Link
+                 key={item.to}
+                 to={item.to}
+                 onClick={closeMobileMenu}
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                   isActive(item.to)
+                     ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                 }`}
+               >
+                 <item.icon size={18} />
+                 <div className="flex flex-col">
+                   <span>{item.label}</span>
+                   {item.description && <span className="text-[10px] text-gray-400 dark:text-gray-500 font-normal">{item.description}</span>}
+                 </div>
+               </Link>
+             ))}
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700 mt-2">
+              <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 w-full">
+                <LogOut size={18} />
+                Sair
+              </button>
+            </div>
+          </nav>
+        </div>
 
       <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
         <div className="max-w-7xl mx-auto">

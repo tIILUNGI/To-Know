@@ -16,6 +16,40 @@ const PORT = 3000;
 const db = new Database("toknow.db");
 const SECRET_KEY = process.env.JWT_SECRET || "toknow-secret-key";
 
+// ============================================================
+// MIGRATIONS
+// ============================================================
+// Ensure relationship_status column exists in entities
+const checkColumn = db.prepare("PRAGMA table_info(entities)");
+const cols = checkColumn.all() as any[];
+if (!cols.find((c: any) => c.name === "relationship_status")) {
+  db.exec("ALTER TABLE entities ADD COLUMN relationship_status TEXT DEFAULT 'Elegível'");
+  console.log("✓ Added relationship_status column to entities");
+}
+
+// Ensure process_types table exists
+const checkTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='process_types'");
+if (!checkTable.get()) {
+  db.exec(`
+    CREATE TABLE process_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT,
+      is_active INTEGER DEFAULT 1,
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  // Seed initial data
+  db.prepare(`
+    INSERT INTO process_types (name, description, sort_order) VALUES 
+      ('Aprovação', 'Processo de due diligence e aprovação de fornecedores ou clientes', 1),
+      ('Avaliação', 'Avaliação de performance ou satisfação de entidades existentes', 2),
+      ('Reavaliação', 'Reavaliação periódica de fornecedores ou clientes', 3)
+  `).run();
+  console.log("✓ Created process_types table with seed data");
+}
+
 app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -72,7 +106,7 @@ const validateRequired = (body: any, fields: string[]): string | null => {
 // Whitelist of valid entity columns to prevent SQL injection via dynamic column names
 const ENTITY_SAFE_COLUMNS = new Set([
   "code", "name", "trade_name", "entity_type", "sub_type", "tax_id",
-  "registration_number", "status", "sector", "supply_type", "category",
+  "registration_number", "status", "relationship_status", "sector", "supply_type", "category",
   "operational_impact", "criticality", "requesting_area", "business_unit",
   "payment_condition", "currency", "contract_limit", "bank", "iban",
   "supply_history", "estimated_annual_volume", "segment", "relationship_channel",
@@ -97,9 +131,12 @@ const paginate = (req: any) => {
 // ============================================================
 const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.sendStatus(401);
-
+  if (!authHeader) return res.sendStatus(401);
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0] !== "Bearer" || !parts[1] || parts[1] === "null" || parts[1] === "undefined") {
+    return res.sendStatus(401);
+  }
+  const token = parts[1];
   jwt.verify(token, SECRET_KEY, (err: any, user: any) => {
     if (err) return res.sendStatus(403);
     req.user = user;
@@ -198,9 +235,23 @@ app.post("/api/users", authenticateToken, requireRole("Administrator"), async (r
   res.status(201).json({ id: result.lastInsertRowid });
 });
 
+app.get("/api/users/:id", authenticateToken, requireRole("Administrator"), (req: any, res: any) => {
+  const user = db.prepare("SELECT id, username, name, role, email FROM users WHERE id = ?").get(req.params.id);
+  if (!user) return res.status(404).json({ message: "Utilizador não encontrado." });
+  res.json(user);
+});
+
 app.put("/api/users/:id", authenticateToken, requireRole("Administrator"), (req: any, res: any) => {
-  const { name, role, email } = req.body;
-  db.prepare("UPDATE users SET name = COALESCE(?, name), role = COALESCE(?, role), email = COALESCE(?, email) WHERE id = ?").run(name, role, email, req.params.id);
+  const { name, role, email, password } = req.body;
+  if (password) {
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(password, salt);
+    db.prepare("UPDATE users SET name = COALESCE(?, name), role = COALESCE(?, role), email = COALESCE(?, email), password = ? WHERE id = ?")
+      .run(name, role, email, hash, req.params.id);
+  } else {
+    db.prepare("UPDATE users SET name = COALESCE(?, name), role = COALESCE(?, role), email = COALESCE(?, email) WHERE id = ?")
+      .run(name, role, email, req.params.id);
+  }
   logAction(req.user.id, null, "UPDATE_USER", `Updated user ID: ${req.params.id}`);
   res.json({ message: "Utilizador atualizado." });
 });
@@ -261,6 +312,51 @@ app.get("/api/entities/:id", authenticateToken, (req, res) => {
 
   const documents = db.prepare("SELECT * FROM documents WHERE entity_id = ?").all(req.params.id);
   res.json({ ...entity, documents });
+});
+
+// GET /api/entities/:id/history - complete historical record
+app.get("/api/entities/:id/history", authenticateToken, (req, res) => {
+  const entity = db.prepare("SELECT * FROM entities WHERE id = ?").get(req.params.id);
+  if (!entity) return res.status(404).json({ message: "Entidade não encontrada" });
+
+  // Audit history with user names
+  const auditHistory = db.prepare(`
+    SELECT h.*, u.name as user_name, u.role as user_role
+    FROM history h
+    LEFT JOIN users u ON h.user_id = u.id
+    WHERE h.entity_id = ?
+    ORDER BY h.timestamp DESC
+  `).all(req.params.id) as any[];
+
+  // Associated processes
+  const processes = db.prepare(`
+    SELECT p.*, u.name as opener_name, approver.name as approver_name
+    FROM processes p
+    LEFT JOIN users u ON p.opener_id = u.id
+    LEFT JOIN users approver ON p.approver_id = approver.id
+    WHERE p.entity_id = ?
+    ORDER BY p.created_at DESC
+  `).all(req.params.id) as any[];
+
+  // Evaluations (including reevaluations)
+  const evaluations = db.prepare(`
+    SELECT ev.*, u.name as evaluator_name
+    FROM evaluations ev
+    LEFT JOIN users u ON ev.evaluator_id = u.id
+    WHERE ev.entity_id = ?
+    ORDER BY ev.evaluation_date DESC
+  `).all(req.params.id) as any[];
+
+  // Documents already fetched above, but include again
+  const documents = db.prepare("SELECT * FROM documents WHERE entity_id = ?").all(req.params.id) as any[];
+
+  res.json({
+    entity,
+    audit_history: auditHistory,
+    processes,
+    evaluations,
+    documents
+  });
 });
 
 app.post("/api/entities", authenticateToken, (req: any, res) => {
@@ -403,13 +499,17 @@ app.get("/api/history", authenticateToken, (req, res) => {
 // CRITERIA
 // ============================================================
 app.get("/api/criteria", authenticateToken, (req, res) => {
-  const { entity_type, process_type, evaluation_type } = req.query;
-  let query = "SELECT * FROM criteria WHERE is_active = 1";
+  const { entity_type, process_type, evaluation_type, include_inactive } = req.query;
+  let query = "SELECT * FROM criteria";
   const params: any[] = [];
 
-  if (entity_type) { query += " AND (entity_type = ? OR entity_type IS NULL)"; params.push(entity_type); }
-  if (process_type) { query += " AND process_type = ?"; params.push(process_type); }
-  if (evaluation_type) { query += " AND evaluation_type = ?"; params.push(evaluation_type); }
+  const conditions = [];
+  if (entity_type) { conditions.push("(entity_type = ? OR entity_type IS NULL)"); params.push(entity_type); }
+  if (process_type) { conditions.push("process_type = ?"); params.push(process_type); }
+  if (evaluation_type) { conditions.push("evaluation_type = ?"); params.push(evaluation_type); }
+  if (include_inactive !== "true") { conditions.push("is_active = 1"); }
+
+  if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
 
   query += " ORDER BY display_order ASC";
   const criteria = db.prepare(query).all(...params);
@@ -420,32 +520,36 @@ app.post("/api/criteria", authenticateToken, requireRole("Administrator"), (req:
   const error = validateRequired(req.body, ["code", "name", "process_type"]);
   if (error) return res.status(400).json({ message: error });
 
-  const { code, name, description, entity_type, process_type, evaluation_type, weight, max_score, is_required, display_order } = req.body;
+  const { code, name, description, entity_type, process_type, evaluation_type, weight, min_score, max_score, is_required, is_active, display_order } = req.body;
   const existing = db.prepare("SELECT id FROM criteria WHERE code = ?").get(code);
   if (existing) return res.status(409).json({ message: "Código de critério já existe." });
 
   const result = db.prepare(`
-    INSERT INTO criteria (code, name, description, entity_type, process_type, evaluation_type, weight, max_score, is_required, display_order)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(code, name, description || null, entity_type || null, process_type, evaluation_type || null, weight || 1, max_score || 10, is_required ?? 1, display_order || 99);
+    INSERT INTO criteria (code, name, description, entity_type, process_type, evaluation_type, weight, min_score, max_score, is_required, is_active, display_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(code, name, description || null, entity_type || null, process_type, evaluation_type || null, weight || 1, min_score || 0, max_score || 10, is_required ? 1 : 0, is_active ? 1 : 1, display_order || 99);
 
   logAction(req.user.id, null, "CREATE_CRITERIA", `Created criteria: ${name}`);
   res.status(201).json({ id: result.lastInsertRowid });
 });
 
 app.put("/api/criteria/:id", authenticateToken, requireRole("Administrator"), (req: any, res: any) => {
-  const { name, description, weight, max_score, is_required, is_active, display_order } = req.body;
+  const { name, description, entity_type, process_type, evaluation_type, weight, min_score, max_score, is_required, is_active, display_order } = req.body;
   db.prepare(`
     UPDATE criteria SET 
       name = COALESCE(?, name), 
       description = COALESCE(?, description), 
+      entity_type = COALESCE(?, entity_type),
+      process_type = COALESCE(?, process_type),
+      evaluation_type = COALESCE(?, evaluation_type),
       weight = COALESCE(?, weight), 
+      min_score = COALESCE(?, min_score),
       max_score = COALESCE(?, max_score), 
       is_required = COALESCE(?, is_required), 
       is_active = COALESCE(?, is_active),
       display_order = COALESCE(?, display_order)
     WHERE id = ?
-  `).run(name, description, weight, max_score, is_required, is_active, display_order, req.params.id);
+  `).run(name, description, entity_type || null, process_type || null, evaluation_type || null, weight, min_score, max_score, is_required, is_active, display_order, req.params.id);
 
   logAction(req.user.id, null, "UPDATE_CRITERIA", `Updated criteria ID: ${req.params.id}`);
   res.json({ message: "Critério atualizado." });
@@ -455,6 +559,71 @@ app.delete("/api/criteria/:id", authenticateToken, requireRole("Administrator"),
   db.prepare("UPDATE criteria SET is_active = 0 WHERE id = ?").run(req.params.id);
   logAction(req.user.id, null, "DELETE_CRITERIA", `Deactivated criteria ID: ${req.params.id}`);
   res.json({ message: "Critério desativado." });
+});
+
+// ============================================================
+// PROCESS TYPES
+// ============================================================
+app.get("/api/process-types", authenticateToken, (req, res) => {
+  const types = db.prepare("SELECT * FROM process_types WHERE is_active = 1 ORDER BY sort_order ASC").all();
+  res.json(types);
+});
+
+app.get("/api/process-types/all", authenticateToken, requireRole("Administrator"), (req, res) => {
+  const types = db.prepare("SELECT * FROM process_types ORDER BY sort_order ASC").all();
+  res.json(types);
+});
+
+app.post("/api/process-types", authenticateToken, requireRole("Administrator"), (req: any, res: any) => {
+  const { name, description, sort_order } = req.body;
+  if (!name) return res.status(400).json({ message: "Nome é obrigatório." });
+
+  const existing = db.prepare("SELECT id FROM process_types WHERE name = ?").get(name);
+  if (existing) return res.status(409).json({ message: "Já existe um tipo com este nome." });
+
+  const result = db.prepare(`
+    INSERT INTO process_types (name, description, sort_order)
+    VALUES (?, ?, ?)
+  `).run(name, description || null, sort_order || 0);
+
+  logAction(req.user.id, null, "CREATE_PROCESS_TYPE", `Created process type: ${name}`);
+  res.status(201).json({ id: result.lastInsertRowid, name, description, sort_order });
+});
+
+app.put("/api/process-types/:id", authenticateToken, requireRole("Administrator"), (req: any, res: any) => {
+  const { name, description, is_active, sort_order } = req.body;
+
+  if (name) {
+    const existing = db.prepare("SELECT id FROM process_types WHERE name = ? AND id != ?").get(name, req.params.id);
+    if (existing) return res.status(409).json({ message: "Já existe um tipo com este nome." });
+  }
+
+  db.prepare(`
+    UPDATE process_types SET
+      name = COALESCE(?, name),
+      description = COALESCE(?, description),
+      is_active = COALESCE(?, is_active),
+      sort_order = COALESCE(?, sort_order)
+    WHERE id = ?
+  `).run(name, description, is_active ? 1 : 0, sort_order, req.params.id);
+
+  logAction(req.user.id, null, "UPDATE_PROCESS_TYPE", `Updated process type ID: ${req.params.id}`);
+  res.json({ message: "Tipo de processo actualizado." });
+});
+
+app.delete("/api/process-types/:id", authenticateToken, requireRole("Administrator"), (req: any, res: any) => {
+  const type = db.prepare("SELECT name FROM process_types WHERE id = ?").get(req.params.id);
+  if (!type) return res.status(404).json({ message: "Tipo não encontrado." });
+
+  // Check if any processes use this type
+  const usage = db.prepare("SELECT COUNT(*) as c FROM processes WHERE process_type = ?").get(type.name);
+  if ((usage as any).c > 0) {
+    return res.status(400).json({ message: "Não é possível eliminar: existem processos associados a este tipo." });
+  }
+
+  db.prepare("DELETE FROM process_types WHERE id = ?").run(req.params.id);
+  logAction(req.user.id, null, "DELETE_PROCESS_TYPE", `Deleted process type: ${type.name}`);
+  res.json({ message: "Tipo de processo eliminado." });
 });
 
 // ============================================================
@@ -493,12 +662,14 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
     for (const c of criteria as any[]) {
       insertPC.run(processId, c.id);
     }
-  }
+    }
+  });
 
-  logAction(req.user.id, entity_id, "CREATE_PROCESS", `Created process: ${process_number}`);
-  res.status(201).json({ id: processId, process_number });
-});
+// ============================================================
+// PROCESSES
+// ============================================================
 
+// GET /api/processes/:id
 app.get("/api/processes/:id", authenticateToken, (req, res) => {
   const process = db.prepare(`
     SELECT p.*, e.name as entity_name, u.name as opener_name
@@ -506,18 +677,99 @@ app.get("/api/processes/:id", authenticateToken, (req, res) => {
     JOIN entities e ON p.entity_id = e.id 
     LEFT JOIN users u ON p.opener_id = u.id
     WHERE p.id = ?
-  `).get(req.params.id);
+  `).get(req.params.id) as any;
 
   if (!process) return res.status(404).json({ message: "Processo não encontrado" });
 
   const criteria = db.prepare(`
-    SELECT pc.*, c.name, c.description, c.weight, c.max_score 
-    FROM process_criteria pc 
-    JOIN criteria c ON pc.criteria_id = c.id 
+    SELECT c.id as criteria_id, c.name, c.description, c.weight, c.max_score,
+           pc.score, pc.evidence, pc.comments
+    FROM process_criteria pc
+    JOIN criteria c ON pc.criteria_id = c.id
     WHERE pc.process_id = ?
-  `).all(req.params.id);
+    ORDER BY c.display_order
+  `).all(req.params.id) as any[];
 
-  res.json({ ...process, criteria });
+  const history = db.prepare(`
+    SELECT wh.*, u.name as user_name
+    FROM workflow_history wh
+    LEFT JOIN users u ON wh.performed_by = u.id
+    WHERE wh.process_id = ?
+    ORDER BY wh.performed_at DESC
+  `).all(req.params.id) as any[];
+
+  res.json({ ...process, criteria, workflow_history: history });
+});
+
+// GET /api/processes/:id with history
+// ============================================================
+// WORKFLOW ENGINE
+// ============================================================
+const WORKFLOW_STEPS = {
+  1: { name: "Rascunho", next: [2, 3], allowedRoles: ["Administrator", "Compliance Manager", "Procurement", "Owner"] },
+  2: { name: "Submetido", next: [3], allowedRoles: ["Administrator", "Compliance Manager"] },
+  3: { name: "Validação Documental", next: [4], allowedRoles: ["Administrator", "Compliance Manager", "Quality"] },
+  4: { name: "Avaliação Técnica/Comercial", next: [5], allowedRoles: ["Administrator", "Compliance Manager", "Technical", "Financial", "Commercial"] },
+  5: { name: "Em Aprovação", next: [6], allowedRoles: ["Administrator", "Compliance Manager", "Approver"] },
+  6: { name: "Aprovado/Reprovado", next: [7, 8], allowedRoles: ["Administrator", "Compliance Manager"] },
+  7: { name: "Comunicação do Resultado", next: [8], allowedRoles: ["Administrator", "Compliance Manager"] },
+  8: { name: "Em Monitorização", next: [], allowedRoles: ["Administrator", "Compliance Manager", "Auditor"] },
+};
+
+function canTransition(stepFrom: number, stepTo: number, userRole: string): boolean {
+  const from = WORKFLOW_STEPS[stepFrom];
+  if (!from) return false;
+  return from.next.includes(stepTo) && from.allowedRoles.includes(userRole);
+}
+
+app.get("/api/workflow/steps", authenticateToken, (req, res) => {
+  res.json(WORKFLOW_STEPS);
+});
+
+app.post("/api/processes/:id/transition", authenticateToken, (req: any, res) => {
+  const { target_step, notes } = req.body;
+  const processId = req.params.id;
+  const userId = req.user.id;
+  const userRole = req.user.role;
+
+  if (!target_step) return res.status(400).json({ message: "Etapa destino obrigatória" });
+
+  const process = db.prepare("SELECT * FROM processes WHERE id = ?").get(processId);
+  if (!process) return res.status(404).json({ message: "Processo não encontrado" });
+
+  const currentStep = process.current_step || 1;
+  
+  if (!canTransition(currentStep, target_step, userRole)) {
+    return res.status(403).json({ 
+      message: `Transição de step ${currentStep} para ${target_step} não permitida para perfil "${userRole}"` 
+    });
+  }
+
+  db.prepare("UPDATE processes SET current_step = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    .run(target_step, processId);
+
+  db.prepare(`
+    INSERT INTO workflow_history (process_id, step_from, step_to, action, notes, performed_by)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(processId, currentStep, target_step, `transition_${currentStep}_to_${target_step}`, notes || null, userId);
+
+  // Auto-update classification when reaching step 6
+  if (target_step === 6) {
+    const scores = db.prepare("SELECT score, weight FROM process_scores WHERE process_id = ?").all(processId);
+    let totalWeighted = 0, totalWeight = 0;
+    scores.forEach((s: any) => { totalWeighted += s.score * s.weight; totalWeight += s.weight; });
+    const percentage = totalWeight > 0 ? (totalWeighted / totalWeight) * 10 : 0;
+    const classification = percentage >= 90 ? "Aprovado" : percentage >= 75 ? "Aprovado com observação" : percentage >= 60 ? "Condicionado" : "Reprovado";
+    db.prepare("UPDATE processes SET result_percentage = ?, classification = ? WHERE id = ?").run(percentage, classification, processId);
+  }
+
+  logAction(userId, process.entity_id, "WORKFLOW_TRANSITION", `Step ${currentStep} → ${target_step}`);
+   res.json({ message: "Workflow actualizado", step: target_step });
+});
+
+// GET /api/workflow/steps - get available steps
+app.get("/api/workflow/steps", authenticateToken, (req, res) => {
+  res.json(WORKFLOW_STEPS);
 });
 
 app.put("/api/processes/:id/score", authenticateToken, (req, res) => {
@@ -796,7 +1048,7 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
     totals: {
       suppliers: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier'${dateFilter}`).get(),
       clients: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Client'${dateFilter}`).get(),
-      processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status IN ('Em análise', 'Em aprovação', 'Submetido')${dateFilter}${entityFilter.includes('Supplier') ? entityFilter : ''}${entityFilter.includes('Client') ? entityFilter : ''}`).get(),
+       processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status IN ('Em análise', 'Pendente', 'Em aprovação', 'Submetido')${dateFilter}${entityFilter.includes('Supplier') ? entityFilter : ''}${entityFilter.includes('Client') ? entityFilter : ''}`).get(),
       approved: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Aprovado'${dateFilter}${entityFilter}`).get(),
       rejected: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Reprovado'${dateFilter}${entityFilter}`).get(),
       eval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Avaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get(),
@@ -830,8 +1082,279 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
 });
 
 // ============================================================
-// SERVER START
+// REPORTS - SUPPLIERS
 // ============================================================
+app.get("/api/reports/suppliers/:type", authenticateToken, (req: any, res) => {
+  const { type } = req.params;
+  let query: string;
+  let params: any[] = [];
+
+  switch (type) {
+    case "approved":
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Supplier' AND e.relationship_status = 'Homologado' ORDER BY e.name`;
+      break;
+    case "rejected":
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Supplier' AND e.relationship_status = 'Desqualificado' ORDER BY e.name`;
+      break;
+    case "by-sector":
+      query = `SELECT sector, COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND sector IS NOT NULL AND sector != '' GROUP BY sector ORDER BY count DESC`;
+      break;
+    case "by-criticality":
+      query = `SELECT criticality, COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND criticality IS NOT NULL AND criticality != '' GROUP BY criticality ORDER BY count DESC`;
+      break;
+    case "expiring":
+      query = `
+        SELECT DISTINCT e.*, p.validity_date, p.status as process_status
+        FROM entities e
+        JOIN processes p ON e.id = p.entity_id
+        WHERE e.entity_type = 'Supplier'
+          AND p.status = 'Aprovado'
+          AND p.validity_date IS NOT NULL
+          AND date(p.validity_date) <= date('now', '+30 days')
+          AND date(p.validity_date) >= date('now')
+        ORDER BY p.validity_date ASC
+      `;
+      break;
+    case "performance-ranking":
+      query = `
+        SELECT e.id, e.name, e.code, AVG(ev.percentage) as avg_score
+        FROM entities e
+        JOIN evaluations ev ON e.id = ev.entity_id
+        WHERE e.entity_type = 'Supplier' AND ev.type = 'Performance'
+        GROUP BY e.id
+        ORDER BY avg_score DESC
+        LIMIT 10
+      `;
+      break;
+    case "satisfaction-ranking":
+      query = `
+        SELECT e.id, e.name, e.code, AVG(ev.percentage) as avg_score
+        FROM entities e
+        JOIN evaluations ev ON e.id = ev.entity_id
+        WHERE e.entity_type = 'Supplier' AND ev.type = 'Satisfaction'
+        GROUP BY e.id
+        ORDER BY avg_score DESC
+        LIMIT 10
+      `;
+      break;
+    case "suspended":
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Supplier' AND (e.status = 'Suspenso' OR e.relationship_status = 'Suspenso') ORDER BY e.name`;
+      break;
+    default:
+      return res.status(400).json({ message: "Tipo de relatório inválido para fornecedores." });
+  }
+
+  const result = db.prepare(query).all(...params);
+  res.json(result);
+});
+
+// ============================================================
+// REPORTS - CLIENTS
+// ============================================================
+app.get("/api/reports/clients/:type", authenticateToken, (req: any, res) => {
+  const { type } = req.params;
+  let query: string;
+
+  switch (type) {
+    case "approved":
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Client' AND e.relationship_status = 'Homologado' ORDER BY e.name`;
+      break;
+    case "by-risk":
+      query = `SELECT final_risk_rating as risk, COUNT(*) as count FROM entities WHERE entity_type = 'Client' AND final_risk_rating IS NOT NULL AND final_risk_rating != '' GROUP BY final_risk_rating ORDER BY count DESC`;
+      break;
+    case "by-segment":
+      query = `SELECT segment, COUNT(*) as count FROM entities WHERE entity_type = 'Client' AND segment IS NOT NULL AND segment != '' GROUP BY segment ORDER BY count DESC`;
+      break;
+    case "performance":
+      query = `
+        SELECT e.id, e.name, e.code, AVG(ev.percentage) as avg_score
+        FROM entities e
+        JOIN evaluations ev ON e.id = ev.entity_id
+        WHERE e.entity_type = 'Client' AND ev.type = 'Performance'
+        GROUP BY e.id
+        ORDER BY avg_score DESC
+        LIMIT 10
+      `;
+      break;
+    case "satisfaction":
+      query = `
+        SELECT e.id, e.name, e.code, AVG(ev.percentage) as avg_score
+        FROM entities e
+        JOIN evaluations ev ON e.id = ev.entity_id
+        WHERE e.entity_type = 'Client' AND ev.type = 'Satisfaction'
+        GROUP BY e.id
+        ORDER BY avg_score DESC
+        LIMIT 10
+      `;
+      break;
+    case "pending-reevaluation":
+      query = `
+        SELECT DISTINCT e.*, p.next_reevaluation_date
+        FROM entities e
+        JOIN processes p ON e.id = p.entity_id
+        WHERE e.entity_type = 'Client'
+          AND p.type = 'Reavaliação'
+          AND p.status NOT IN ('Encerrado', 'Reprovado')
+          AND (p.next_reevaluation_date IS NULL OR p.next_reevaluation_date >= date('now'))
+      `;
+      break;
+    case "restricted":
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Client' AND e.relationship_status = 'Restrito' ORDER BY e.name`;
+      break;
+    default:
+      return res.status(400).json({ message: "Tipo de relatório inválido para clientes." });
+  }
+
+  const result = db.prepare(query).all();
+  res.json(result);
+});
+
+// ============================================================
+// REPORTS - MANAGEMENT
+// ============================================================
+app.get("/api/reports/management/:type", authenticateToken, (req: any, res) => {
+  const { type } = req.params;
+
+  switch (type) {
+      case "avg-approval-time": {
+        const rows = db.prepare(`
+          SELECT 
+            u.name as responsible,
+            COUNT(p.id) as approved_count,
+            AVG(julianday(p.decision_date) - julianday(p.created_at)) as avg_days
+          FROM processes p
+          LEFT JOIN users u ON p.opener_id = u.id
+          WHERE p.status IN ('Aprovado', 'Reprovado')
+            AND p.decision_date IS NOT NULL
+          GROUP BY p.opener_id, u.name
+          ORDER BY avg_days DESC
+        `).all() as any[];
+        const result = rows.map((row: any) => ({
+          responsible: row.responsible || "Sem responsável",
+          approved_count: row.approved_count,
+          avg_days: Math.round((row.avg_days || 0) * 10) / 10
+        }));
+        res.json(result);
+        break;
+      }
+      case "approval-rate": {
+        const rows = db.prepare(`
+          SELECT 
+            u.name as responsible,
+            COUNT(p.id) as total,
+            SUM(CASE WHEN p.status = 'Aprovado' THEN 1 ELSE 0 END) as approved,
+            AVG(julianday(p.decision_date) - julianday(p.created_at)) as avg_days
+          FROM processes p
+          LEFT JOIN users u ON p.opener_id = u.id
+          GROUP BY p.opener_id, u.name
+          ORDER BY approved DESC
+        `).all() as any[];
+        const result = rows.map((row: any) => ({
+          responsible: row.responsible || "Sem responsável",
+          total: row.total || 0,
+          approved: row.approved || 0,
+          approval_rate: row.total > 0 ? Math.round((row.approved / row.total) * 1000) / 10 : 0,
+          avg_days: Math.round((row.avg_days || 0) * 10) / 10
+        }));
+        res.json(result);
+        break;
+      }
+      case "rejection-rate": {
+        const rows = db.prepare(`
+          SELECT 
+            u.name as responsible,
+            COUNT(p.id) as total,
+            SUM(CASE WHEN p.status = 'Reprovado' THEN 1 ELSE 0 END) as rejected,
+            AVG(CASE WHEN p.status = 'Reprovado' THEN julianday(p.decision_date) - julianday(p.created_at) END) as avg_days,
+            (SELECT COUNT(*) FROM processes pr WHERE pr.opener_id = u.id AND pr.status = 'Reprovado' AND pr.justification IS NOT NULL AND pr.justification != '' LIMIT 1) as has_reason
+          FROM processes p
+          LEFT JOIN users u ON p.opener_id = u.id
+          GROUP BY p.opener_id, u.name
+          ORDER BY rejected DESC
+        `).all() as any[];
+        const result = rows.map((row: any) => ({
+          responsible: row.responsible || "Sem responsável",
+          total: row.total || 0,
+          rejected: row.rejected || 0,
+          rejection_rate: row.total > 0 ? Math.round((row.rejected / row.total) * 1000) / 10 : 0,
+          avg_days: Math.round((row.avg_days || 0) * 10) / 10,
+          common_reason: row.has_reason ? "Ver justificativa" : "N/A"
+        }));
+        res.json(result);
+        break;
+      }
+     case "satisfaction-trend": {
+       const rows = db.prepare(`
+         SELECT strftime('%Y-%m', evaluation_date) as period, AVG(percentage) as avg_score
+         FROM evaluations
+         WHERE type = 'Satisfaction'
+         GROUP BY period
+         ORDER BY period DESC
+         LIMIT 12
+       `).all() as any[];
+       res.json(rows);
+       break;
+     }
+     case "performance-trend": {
+       const rows = db.prepare(`
+         SELECT strftime('%Y-%m', evaluation_date) as period, AVG(percentage) as avg_score
+         FROM evaluations
+         WHERE type = 'Performance'
+         GROUP BY period
+         ORDER BY period DESC
+         LIMIT 12
+       `).all() as any[];
+       res.json(rows);
+       break;
+     }
+     case "open-action-plans": {
+       const rows = db.prepare(`
+         SELECT 
+           ev.id,
+           ev.entity_id,
+           e.name as entity_name,
+           ev.action_plan as action_description,
+           ev.action_plan_deadline as deadline,
+           ev.evaluation_date,
+           CASE 
+             WHEN ev.action_plan_deadline < date('now') THEN 'Atrasado'
+             ELSE 'Em andamento'
+           END as status
+         FROM evaluations ev
+         JOIN entities e ON ev.entity_id = e.id
+         WHERE ev.action_plan IS NOT NULL AND ev.action_plan != ''
+           AND (ev.action_plan_deadline IS NULL OR ev.action_plan_deadline >= date('now'))
+       `).all() as any[];
+       res.json(rows);
+       break;
+     }
+     case "processes-by-responsible": {
+       const rows = db.prepare(`
+         SELECT 
+           u.name as responsible,
+           COUNT(p.id) as total,
+           SUM(CASE WHEN p.status = 'Aprovado' THEN 1 ELSE 0 END) as approved,
+           SUM(CASE WHEN p.status = 'Reprovado' THEN 1 ELSE 0 END) as rejected,
+           SUM(CASE WHEN p.status IN ('Rascunho', 'Pendente', 'Em análise', 'Submetido', 'Em aprovação') THEN 1 ELSE 0 END) as pending
+         FROM processes p
+         LEFT JOIN users u ON p.opener_id = u.id
+         GROUP BY p.opener_id, u.name
+         ORDER BY total DESC
+       `).all() as any[];
+       const result = rows.map((row: any) => ({
+         responsible: row.responsible || "Sem responsável",
+         total: row.total || 0,
+         approved: row.approved || 0,
+         rejected: row.rejected || 0,
+         pending: row.pending || 0
+       }));
+       res.json(result);
+       break;
+     }
+    default:
+      res.status(400).json({ message: "Tipo de relatório de gestão inválido." });
+  }
+});
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -852,3 +1375,4 @@ async function startServer() {
 }
 
 startServer();
+

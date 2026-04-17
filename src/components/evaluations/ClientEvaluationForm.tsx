@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Save, FileText, User, Package, Scale, TrendingUp, Star } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
@@ -26,19 +26,24 @@ const FormField = ({ label, name, value, onChange, type = "text", options = null
 
 export default function ClientEvaluationForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showClientSelect, setShowClientSelect] = useState(false);
-
+  
+  // Parse query params
+  const evalType = searchParams.get('type') === 'Satisfaction' ? 'Satisfaction' : 'Performance';
+  
   const [formData, setFormData] = useState({
     evaluation_number: "",
-    evaluation_type: "Performance do cliente",
+    evaluation_type: evalType === 'Satisfaction' ? 'Satisfação do cliente' : 'Performance do cliente',
     evaluation_date: new Date().toISOString().split('T')[0],
     period_start: "",
     period_end: "",
-    evaluator_name: ""
+    evaluator_name: "",
+    evaluation_type_detail: evalType
   });
 
   const [criteria, setCriteria] = useState([
@@ -142,12 +147,12 @@ export default function ClientEvaluationForm() {
         body: JSON.stringify({ ...formData, client_id: selectedClient.id, criteria, result: resultData })
       });
 
-      if (res.ok) {
-        addToast("Avaliação salva com sucesso!", "success");
-        navigate("/evaluations");
-      } else {
-        addToast("Erro ao salvar avaliação.", "error");
-      }
+        if (res.ok) {
+          addToast("Avaliação salva com sucesso!", "success");
+          navigate("/avaliacoes");
+        } else {
+          addToast("Erro ao salvar avaliação.", "error");
+        }
     } catch {
       addToast("Erro de conexão.", "error");
     }
@@ -158,12 +163,18 @@ export default function ClientEvaluationForm() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/evaluations")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+          <button onClick={() => navigate("/avaliacoes")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Avaliação de Clientes</h2>
-            <p className="text-sm text-gray-500 mt-1">Avalie a performance ou satisfação dos clientes.</p>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {evalType === 'Satisfaction' ? 'Pesquisa de Satisfação - Cliente' : 'Avaliação de Performance - Cliente'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {evalType === 'Satisfaction'
+                ? 'Avalie o nível de satisfação do cliente com nossos produtos e serviços.'
+                : 'Avalie a performance do cliente conforme critérios estabelecidos.'}
+            </p>
           </div>
         </div>
         <button
@@ -279,7 +290,9 @@ export default function ClientEvaluationForm() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <Scale size={22} className="text-amber-600" />
-            <h3 className="text-lg font-bold text-gray-900">Avaliação de Performance do Cliente</h3>
+            <h3 className="text-lg font-bold text-gray-900">
+              {evalType === 'Satisfaction' ? 'Pesquisa de Satisfação' : 'Avaliação de Performance'}
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

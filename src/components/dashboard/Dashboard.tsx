@@ -77,7 +77,7 @@ export default function Dashboard() {
   const buildFilterParams = () => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.append(key, value);
+      if (value) params.append(key, value.toString());
     });
     return params.toString();
   };
@@ -181,43 +181,47 @@ export default function Dashboard() {
                 className="input text-xs w-full"
               >
                 <option value="">Todos</option>
-                <option value="Approval">Aprovação</option>
-                <option value="Evaluation">Avaliação</option>
-                <option value="Reevaluation">Reavaliação</option>
+                <option value="Aprovação">Aprovação</option>
+                <option value="Avaliação">Avaliação</option>
+                <option value="Reavaliação">Reavaliação</option>
               </select>
             </div>
 
             {/* Estado */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</label>
-              <select
-                value={filters.processStatus}
-                onChange={(e) => handleFilterChange("processStatus", e.target.value)}
-                className="input text-xs w-full"
-              >
-                <option value="">Todos</option>
-                <option value="Draft">Rascunho</option>
-                <option value="In Analysis">Em Análise</option>
-                <option value="In Approval">Em Aprovação</option>
-                <option value="Approved">Aprovado</option>
-                <option value="Rejected">Rejeitado</option>
-              </select>
+                <select
+                  value={filters.processStatus}
+                  onChange={(e) => handleFilterChange("processStatus", e.target.value)}
+                  className="input text-xs w-full"
+                >
+                  <option value="">Todos</option>
+                  <option value="Rascunho">Rascunho</option>
+                  <option value="Em análise">Em Análise</option>
+                  <option value="Pendente">Pendente</option>
+                  <option value="Submetido">Submetido</option>
+                  <option value="Em aprovação">Em Aprovação</option>
+                  <option value="Aprovado">Aprovado</option>
+                  <option value="Aprovado com restrições">Aprovado c/ Restrições</option>
+                  <option value="Reprovado">Reprovar</option>
+                  <option value="Encerrado">Encerrado</option>
+                </select>
             </div>
 
-            {/* Risco */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Risco</label>
-              <select
-                value={filters.riskRating}
-                onChange={(e) => handleFilterChange("riskRating", e.target.value)}
-                className="input text-xs w-full"
-              >
-                <option value="">Todos</option>
-                <option value="Low">Baixo</option>
-                <option value="Medium">Médio</option>
-                <option value="High">Alto</option>
-              </select>
-            </div>
+             {/* Risco */}
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Risco</label>
+               <select
+                 value={filters.riskRating}
+                 onChange={(e) => handleFilterChange("riskRating", e.target.value)}
+                 className="input text-xs w-full"
+               >
+                 <option value="">Todos</option>
+                 <option value="Baixo">Baixo</option>
+                 <option value="Médio">Médio</option>
+                 <option value="Alto">Alto</option>
+               </select>
+             </div>
 
             {/* Sector */}
             <div className="space-y-1.5">
@@ -473,11 +477,11 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div className="lg:col-span-2 bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Fluxo de Processos</h3>
-          <div className="h-40 sm:h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[...stats.monthly_evolution].reverse()}>
+         <div className="lg:col-span-2 bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+           <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Fluxo de Processos</h3>
+           <div className="h-40 sm:h-52">
+             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+               <BarChart data={[...stats.monthly_evolution].reverse()}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
@@ -491,11 +495,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Status de Processos</h3>
-          <div className="h-28 sm:h-36">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+         <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+           <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Status de Processos</h3>
+           <div className="h-28 sm:h-36">
+             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%" cy="50%"

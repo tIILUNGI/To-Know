@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Save, ArrowLeft, AlertCircle } from "lucide-react";
 
@@ -84,11 +84,11 @@ export default function EvaluationForm() {
 
   const questions = getQuestions();
 
-  const setScore = (id: number, score: number) => {
+  const setScore = (id: string | number, score: number) => {
     setResponses(prev => ({ ...prev, [id]: score }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const formattedResponses = questions.map(q => ({
       criterion_name: q.id,

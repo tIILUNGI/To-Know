@@ -115,12 +115,12 @@ export default function ReevaluationForm() {
         body: JSON.stringify({ ...formData, supplier_id: selectedSupplier.id, criteria: selectedCriteria })
       });
 
-      if (res.ok) {
-        addToast("Reavaliação salva com sucesso!", "success");
-        navigate("/evaluations");
-      } else {
-        addToast("Erro ao salvar reavaliação.", "error");
-      }
+       if (res.ok) {
+          addToast("Reavaliação salva com sucesso!", "success");
+          navigate("/avaliacoes");
+        } else {
+          addToast("Erro ao salvar reavaliação.", "error");
+        }
     } catch {
       addToast("Erro de conexão.", "error");
     }
@@ -138,7 +138,7 @@ export default function ReevaluationForm() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/evaluations")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+          <button onClick={() => navigate("/avaliacoes")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
