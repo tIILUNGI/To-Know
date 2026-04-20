@@ -98,15 +98,7 @@ export default function Login() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
-              <span className="text-sm">Gestão de Risco</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
               <span className="text-sm">Avaliação KYC/KYS</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
-              <span className="text-sm">Auditoria Completa</span>
             </div>
           </div>
         </div>
