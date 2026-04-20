@@ -115,7 +115,7 @@ export default function ReportsView() {
       case "by-sector":
         return (
           <div className="space-y-3">
-            <h3 className="text-sm font-bold text-gray-900">Fornecedores por Setor</h3>
+            <h3 className="text-sm font-bold text-gray-900">Fornecedores por Sector</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {data?.map((s: any) => (
                 <div key={s.sector} className="p-4 border border-gray-100 rounded-xl">
@@ -151,7 +151,7 @@ export default function ReportsView() {
                   <thead>
                     <tr className="bg-gray-50 text-[10px] font-semibold text-gray-500 uppercase">
                       <th className="px-4 py-2.5">Entidade</th>
-                      <th className="px-4 py-2.5 hidden md:table-cell">Setor</th>
+                      <th className="px-4 py-2.5 hidden md:table-cell">Sector</th>
                       <th className="px-4 py-2.5">Última Avaliação</th>
                       <th className="px-4 py-2.5">Expira em</th>
                     </tr>
@@ -608,7 +608,7 @@ export default function ReportsView() {
   const supplierOptions: { value: SupplierReportType; label: string }[] = [
     { value: "approved", label: "Aprovados" },
     { value: "rejected", label: "Reprovados" },
-    { value: "by-sector", label: "Por Setor" },
+    { value: "by-sector", label: "Por Sector" },
     { value: "by-criticality", label: "Por Criticidade" },
     { value: "expiring", label: "Avaliações a Expirar" },
     { value: "performance-ranking", label: "Ranking Performance" },

@@ -38,6 +38,7 @@ export default function ClientEvaluationForm() {
   
   const [formData, setFormData] = useState({
     evaluation_number: "",
+    name: "",
     evaluation_type: evalType === 'Satisfaction' ? 'Satisfação do cliente' : 'Performance do cliente',
     evaluation_date: new Date().toISOString().split('T')[0],
     period_start: "",
@@ -202,6 +203,13 @@ export default function ClientEvaluationForm() {
               value={formData.evaluation_number} 
               onChange={handleChange} 
               placeholder="Ex: AVL-CLI-001" 
+            />
+            <FormField 
+              label="Nome da Avaliação" 
+              name="name" 
+              value={formData.name} 
+              onChange={handleChange} 
+              placeholder="Ex: Avaliação anual de clientes 2024" 
             />
             <FormField 
               label="Tipo de Avaliação" 

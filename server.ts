@@ -644,7 +644,7 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
   const error = validateRequired(req.body, ["entity_id", "type"]);
   if (error) return res.status(400).json({ message: error });
 
-  const { entity_id, type, priority, area, justification } = req.body;
+  const { entity_id, type, priority, area, justification, criteria_ids } = req.body;
   const process_number = `PROC-${Date.now()}`;
 
   const result = db.prepare(`
@@ -654,16 +654,34 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
 
   const processId = result.lastInsertRowid;
 
-  // Auto-populate criteria
-  const entity = db.prepare("SELECT entity_type FROM entities WHERE id = ?").get(entity_id) as any;
-  if (entity) {
-    const criteria = db.prepare("SELECT id FROM criteria WHERE (entity_type = ? OR entity_type IS NULL) AND process_type = ? AND is_active = 1").all(entity.entity_type, type);
+  // Use criteria_ids from request, or auto-populate if not provided
+  let criteriaToUse: any[] = [];
+  
+  if (criteria_ids && criteria_ids.length > 0) {
+    // Use selected criteria from request
+    const getCriteria = db.prepare("SELECT id FROM criteria WHERE id = ?");
+    for (const cid of criteria_ids) {
+      const c = getCriteria.get(cid);
+      if (c) criteriaToUse.push(c);
+    }
+  } else {
+    // Auto-populate criteria based on entity type
+    const entity = db.prepare("SELECT entity_type FROM entities WHERE id = ?").get(entity_id) as any;
+    if (entity) {
+      criteriaToUse = db.prepare("SELECT id FROM criteria WHERE (entity_type = ? OR entity_type IS NULL) AND process_type = ? AND is_active = 1").all(entity.entity_type, type);
+    }
+  }
+  
+  // Insert criteria
+  if (criteriaToUse.length > 0) {
     const insertPC = db.prepare("INSERT INTO process_criteria (process_id, criteria_id) VALUES (?, ?)");
-    for (const c of criteria as any[]) {
+    for (const c of criteriaToUse as any[]) {
       insertPC.run(processId, c.id);
     }
-    }
-  });
+  }
+
+  res.status(201).json({ id: processId });
+});
 
 // ============================================================
 // PROCESSES

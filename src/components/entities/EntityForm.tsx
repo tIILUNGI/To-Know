@@ -184,15 +184,15 @@ export default function EntityForm() {
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
                 <FormField label="Código" name="code" value={formData.code} onChange={handleChange} placeholder="GER-001" error={undefined} />
                 <div className="lg:col-span-2">
-                  <FormField label="Razão Social / Nome Completo" name="name" value={formData.name} onChange={handleChange} required={true} error={errors.name} />
+                  <FormField label="Denominação Social" name="name" value={formData.name} onChange={handleChange} required={true} error={errors.name} />
                 </div>
-                <FormField label="Nome Comercial" name="trade_name" value={formData.trade_name} onChange={handleChange} error={undefined} />
+                <FormField label="Objecto Comercial" name="trade_name" value={formData.trade_name} onChange={handleChange} error={undefined} />
                 <FormField label="Tipo de Entidade" name="sub_type" value={formData.sub_type} onChange={handleChange} options={[
                   { value: 'Company', label: 'Empresa' },
                   { value: 'Individual', label: 'Individual' },
                   { value: 'Public', label: 'Pública/Estado' }
                 ]} required={true} error={errors.sub_type} />
-                <FormField label="NIF / Identificação Fiscal" name="tax_id" value={formData.tax_id} onChange={handleChange} required={true} error={errors.tax_id} />
+                <FormField label="NIF" name="tax_id" value={formData.tax_id} onChange={handleChange} required={true} error={errors.tax_id} />
                 <FormField label="Registo Comercial / Alvará" name="registration_number" value={formData.registration_number} onChange={handleChange} error={undefined} />
                 <FormField label="Estado" name="status" value={formData.status} onChange={handleChange} options={[
                   { value: 'Ativo', label: 'Ativo' },

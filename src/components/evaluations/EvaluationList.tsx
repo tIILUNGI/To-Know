@@ -194,13 +194,14 @@ export default function EvaluationList() {
             <thead>
               <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                 <th className="px-3 sm:px-4 py-2.5">Data</th>
+                <th className="px-3 sm:px-4 py-2.5">Código</th>
+                <th className="px-3 sm:px-4 py-2.5">Nome da Avaliação</th>
                 <th className="px-3 sm:px-4 py-2.5">Entidade</th>
-                <th className="px-3 sm:px-4 py-2.5">Avaliação</th>
-                <th className="px-3 sm:px-4 py-2.5 hidden sm:table-cell">Tipo</th>
-                <th className="px-3 sm:px-4 py-2.5 hidden md:table-cell">Periodicidade</th>
+                <th className="px-3 sm:px-4 py-2.5">Tipo</th>
+                <th className="px-3 sm:px-4 py-2.5 hidden sm:table-cell">Periodicidade</th>
                 <th className="px-3 sm:px-4 py-2.5">Score</th>
                 <th className="px-3 sm:px-4 py-2.5">Classificação</th>
-                <th className="px-3 sm:px-4 py-2.5 text-right">Ações</th>
+                <th className="px-3 sm:px-4 py-2.5 text-right">Acções</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -223,16 +224,15 @@ export default function EvaluationList() {
                       {new Date(ev.created_at).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-900">
+                      {ev.evaluation_number || "-"}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-900">
+                      {ev.name || "-"}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-900">
                       {ev.entity_name}
                     </td>
                     <td className="px-3 sm:px-4 py-2.5">
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                        ev.evaluation_type === "Reavaliação" ? "bg-amber-100 text-amber-700" : "bg-blue-50 text-blue-600"
-                      }`}>
-                        {ev.evaluation_type || "Nova"}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5 hidden sm:table-cell">
                       <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
                         ev.type === "Performance" ? "bg-emerald-50 text-emerald-600" : "bg-indigo-50 text-indigo-600"
                       }`}>

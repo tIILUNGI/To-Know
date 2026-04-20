@@ -38,6 +38,7 @@ export default function EvaluationFormNew() {
   
   const [formData, setFormData] = useState({
     evaluation_number: "",
+    name: "",
     evaluation_type: evalType === 'Satisfaction' ? 'Satisfação do fornecedor' : 'Performance do fornecedor',
     periodicity: "Trimestral",
     evaluation_date: new Date().toISOString().split('T')[0],
@@ -231,6 +232,13 @@ export default function EvaluationFormNew() {
               value={formData.evaluation_number} 
               onChange={handleChange} 
               placeholder="Ex: AVL-2024-001" 
+            />
+            <FormField 
+              label="Nome da Avaliação" 
+              name="name" 
+              value={formData.name} 
+              onChange={handleChange} 
+              placeholder="Ex: Avaliação anual de fornecedores 2024" 
             />
             <FormField 
               label="Tipo de Avaliação" 

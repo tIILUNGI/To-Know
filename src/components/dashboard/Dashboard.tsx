@@ -278,7 +278,7 @@ export default function Dashboard() {
             <div>
               <p className="text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider">Fornecedores</p>
               <p className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-300 mt-1">{stats.totals.suppliers.count}</p>
-              <p className="text-[10px] text-blue-400 dark:text-blue-500 mt-1">cadastrados</p>
+              <p className="text-[10px] text-blue-400 dark:text-blue-500 mt-1">Cadastrados</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-200">
               <Building2 size={18} strokeWidth={2} className="text-white" />
@@ -291,7 +291,7 @@ export default function Dashboard() {
             <div>
               <p className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">Clientes</p>
               <p className="text-2xl sm:text-3xl font-black text-indigo-700 dark:text-indigo-300 mt-1">{stats.totals.clients.count}</p>
-              <p className="text-[10px] text-indigo-400 dark:text-indigo-500 mt-1">cadastrados</p>
+              <p className="text-[10px] text-indigo-400 dark:text-indigo-500 mt-1">Cadastrados</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-indigo-600 rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-200">
               <Briefcase size={18} strokeWidth={2} className="text-white" />
@@ -304,7 +304,7 @@ export default function Dashboard() {
             <div>
               <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Em Aprovação</p>
               <p className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300 mt-1">{stats.totals.processes_pending.count}</p>
-              <p className="text-[10px] text-amber-500 dark:text-amber-500 mt-1">processos</p>
+              <p className="text-[10px] text-amber-500 dark:text-amber-500 mt-1">Processos</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-amber-500 rounded-xl sm:rounded-2xl shadow-lg shadow-amber-200">
               <Clock size={18} strokeWidth={2} className="text-white" />
@@ -317,7 +317,7 @@ export default function Dashboard() {
             <div>
               <p className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Taxa Aprovação</p>
               <p className="text-2xl sm:text-3xl font-black text-green-700 dark:text-green-300 mt-1">{approvalRate}%</p>
-              <p className="text-[10px] text-green-500 dark:text-green-500 mt-1">aprovados/rejeitados</p>
+              <p className="text-[10px] text-green-500 dark:text-green-500 mt-1">Aprovados/Rejeitados</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-green-600 rounded-xl sm:rounded-2xl shadow-lg shadow-green-200">
               <CheckCircle size={18} strokeWidth={2} className="text-white" />
@@ -434,7 +434,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Satisfação de Clientes</h3>
-              <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-1">Índice médio de satisfação</p>
+              <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-1">Índice médio de Satisfação</p>
             </div>
             <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
               <svg className="w-full h-full -rotate-90">
@@ -456,7 +456,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Performance de Fornecedores</h3>
-              <p className="text-[10px] text-emerald-500 dark:text-emerald-400 mt-1">Índice médio de performance</p>
+              <p className="text-[10px] text-emerald-500 dark:text-emerald-400 mt-1">Índice médio de Performance</p>
             </div>
             <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
               <svg className="w-full h-full -rotate-90">

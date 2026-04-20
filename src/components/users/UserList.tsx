@@ -121,7 +121,7 @@ export default function UserList() {
                 <th className="px-3 sm:px-4 py-2.5 hidden sm:table-cell">Username</th>
                 <th className="px-3 sm:px-4 py-2.5">Email</th>
                 <th className="px-3 sm:px-4 py-2.5">Papel</th>
-                <th className="px-3 sm:px-4 py-2.5 text-right">Ações</th>
+                <th className="px-3 sm:px-4 py-2.5 text-right">Acções</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">

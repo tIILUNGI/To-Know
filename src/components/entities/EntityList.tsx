@@ -115,7 +115,7 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
               onChange={(e) => setFilterSector(e.target.value)}
               className="input text-xs min-w-[100px]"
             >
-              <option value="">Setor</option>
+              <option value="">Sector</option>
               {sectors.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
@@ -138,12 +138,12 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
             <thead>
                 <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                   <th className="px-3 sm:px-4 py-2.5">Entidade</th>
-                  <th className="px-3 sm:px-4 py-2.5 hidden md:table-cell">Setor</th>
+                  <th className="px-3 sm:px-4 py-2.5 hidden md:table-cell">Sector</th>
                   <th className="px-3 sm:px-4 py-2.5 hidden lg:table-cell">NIF</th>
                   <th className="px-3 sm:px-4 py-2.5">Estado</th>
                   <th className="px-3 sm:px-4 py-2.5">Relacionamento</th>
                   <th className="px-3 sm:px-4 py-2.5">Risco</th>
-                  <th className="px-3 sm:px-4 py-2.5 text-right">Ações</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Acções</th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">

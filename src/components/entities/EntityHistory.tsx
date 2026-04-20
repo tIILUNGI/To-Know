@@ -65,7 +65,7 @@ export default function EntityHistory() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
           <div>
-            <span className="text-gray-500 text-xs uppercase">Razão Social</span>
+            <span className="text-gray-500 text-xs uppercase">Denominação Social</span>
             <p className="font-semibold text-gray-900">{entity.name}</p>
           </div>
           <div>

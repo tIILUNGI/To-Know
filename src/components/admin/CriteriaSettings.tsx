@@ -249,7 +249,7 @@ export default function CriteriaSettings() {
                 <th className="px-2 sm:px-4 py-2.5 text-center">Peso/Máx</th>
                 <th className="px-2 sm:px-4 py-2.5 text-center">Min/Max</th>
                 <th className="px-2 sm:px-4 py-2.5 text-center">Obs.</th>
-                <th className="px-2 sm:px-4 py-2.5 text-right">Ações</th>
+                <th className="px-2 sm:px-4 py-2.5 text-right">Acções</th>
               </tr>
             </thead>
           <tbody className="divide-y divide-gray-50">
