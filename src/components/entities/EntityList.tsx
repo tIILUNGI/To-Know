@@ -79,15 +79,12 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-lg sm:text-xl font-bold text-gray-900">
-            {type === "Supplier" ? "Fornecedores" : "Clientes"}
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-            Gerencie sua base de {type === "Supplier" ? "parceiros de suprimentos" : "clientes comerciais"}.
-          </p>
-        </div>
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+         <div>
+           <h1 className="text-lg sm:text-xl font-bold text-gray-900">
+             {type === "Supplier" ? "Fornecedores" : "Clientes"}
+           </h1>
+         </div>
         <Link
           to="/entities/new"
           state={{ type }}

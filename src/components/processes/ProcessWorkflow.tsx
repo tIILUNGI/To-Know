@@ -103,9 +103,6 @@ export default function ProcessWorkflow() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900">Processos</h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-            Acompanhe o fluxo de aprovação e avaliação de fornecedores e clientes.
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link

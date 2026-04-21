@@ -34,52 +34,40 @@ export default function ApprovalForm() {
   const [showSupplierSelect, setShowSupplierSelect] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
-  const [criteria, setCriteria] = useState<any[]>([
-    { id: 1, name: "Regularidade legal", description: "Verificação de documentos legais e licenças", weight: 10, max_score: 100, score: 0, evidence: "" },
-    { id: 2, name: "Regularidade fiscal", description: "Verificação de situação fiscal e contribuições", weight: 10, max_score: 100, score: 0, evidence: "" },
-    { id: 3, name: "Capacidade técnica", description: "Avaliação da capacidade técnica e recursos", weight: 10, max_score: 100, score: 0, evidence: "" },
-    { id: 4, name: "Capacidade financeira", description: "Análise da saúde financeira", weight: 10, max_score: 100, score: 0, evidence: "" },
-    { id: 5, name: "Histórico reputacional", description: "Verificação de histórico e reputação no mercado", weight: 8, max_score: 100, score: 0, evidence: "" },
-    { id: 6, name: "Qualidade do produto/serviço", description: "Avaliação da qualidade", weight: 10, max_score: 100, score: 0, evidence: "" },
-    { id: 7, name: "Prazos de entrega", description: "Histórico de cumprimento de prazos", weight: 8, max_score: 100, score: 0, evidence: "" },
-    { id: 8, name: "Condições comerciais", description: "Avaliação das condições comerciais oferecidas", weight: 8, max_score: 100, score: 0, evidence: "" },
-    { id: 9, name: "Segurança e conformidade", description: "Verificação de standards de segurança", weight: 8, max_score: 100, score: 0, evidence: "" },
-    { id: 10, name: "Impacto na operação", description: "Impacto potencial na operação", weight: 6, max_score: 100, score: 0, evidence: "" },
-    { id: 11, name: "Dependência crítica", description: "Nível de dependência crítica", weight: 6, max_score: 100, score: 0, evidence: "" },
-    { id: 12, name: "Referências do mercado", description: "Referências de outros clientes", weight: 6, max_score: 100, score: 0, evidence: "" }
-  ]);
-  const [resultData, setResultData] = useState({
-    total_score: 0,
-    final_percentage: 0,
-    compliance_level: "",
-    final_classification: "",
-    validity_date: "",
-    next_evaluation_date: "",
-    conditions: "",
-    final_comments: "",
-    approver_name: "",
-    decision_date: new Date().toISOString().split('T')[0]
-  });
-  const [formData, setFormData] = useState({
-    process_reference: "",
-    approval_type: "",
-    approval_date: new Date().toISOString().split('T')[0],
-    responsible_name: "",
-    responsible_position: "",
-    responsible_mobile: "",
-    responsible_email: "",
-    approval_reason: "",
-    operational_necessity: ""
-  });
+  const [allCriteria, setAllCriteria] = useState<any[]>([]);
+  const [selectedCriteriaIds, setSelectedCriteriaIds] = useState<number[]>([]);
+  const [showCriteriaSelect, setShowCriteriaSelect] = useState(false);
+   const [resultData, setResultData] = useState({
+     total_score: 0,
+     final_percentage: 0,
+     compliance_level: "",
+     final_classification: "",
+     validity_date: "",
+     next_evaluation_date: "",
+     conditions: "",
+     final_comments: "",
+     approver_name: "",
+     decision_date: new Date().toISOString().split('T')[0]
+   });
 
-  useEffect(() => {
-    fetch("/api/entities?type=Supplier", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then(res => res.json())
-      .then(data => setSuppliers(data))
-      .catch(() => {});
-  }, []);
+   useEffect(() => {
+     fetch("/api/entities?type=Supplier", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => setSuppliers(data))
+       .catch(() => {});
+
+     fetch("/api/criteria", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => {
+         // Filter criteria for approval (default to all or filter by process_type)
+         setAllCriteria(data);
+       })
+       .catch(() => {});
+   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -123,8 +111,34 @@ export default function ApprovalForm() {
   };
 
   const handleCriteriaChange = (id, field, value) => {
-    setCriteria(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+    setCriteria(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'score' ? Number(value) : value } : c));
   };
+
+  const toggleCriteria = (criterion: any) => {
+    setSelectedCriteriaIds(prev => {
+      const exists = prev.find(id => id === criterion.id);
+      if (exists) {
+        return prev.filter(id => id !== criterion.id);
+      }
+      return [...prev, criterion.id];
+    });
+  };
+
+  // Atualiza criteria baseado nos critérios selecionados
+  useEffect(() => {
+    const selected = allCriteria
+      .filter(c => selectedCriteriaIds.includes(c.id))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description || "",
+        weight: c.weight || 10,
+        max_score: c.max_score || 100,
+        score: 0,
+        evidence: ""
+      }));
+    setCriteria(selected);
+  }, [selectedCriteriaIds, allCriteria]);
 
   const calculateResults = () => {
     let totalWeight = 0;
@@ -206,7 +220,6 @@ export default function ApprovalForm() {
           </button>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Aprovação de Fornecedores</h2>
-            <p className="text-sm text-gray-500 mt-1">Registe os dados da aprovação do fornecedor.</p>
           </div>
         </div>
         <button
@@ -292,58 +305,98 @@ export default function ApprovalForm() {
           </div>
         </div>
 
-        {/* Selecionar Fornecedor(es) */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-            <Package size={22} className="text-blue-600" />
-            <h3 className="text-lg font-bold text-gray-900">Selecionar Fornecedor(es)</h3>
-          </div>
+         {/* Selecionar Fornecedor(es) */}
+         <div className="space-y-6">
+           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+             <Package size={22} className="text-blue-600" />
+             <h3 className="text-lg font-bold text-gray-900">Selecionar Fornecedor(es)</h3>
+           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {selectedSuppliers.map(supplier => (
-              <div key={supplier.id} className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
-                <div>
-                  <p className="text-sm font-bold text-gray-900">{supplier.name}</p>
-                  <p className="text-xs text-gray-500">{supplier.code}</p>
-                </div>
-                <button type="button" onClick={() => toggleSupplier(supplier)} className="text-green-600 hover:text-green-700">
-                  <X size={18} />
-                </button>
-              </div>
-            ))}
-          </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+             {selectedSuppliers.map(supplier => (
+               <div key={supplier.id} className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
+                 <div>
+                   <p className="text-sm font-bold text-gray-900">{supplier.name}</p>
+                   <p className="text-xs text-gray-500">{supplier.code}</p>
+                 </div>
+                 <button type="button" onClick={() => toggleSupplier(supplier)} className="text-green-600 hover:text-green-700">
+                   <X size={18} />
+                 </button>
+               </div>
+             ))}
+           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowSupplierSelect(!showSupplierSelect)}
-            className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center gap-2"
-          >
-            <Package size={18} />
-            {showSupplierSelect ? 'Fechar' : 'Adicionar Fornecedor'}
-          </button>
+           <button
+             type="button"
+             onClick={() => setShowSupplierSelect(!showSupplierSelect)}
+             className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center gap-2"
+           >
+             <Package size={18} />
+             {showSupplierSelect ? 'Fechar' : 'Adicionar Fornecedor'}
+           </button>
 
-          {showSupplierSelect && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
-              {suppliers.filter(s => !selectedSuppliers.find(ss => ss.id === s.id)).map(supplier => (
-                <button
-                  type="button"
-                  key={supplier.id}
-                  onClick={() => toggleSupplier(supplier)}
-                  className="p-3 text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl transition-colors"
-                >
-                  <p className="text-sm font-medium text-gray-900">{supplier.name}</p>
-                  <p className="text-xs text-gray-500">{supplier.code} • {supplier.sector}</p>
-                </button>
-              ))}
-              {suppliers.length === 0 && (
-                <p className="col-span-full text-center text-gray-400 py-4">Nenhum fornecedor disponível.</p>
-              )}
-            </div>
-          )}
-        </div>
+           {showSupplierSelect && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+               {suppliers.filter(s => !selectedSuppliers.find(ss => ss.id === s.id)).map(supplier => (
+                 <button
+                   type="button"
+                   key={supplier.id}
+                   onClick={() => toggleSupplier(supplier)}
+                   className="p-3 text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl transition-colors"
+                 >
+                   <p className="text-sm font-medium text-gray-900">{supplier.name}</p>
+                   <p className="text-xs text-gray-500">{supplier.code} • {supplier.sector}</p>
+                 </button>
+               ))}
+               {suppliers.length === 0 && (
+                 <p className="col-span-full text-center text-gray-400 py-4">Nenhum fornecedor disponível.</p>
+               )}
+             </div>
+           )}
+         </div>
 
-        {/* Motivo e Necessidade Operacional */}
-        <div className="space-y-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+             {criteria.map(c => (
+               <div key={c.id} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                 <div>
+                   <p className="text-sm font-bold text-gray-900">{c.name}</p>
+                   <p className="text-xs text-gray-500">Peso: {c.weight}% • Máx: {c.max_score} pts</p>
+                 </div>
+                 <button type="button" onClick={() => toggleCriteria(allCriteria.find(ac => ac.id === c.id))} className="text-blue-600 hover:text-blue-700">
+                   <X size={18} />
+                 </button>
+               </div>
+             ))}
+           </div>
+
+           <button
+             type="button"
+             onClick={() => setShowCriteriaSelect(!showCriteriaSelect)}
+             className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center gap-2"
+           >
+             <Plus size={18} />
+             {showCriteriaSelect ? 'Fechar' : 'Adicionar Critérios'}
+           </button>
+
+           {showCriteriaSelect && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+               {allCriteria.filter(c => !selectedCriteriaIds.includes(c.id)).map(criterion => (
+                 <button
+                   type="button"
+                   key={criterion.id}
+                   onClick={() => toggleCriteria(criterion)}
+                   className="p-3 text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl transition-colors"
+                 >
+                   <p className="text-sm font-medium text-gray-900">{criterion.name}</p>
+                   <p className="text-xs text-gray-500">Peso: {criterion.weight}% • Máx: {c.max_score} pts</p>
+                 </button>
+               ))}
+             </div>
+           )}
+         </div>
+
+         {/* Critérios de Aprovação */}
+         <div className="space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <FileText size={22} className="text-amber-600" />
             <h3 className="text-lg font-bold text-gray-900">Motivo e Justificação</h3>
@@ -413,61 +466,58 @@ export default function ApprovalForm() {
             <h3 className="text-lg font-bold text-gray-900">Critérios de Aprovação do Fornecedor</h3>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Critério</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Descrição</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-20">Peso</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-24">Max</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-28">Pontuação</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Evidência / Comentário</th>
-                </tr>
-              </thead>
-              <tbody>
-                {criteria.map((c) => (
-                  <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <span className="text-sm font-bold text-gray-900">{c.name}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs text-gray-500">{c.description}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-sm font-medium text-gray-600">{c.weight}%</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <input
-                        type="number"
-                        value={c.max_score}
-                        onChange={(e) => handleCriteriaChange(c.id, 'max_score', Number(e.target.value))}
-                        className="w-16 px-2 py-1 text-center text-sm bg-gray-50 border border-gray-200 rounded-lg"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        value={c.score}
-                        onChange={(e) => handleCriteriaChange(c.id, 'score', Number(e.target.value))}
-                        className="w-24 px-3 py-1 text-center text-sm font-bold bg-blue-50 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="0-100"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="text"
-                        value={c.evidence}
-                        onChange={(e) => handleCriteriaChange(c.id, 'evidence', e.target.value)}
-                        className="w-full px-3 py-1 text-sm bg-gray-50 border border-gray-200 rounded-lg"
-                        placeholder="Evidência ou comentário..."
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+           <div className="overflow-x-auto">
+             <table className="w-full min-w-[800px]">
+               <thead>
+                 <tr className="bg-gray-50 border-b border-gray-200">
+                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Critério</th>
+                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Descrição</th>
+                   <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-20">Peso</th>
+                   <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-24">Max</th>
+                   <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-28">Pontuação</th>
+                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Evidência / Comentário</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {criteria.map((c) => (
+                   <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
+                     <td className="px-4 py-3">
+                       <span className="text-sm font-bold text-gray-900">{c.name}</span>
+                     </td>
+                     <td className="px-4 py-3">
+                       <span className="text-xs text-gray-500">{c.description}</span>
+                     </td>
+                     <td className="px-4 py-3 text-center">
+                       <span className="text-sm font-medium text-gray-600">{c.weight}%</span>
+                     </td>
+                     <td className="px-4 py-3 text-center">
+                       <span className="text-sm text-gray-600">/{c.max_score}</span>
+                     </td>
+                     <td className="px-4 py-3">
+                       <input
+                         type="number"
+                         value={c.score}
+                         onChange={(e) => handleCriteriaChange(c.id, 'score', e.target.value)}
+                         className="w-24 px-3 py-1 text-center text-sm font-bold bg-blue-50 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                         placeholder="0-100"
+                         min="0"
+                         max={c.max_score}
+                       />
+                     </td>
+                     <td className="px-4 py-3">
+                       <input
+                         type="text"
+                         value={c.evidence}
+                         onChange={(e) => handleCriteriaChange(c.id, 'evidence', e.target.value)}
+                         className="w-full px-3 py-1 text-sm bg-gray-50 border border-gray-200 rounded-lg"
+                         placeholder="Evidência ou comentário..."
+                       />
+                     </td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           </div>
 
           <button
             type="button"

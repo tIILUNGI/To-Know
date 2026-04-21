@@ -143,7 +143,6 @@ export default function ReevaluationForm() {
           </button>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Reavaliação de Fornecedores</h2>
-            <p className="text-sm text-gray-500 mt-1">Realize a reavaliação de fornecedores existentes.</p>
           </div>
         </div>
         <button

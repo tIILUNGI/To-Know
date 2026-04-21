@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, FileText, User, Package, Scale, TrendingUp, Star, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, FileText, User, Package, Scale, TrendingUp, Star, AlertCircle, X, Plus } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
@@ -29,9 +29,12 @@ export default function EvaluationFormNew() {
   const [searchParams] = useSearchParams();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [suppliers, setSuppliers] = useState<any[]>([]);
-  const [selectedSuppliers, setSelectedSuppliers] = useState<any[]>([]);
-  const [showSupplierSelect, setShowSupplierSelect] = useState(false);
+   const [suppliers, setSuppliers] = useState<any[]>([]);
+   const [selectedSuppliers, setSelectedSuppliers] = useState<any[]>([]);
+   const [showSupplierSelect, setShowSupplierSelect] = useState(false);
+   const [allCriteria, setAllCriteria] = useState<any[]>([]);
+   const [selectedCriteriaIds, setSelectedCriteriaIds] = useState<number[]>([]);
+   const [showCriteriaSelect, setShowCriteriaSelect] = useState(false);
   
   // Parse query params
   const evalType = searchParams.get('type') === 'Satisfaction' ? 'Satisfaction' : 'Performance';
@@ -73,14 +76,39 @@ export default function EvaluationFormNew() {
     follow_up_responsible: ""
   });
 
-  useEffect(() => {
-    fetch("/api/entities?type=Supplier", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then(res => res.json())
-      .then(data => setSuppliers(data))
-      .catch(() => {});
-  }, []);
+   useEffect(() => {
+     fetch("/api/entities?type=Supplier", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => setSuppliers(data))
+       .catch(() => {});
+
+     fetch("/api/criteria", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => {
+         // Filter criteria for evaluation type and supplier if needed
+         const evalType = searchParams.get('type') === 'Satisfaction' ? 'Satisfaction' : 'Performance';
+         let filtered = data;
+         if (evalType === 'Satisfaction') {
+           filtered = data.filter((c: any) => 
+             !c.evaluation_type || 
+             c.evaluation_type === 'Satisfaction' || 
+             c.evaluation_type === 'Ambos'
+           );
+         } else {
+           filtered = data.filter((c: any) => 
+             !c.evaluation_type || 
+             c.evaluation_type === 'Performance' || 
+             c.evaluation_type === 'Ambos'
+           );
+         }
+         setAllCriteria(filtered);
+       })
+       .catch(() => {});
+   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,6 +125,32 @@ export default function EvaluationFormNew() {
     });
   };
 
+  const toggleCriteria = (criterion: any) => {
+    setSelectedCriteriaIds(prev => {
+      const exists = prev.find(id => id === criterion.id);
+      if (exists) {
+        return prev.filter(id => id !== criterion.id);
+      }
+      return [...prev, criterion.id];
+    });
+  };
+
+  // Atualiza criteria baseado nos critérios selecionados da API
+  useEffect(() => {
+    const selected = allCriteria
+      .filter(c => selectedCriteriaIds.includes(c.id))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        weight: c.weight || 10,
+        max_score: c.max_score || 5,
+        score: 0,
+        observation: "",
+        evidence: ""
+      }));
+    setCriteria(selected);
+  }, [selectedCriteriaIds, allCriteria]);
+
   const handleCriteriaChange = (id, field, value) => {
     setCriteria(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
@@ -106,7 +160,7 @@ export default function EvaluationFormNew() {
     let weightedScore = 0;
     criteria.forEach(c => {
       totalWeight += c.weight;
-      weightedScore += (c.score / 5) * c.weight;
+      weightedScore += (c.score / c.max_score) * c.weight;
     });
     const percentage = totalWeight > 0 ? (weightedScore / totalWeight) * 100 : 0;
     
@@ -200,11 +254,6 @@ export default function EvaluationFormNew() {
             <h2 className="text-2xl font-bold text-gray-900">
               {evalType === 'Satisfaction' ? 'Nova Pesquisa de Satisfação - Fornecedor' : 'Nova Avaliação de Performance - Fornecedor'}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {evalType === 'Satisfaction' 
-                ? 'Avalie o nível de satisfação com o desempenho dos fornecedores.' 
-                : 'Avalie a performance dos fornecedores conforme critérios estabelecidos.'}
-            </p>
           </div>
         </div>
         <button
@@ -335,6 +384,53 @@ export default function EvaluationFormNew() {
           )}
         </div>
 
+        {/* Selecionar Critérios de Avaliação */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+            <Scale size={22} className="text-amber-600" />
+            <h3 className="text-lg font-bold text-gray-900">Critérios de Avaliação</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {criteria.map(c => (
+              <div key={c.id} className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{c.name}</p>
+                  <p className="text-xs text-gray-500">Peso: {c.weight}% • Máx: {c.max_score} pts</p>
+                </div>
+                <button type="button" onClick={() => toggleCriteria(allCriteria.find(ac => ac.id === c.id))} className="text-amber-600 hover:text-amber-700">
+                  <X size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCriteriaSelect(!showCriteriaSelect)}
+            className="px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-amber-400 hover:text-amber-600 transition-colors flex items-center gap-2"
+          >
+            <Plus size={18} />
+            {showCriteriaSelect ? 'Fechar' : 'Adicionar Critérios'}
+          </button>
+
+          {showCriteriaSelect && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+              {allCriteria.filter(c => !selectedCriteriaIds.includes(c.id)).map(criterion => (
+                <button
+                  type="button"
+                  key={criterion.id}
+                  onClick={() => toggleCriteria(criterion)}
+                  className="p-3 text-left bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-300 rounded-xl transition-colors"
+                >
+                  <p className="text-sm font-medium text-gray-900">{criterion.name}</p>
+                  <p className="text-xs text-gray-500">Peso: {criterion.weight}% • Máx: {criterion.max_score} pts</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* 9.2 Avaliação de Performance */}
         <div className="space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
@@ -348,7 +444,7 @@ export default function EvaluationFormNew() {
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Critério</th>
                   <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-20">Peso</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-28">Nota (1-5)</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-28">Nota (0-{criteria.length > 0 ? criteria[0].max_score : 5})</th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Observação</th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Evidência</th>
                 </tr>
@@ -369,11 +465,9 @@ export default function EvaluationFormNew() {
                         className="w-20 px-3 py-1 text-center text-sm font-bold bg-blue-50 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                       >
                         <option value={0}>—</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                        <option value={4}>4</option>
-                        <option value={5}>5</option>
+                        {Array.from({length: c.max_score}, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num}>{num}</option>
+                        ))}
                       </select>
                     </td>
                     <td className="px-4 py-3">

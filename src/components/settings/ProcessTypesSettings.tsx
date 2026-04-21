@@ -129,10 +129,9 @@ export default function ProcessTypesSettings() {
           <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Tipos de Processo</h2>
-            <p className="text-sm text-gray-500 mt-1">Configure os tipos de processo disponíveis no sistema.</p>
-          </div>
+           <div>
+             <h2 className="text-2xl font-bold text-gray-900">Tipos de Processo</h2>
+           </div>
         </div>
         <button
           onClick={() => handleOpenModal()}

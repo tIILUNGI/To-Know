@@ -120,11 +120,6 @@ export default function Login() {
               <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">
                 {mode === 'login' ? 'Bem-vindo de volta' : mode === 'register' ? 'Criar Conta' : 'Recuperar Senha'}
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                {mode === 'login' && 'Insira suas credenciais para acessar o sistema'}
-                {mode === 'register' && 'Solicite acesso ao sistema corporativo'}
-                {mode === 'forgot' && 'Enviaremos instruções para o seu email'}
-              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">

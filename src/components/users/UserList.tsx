@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, Trash2, Edit, UserPlus, Shield } from "lucide-react";
+import { Plus, Search, Trash2, Edit, UserPlus, Shield, ArrowLeft } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 
@@ -83,13 +83,13 @@ export default function UserList() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Utilizadores</h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-            Gerencie utilizadores do sistema e suas permissões.
-          </p>
-        </div>
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+              <ArrowLeft size={20} />
+            </button>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Utilizadores</h2>
+          </div>
         <Link
           to="/configuracoes/utilizadores/novo"
           className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors"

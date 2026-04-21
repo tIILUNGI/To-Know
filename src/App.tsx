@@ -23,6 +23,8 @@ import UserList from "./components/users/UserList";
 import UserForm from "./components/users/UserForm";
 import RolesInfo from "./components/users/RolesInfo";
 import ProcessTypesSettings from "./components/settings/ProcessTypesSettings";
+import AlertsPage from "./components/common/AlertsPage";
+import DemoDataCreator from "./components/admin/DemoDataCreator";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -79,6 +81,8 @@ export default function App() {
                <Route path="configuracoes/utilizadores/:id" element={<UserForm />} />
                <Route path="configuracoes/perfis" element={<RolesInfo />} />
                <Route path="configuracoes/tipos-processo" element={<ProcessTypesSettings />} />
+               <Route path="alertas" element={<AlertsPage />} />
+               <Route path="demo/criar" element={<DemoDataCreator />} />
               
               <Route path="profile" element={<UserProfile />} />
             </Route>

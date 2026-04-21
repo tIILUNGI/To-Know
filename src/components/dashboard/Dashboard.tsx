@@ -116,12 +116,11 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">Dashboard</h1>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 mt-1">Visão geral do sistema de compliance</p>
-        </div>
-      </div>
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3">
+         <div>
+           <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">Dashboard</h1>
+         </div>
+       </div>
 
       {/* Filters - Design Melhorado */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl p-0.5 shadow-lg shadow-blue-100 dark:shadow-none">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, FileText, User, Package, Scale, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Save, FileText, User, Package, Scale, CheckCircle2, TrendingUp, AlertTriangle, X, Plus } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
@@ -28,87 +28,112 @@ export default function ClientApprovalForm() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<any[]>([]);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [showClientSelect, setShowClientSelect] = useState(false);
+    const [clients, setClients] = useState<any[]>([]);
+    const [selectedClient, setSelectedClient] = useState<any>(null);
+    const [showClientSelect, setShowClientSelect] = useState(false);
+    const [allCriteria, setAllCriteria] = useState<any[]>([]);
+    const [selectedCriteriaIds, setSelectedCriteriaIds] = useState<number[]>([]);
+    const [showCriteriaSelect, setShowCriteriaSelect] = useState(false);
 
-  const [formData, setFormData] = useState({
-    process_number: "",
-    process_type: "Aprovação",
-    process_date: new Date().toISOString().split('T')[0],
-    responsible_name: "",
-    responsible_position: "",
-    responsible_mobile: "",
-    responsible_email: "",
-    approval_reason: "",
-    credit_limit: "",
-    special_conditions: "",
-    validity_date: "",
-    reevaluation_date: ""
-  });
+    const [formData, setFormData] = useState({
+      process_number: "",
+      process_type: "Aprovação",
+      process_date: new Date().toISOString().split('T')[0],
+      responsible_name: "",
+      responsible_position: "",
+      responsible_mobile: "",
+      responsible_email: "",
+      approval_reason: "",
+      credit_limit: "",
+      special_conditions: "",
+      validity_date: "",
+      reevaluation_date: ""
+    });
 
-  const [criteria, setCriteria] = useState([
-    { id: 1, name: "Identificação validada", score: 0, max_score: 100 },
-    { id: 2, name: "Regularidade legal", score: 0, max_score: 100 },
-    { id: 3, name: "Histórico comercial", score: 0, max_score: 100 },
-    { id: 4, name: "Capacidade financeira", score: 0, max_score: 100 },
-    { id: 5, name: "Risco de crédito", score: 0, max_score: 100 },
-    { id: 6, name: "Risco reputacional", score: 0, max_score: 100 },
-    { id: 7, name: "Conformidade documental", score: 0, max_score: 100 },
-    { id: 8, name: "Potencial de negócio", score: 0, max_score: 100 },
-    { id: 9, name: "Aderência ao perfil de cliente desejado", score: 0, max_score: 100 },
-    { id: 10, name: "Risco de branqueamento / compliance", score: 0, max_score: 100 }
-  ]);
+    const [criteria, setCriteria] = useState<any[]>([]);
 
-  const [resultData, setResultData] = useState({
-    total_score: 0,
-    risk_classification: "",
-    decision: "",
-  });
+   const processTypeOptions = [
+     { value: 'Aprovação', label: 'Aprovação' },
+     { value: 'Avaliação', label: 'Avaliação' },
+     { value: 'Reavaliação', label: 'Reavaliação' }
+   ];
 
-  const processTypeOptions = [
-    { value: 'Aprovação', label: 'Aprovação' },
-    { value: 'Avaliação', label: 'Avaliação' },
-    { value: 'Reavaliação', label: 'Reavaliação' }
-  ];
+   const decisionOptions = [
+     { value: 'Aprovado', label: 'Aprovado' },
+     { value: 'Aprovado com restrições', label: 'Aprovado com restrições' },
+     { value: 'Reprovado', label: 'Reprovado' }
+   ];
 
-  const decisionOptions = [
-    { value: 'Aprovado', label: 'Aprovado' },
-    { value: 'Aprovado com restrições', label: 'Aprovado com restrições' },
-    { value: 'Reprovado', label: 'Reprovado' }
-  ];
+   const riskOptions = [
+     { value: 'Baixo', label: 'Baixo' },
+     { value: 'Médio', label: 'Médio' },
+     { value: 'Alto', label: 'Alto' }
+   ];
 
-  const riskOptions = [
-    { value: 'Baixo', label: 'Baixo' },
-    { value: 'Médio', label: 'Médio' },
-    { value: 'Alto', label: 'Alto' }
-  ];
+   useEffect(() => {
+     fetch("/api/entities?type=Client", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => setClients(data))
+       .catch(() => {});
 
+     fetch("/api/criteria", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => {
+         // Filter criteria for client approvals
+         const filtered = data.filter((c: any) =>
+           !c.entity_type || c.entity_type === 'Client' || c.entity_type === 'Ambos'
+         );
+         setAllCriteria(filtered);
+       })
+       .catch(() => {});
+   }, []);
+
+  const handleCriteriaChange = (id, field, value) => {
+    setCriteria(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'score' ? Number(value) : value } : c));
+  };
+
+  const toggleCriteria = (criterion: any) => {
+    setSelectedCriteriaIds(prev => {
+      const exists = prev.find(id => id === criterion.id);
+      if (exists) {
+        return prev.filter(id => id !== criterion.id);
+      }
+      return [...prev, criterion.id];
+    });
+  };
+
+  // Atualiza criteria baseado nos critérios selecionados
   useEffect(() => {
-    fetch("/api/entities?type=Client", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then(res => res.json())
-      .then(data => setClients(data))
-      .catch(() => {});
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCriteriaChange = (id, value) => {
-    setCriteria(prev => prev.map(c => c.id === id ? { ...c, score: Number(value) } : c));
-  };
+    const selected = allCriteria
+      .filter(c => selectedCriteriaIds.includes(c.id))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description || "",
+        weight: c.weight || 10,
+        max_score: c.max_score || 100,
+        score: 0,
+        evidence: ""
+      }));
+    setCriteria(selected);
+  }, [selectedCriteriaIds, allCriteria]);
 
   const calculateResults = () => {
-    const total = criteria.reduce((sum, c) => sum + c.score, 0);
-    const percentage = total / criteria.length;
-    
+    let totalWeight = 0;
+    let weightedScore = 0;
+    criteria.forEach(c => {
+      totalWeight += c.weight;
+      weightedScore += (c.score / c.max_score) * c.weight;
+    });
+    const percentage = totalWeight > 0 ? (weightedScore / totalWeight) * 100 : 0;
+
     let risk = "";
     let decision = "";
-    
+
     if (percentage >= 75) {
       risk = "Baixo";
       decision = "Aprovado";
@@ -119,8 +144,13 @@ export default function ClientApprovalForm() {
       risk = "Alto";
       decision = "Reprovado";
     }
-    
-    setResultData({ total_score: total, risk_classification: risk, decision });
+
+    setResultData({
+      total_score: weightedScore.toFixed(1),
+      final_percentage: percentage.toFixed(1),
+      risk_classification: risk,
+      decision
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -162,7 +192,6 @@ export default function ClientApprovalForm() {
           </button>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Aprovação de Clientes</h2>
-            <p className="text-sm text-gray-500 mt-1">Processo de aprovação e avaliação de clientes.</p>
           </div>
         </div>
         <button
@@ -286,10 +315,10 @@ export default function ClientApprovalForm() {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Motivo da Aprovação</label>
-            <textarea 
-              name="approval_reason" 
-              value={formData.approval_reason} 
-              onChange={handleChange} 
+            <textarea
+              name="approval_reason"
+              value={formData.approval_reason}
+              onChange={handleChange}
               rows={3}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
               placeholder="Descreva o motivo da aprovação..."
@@ -297,30 +326,112 @@ export default function ClientApprovalForm() {
           </div>
         </div>
 
+        {/* Selecionar Critérios de Avaliação */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+            <Scale size={22} className="text-indigo-600" />
+            <h3 className="text-lg font-bold text-gray-900">Critérios de Avaliação</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {criteria.map(c => (
+              <div key={c.id} className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{c.name}</p>
+                  <p className="text-xs text-gray-500">Peso: {c.weight}% • Máx: {c.max_score} pts</p>
+                </div>
+                <button type="button" onClick={() => toggleCriteria(allCriteria.find(ac => ac.id === c.id))} className="text-indigo-600 hover:text-indigo-700">
+                  <X size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCriteriaSelect(!showCriteriaSelect)}
+            className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center gap-2"
+          >
+            <Plus size={18} />
+            {showCriteriaSelect ? 'Fechar' : 'Adicionar Critérios'}
+          </button>
+
+          {showCriteriaSelect && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+              {allCriteria.filter(c => !selectedCriteriaIds.includes(c.id)).map(criterion => (
+                <button
+                  type="button"
+                  key={criterion.id}
+                  onClick={() => toggleCriteria(criterion)}
+                  className="p-3 text-left bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-colors"
+                >
+                  <p className="text-sm font-medium text-gray-900">{criterion.name}</p>
+                  <p className="text-xs text-gray-500">Peso: {criterion.weight}% • Máx: {criterion.max_score} pts</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* 12.2 Critérios de Aprovação */}
         <div className="space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <Scale size={22} className="text-amber-600" />
-            <h3 className="text-lg font-bold text-gray-900">Critérios de Aprovação do Cliente</h3>
+            <h3 className="text-lg font-bold text-gray-900">Avaliação do Cliente</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {criteria.map(c => (
-              <div key={c.id} className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                <span className="text-sm font-medium text-gray-700 flex-1">{c.name}</span>
-                <input
-                  type="number"
-                  value={c.score}
-                  onChange={(e) => handleCriteriaChange(c.id, e.target.value)}
-                  className="w-20 px-3 py-1.5 text-center text-sm font-bold bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="0-100"
-                  min="0"
-                  max="100"
-                />
-                <span className="text-xs text-gray-400 w-8">/100</span>
-              </div>
-            ))}
-          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Critério</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Descrição</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-20">Peso</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-24">Máx</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-28">Pontuação</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Evidência / Comentário</th>
+                </tr>
+              </thead>
+              <tbody>
+                {criteria.map((c) => (
+                  <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <span className="text-sm font-bold text-gray-900">{c.name}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-gray-500">{c.description}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-sm font-medium text-gray-600">{c.weight}%</span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-sm text-gray-600">/{c.max_score}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        value={c.score}
+                        onChange={(e) => handleCriteriaChange(c.id, 'score', Number(e.target.value))}
+                        className="w-24 px-3 py-1 text-center text-sm font-bold bg-indigo-50 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder={`0-${c.max_score}`}
+                        min="0"
+                        max={c.max_score}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={c.evidence}
+                        onChange={(e) => handleCriteriaChange(c.id, 'evidence', e.target.value)}
+                        className="w-full px-3 py-1 text-sm bg-gray-50 border border-gray-200 rounded-lg"
+                        placeholder="Evidência ou comentário..."
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>>
 
           <button
             type="button"

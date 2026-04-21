@@ -641,7 +641,6 @@ export default function ReportsView() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h1 className="text-lg sm:text-xl font-bold text-gray-900">Relatórios do Sistema</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Análises e indicadores consolidated</p>
         </div>
         <button onClick={handleExportCSV} className="btn btn-outline text-sm">
           <Download size={14} strokeWidth={2} /> Exportar

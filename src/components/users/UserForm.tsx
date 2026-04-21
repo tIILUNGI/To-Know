@@ -144,14 +144,11 @@ export default function UserForm() {
           <button onClick={() => navigate("/configuracoes/utilizadores")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {isEditing ? "Editar Utilizador" : "Novo Utilizador"}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {isEditing ? "Actualize os dados do utilizador" : "Crie um novo utilizador do sistema"}
-            </p>
-          </div>
+           <div>
+             <h2 className="text-2xl font-bold text-gray-900">
+               {isEditing ? "Editar Utilizador" : "Novo Utilizador"}
+             </h2>
+           </div>
         </div>
         <button
           type="submit"

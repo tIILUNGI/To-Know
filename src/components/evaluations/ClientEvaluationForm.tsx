@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { X, Plus } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Save, FileText, User, Package, Scale, TrendingUp, Star } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
@@ -29,9 +30,12 @@ export default function ClientEvaluationForm() {
   const [searchParams] = useSearchParams();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<any[]>([]);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [showClientSelect, setShowClientSelect] = useState(false);
+   const [clients, setClients] = useState<any[]>([]);
+   const [selectedClient, setSelectedClient] = useState<any>(null);
+   const [showClientSelect, setShowClientSelect] = useState(false);
+   const [allCriteria, setAllCriteria] = useState<any[]>([]);
+   const [selectedCriteriaIds, setSelectedCriteriaIds] = useState<number[]>([]);
+   const [showCriteriaSelect, setShowCriteriaSelect] = useState(false);
   
   // Parse query params
   const evalType = searchParams.get('type') === 'Satisfaction' ? 'Satisfaction' : 'Performance';
@@ -47,18 +51,7 @@ export default function ClientEvaluationForm() {
     evaluation_type_detail: evalType
   });
 
-  const [criteria, setCriteria] = useState([
-    { id: 1, name: "Pontualidade no pagamento", weight: 12, score: 0 },
-    { id: 2, name: "Volume de compras", weight: 10, score: 0 },
-    { id: 3, name: "Frequência de relacionamento", weight: 8, score: 0 },
-    { id: 4, name: "Cumprimento contratual", weight: 10, score: 0 },
-    { id: 5, name: "Qualidade da comunicação", weight: 8, score: 0 },
-    { id: 6, name: "Estabilidade da relação comercial", weight: 10, score: 0 },
-    { id: 7, name: "Ocorrência de litígios", weight: 8, score: 0 },
-    { id: 8, name: "Rentabilidade do cliente", weight: 10, score: 0 },
-    { id: 9, name: "Fidelização", weight: 8, score: 0 },
-    { id: 10, name: "Potencial de crescimento", weight: 8, score: 0 }
-  ]);
+  const [criteria, setCriteria] = useState<any[]>([]);
 
   const [resultData, setResultData] = useState({
     total_score: 0,
@@ -67,27 +60,29 @@ export default function ClientEvaluationForm() {
     decision: ""
   });
 
-  const evaluationTypeOptions = [
-    { value: 'Performance do cliente', label: 'Performance do cliente' },
-    { value: 'Satisfação do cliente', label: 'Satisfação do cliente' }
-  ];
 
-  const decisionOptions = [
-    { value: 'Manter', label: 'Manter' },
-    { value: 'Desenvolver', label: 'Desenvolver' },
-    { value: 'Rever condições', label: 'Rever condições' },
-    { value: 'Restringir', label: 'Restringir' },
-    { value: 'Encerrar relacionamento', label: 'Encerrar relacionamento' }
-  ];
 
-  useEffect(() => {
-    fetch("/api/entities?type=Client", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then(res => res.json())
-      .then(data => setClients(data))
-      .catch(() => {});
-  }, []);
+   useEffect(() => {
+     fetch("/api/entities?type=Client", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => setClients(data))
+       .catch(() => {});
+
+     fetch("/api/criteria", {
+       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+     })
+       .then(res => res.json())
+       .then(data => {
+         // Filter criteria for client evaluations
+         const filtered = data.filter((c: any) => 
+           !c.entity_type || c.entity_type === 'Client' || c.entity_type === 'Ambos'
+         );
+         setAllCriteria(filtered);
+       })
+       .catch(() => {});
+   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,14 +93,38 @@ export default function ClientEvaluationForm() {
     setCriteria(prev => prev.map(c => c.id === id ? { ...c, score: Number(value) } : c));
   };
 
-  const calculateResults = () => {
-    let totalWeight = 0;
-    let weightedScore = 0;
-    criteria.forEach(c => {
-      totalWeight += c.weight;
-      weightedScore += (c.score / 5) * c.weight;
+  const toggleCriteria = (criterion: any) => {
+    setSelectedCriteriaIds(prev => {
+      const exists = prev.find(id => id === criterion.id);
+      if (exists) {
+        return prev.filter(id => id !== criterion.id);
+      }
+      return [...prev, criterion.id];
     });
-    const percentage = totalWeight > 0 ? (weightedScore / totalWeight) * 100 : 0;
+  };
+
+  // Atualiza criteria baseado nos critérios selecionados
+  useEffect(() => {
+    const selected = allCriteria
+      .filter(c => selectedCriteriaIds.includes(c.id))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        weight: c.weight || 10,
+        max_score: c.max_score || 5,
+        score: 0
+      }));
+    setCriteria(selected);
+  }, [selectedCriteriaIds, allCriteria]);
+
+   const calculateResults = () => {
+     let totalWeight = 0;
+     let weightedScore = 0;
+     criteria.forEach(c => {
+       totalWeight += c.weight;
+       weightedScore += (c.score / 5) * c.weight;
+     });
+     const percentage = totalWeight > 0 ? (weightedScore / totalWeight) * 100 : 0;
     
     let classification = "";
     let decision = "";
@@ -145,7 +164,7 @@ export default function ClientEvaluationForm() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ ...formData, client_id: selectedClient.id, criteria, result: resultData })
+         body: JSON.stringify({ ...formData, client_id: selectedClient.id, criteria, result: resultData })
       });
 
         if (res.ok) {
@@ -171,11 +190,6 @@ export default function ClientEvaluationForm() {
             <h2 className="text-2xl font-bold text-gray-900">
               {evalType === 'Satisfaction' ? 'Pesquisa de Satisfação - Cliente' : 'Avaliação de Performance - Cliente'}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {evalType === 'Satisfaction'
-                ? 'Avalie o nível de satisfação do cliente com nossos produtos e serviços.'
-                : 'Avalie a performance do cliente conforme critérios estabelecidos.'}
-            </p>
           </div>
         </div>
         <button
@@ -216,7 +230,6 @@ export default function ClientEvaluationForm() {
               name="evaluation_type" 
               value={formData.evaluation_type} 
               onChange={handleChange} 
-              options={evaluationTypeOptions} 
             />
             <FormField 
               label="Data da Avaliação" 
@@ -249,82 +262,127 @@ export default function ClientEvaluationForm() {
           </div>
         </div>
 
-        {/* Selecionar Cliente */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-            <Package size={22} className="text-indigo-600" />
-            <h3 className="text-lg font-bold text-gray-900">Selecionar Cliente</h3>
-          </div>
+         {/* Selecionar Cliente */}
+         <div className="space-y-6">
+           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+             <Package size={22} className="text-indigo-600" />
+             <h3 className="text-lg font-bold text-gray-900">Selecionar Cliente</h3>
+           </div>
 
-          {selectedClient ? (
-            <div className="flex items-center justify-between p-6 bg-indigo-50 border border-indigo-200 rounded-2xl">
-              <div>
-                <p className="text-lg font-bold text-gray-900">{selectedClient.name}</p>
-                <p className="text-sm text-gray-500">{selectedClient.code} • {selectedClient.segment}</p>
-              </div>
-              <button type="button" onClick={() => setSelectedClient(null)} className="text-indigo-600 hover:text-indigo-700">
-                <Package size={20} />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowClientSelect(!showClientSelect)}
-              className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center gap-2"
-            >
-              <Package size={18} />
-              {showClientSelect ? 'Fechar' : 'Selecionar Cliente'}
-            </button>
-          )}
+           {selectedClient ? (
+             <div className="flex items-center justify-between p-6 bg-indigo-50 border border-indigo-200 rounded-2xl">
+               <div>
+                 <p className="text-lg font-bold text-gray-900">{selectedClient.name}</p>
+                 <p className="text-sm text-gray-500">{selectedClient.code} • {selectedClient.segment}</p>
+               </div>
+               <button type="button" onClick={() => setSelectedClient(null)} className="text-indigo-600 hover:text-indigo-700">
+                 <Package size={20} />
+               </button>
+             </div>
+           ) : (
+             <button
+               type="button"
+               onClick={() => setShowClientSelect(!showClientSelect)}
+               className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center gap-2"
+             >
+               <Package size={18} />
+               {showClientSelect ? 'Fechar' : 'Selecionar Cliente'}
+             </button>
+           )}
 
-          {showClientSelect && !selectedClient && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
-              {clients.map(client => (
-                <button
-                  type="button"
-                  key={client.id}
-                  onClick={() => { setSelectedClient(client); setShowClientSelect(false); }}
-                  className="p-3 text-left bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-colors"
-                >
-                  <p className="text-sm font-medium text-gray-900">{client.name}</p>
-                  <p className="text-xs text-gray-500">{client.code} • {client.segment}</p>
-                </button>
+           {showClientSelect && !selectedClient && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+               {clients.map(client => (
+                 <button
+                   type="button"
+                   key={client.id}
+                   onClick={() => { setSelectedClient(client); setShowClientSelect(false); }}
+                   className="p-3 text-left bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-colors"
+                 >
+                   <p className="text-sm font-medium text-gray-900">{client.name}</p>
+                   <p className="text-xs text-gray-500">{client.code} • {client.segment}</p>
+                 </button>
+               ))}
+             </div>
+           )}
+         </div>
+
+         {/* Selecionar Critérios de Avaliação */}
+         <div className="space-y-6">
+           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+             <Scale size={22} className="text-amber-600" />
+             <h3 className="text-lg font-bold text-gray-900">Critérios de Avaliação</h3>
+           </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {criteria.map(c => (
+                <div key={c.id} className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">{c.name}</p>
+                    <p className="text-xs text-gray-500">Peso: {c.weight}% • Máx: {c.max_score} pts</p>
+                  </div>
+                  <button type="button" onClick={() => toggleCriteria(allCriteria.find(ac => ac.id === c.id))} className="text-amber-600 hover:text-amber-700">
+                    <X size={18} />
+                  </button>
+                </div>
               ))}
             </div>
-          )}
-        </div>
 
-        {/* 13.2 Avaliação de Performance */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-            <Scale size={22} className="text-amber-600" />
-            <h3 className="text-lg font-bold text-gray-900">
-              {evalType === 'Satisfaction' ? 'Pesquisa de Satisfação' : 'Avaliação de Performance'}
-            </h3>
-          </div>
+           <button
+             type="button"
+             onClick={() => setShowCriteriaSelect(!showCriteriaSelect)}
+             className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-amber-400 hover:text-amber-600 transition-colors flex items-center gap-2"
+           >
+             <Plus size={18} />
+             {showCriteriaSelect ? 'Fechar' : 'Adicionar Critérios'}
+           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {criteria.map(c => (
-              <div key={c.id} className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                <div className="flex-1">
-                  <span className="text-sm font-medium text-gray-700">{c.name}</span>
-                  <span className="text-xs text-gray-400 ml-2">({c.weight}%)</span>
-                </div>
-                <select
-                  value={c.score}
-                  onChange={(e) => handleCriteriaChange(c.id, e.target.value)}
-                  className="w-24 px-3 py-1.5 text-center text-sm font-bold bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
-                >
-                  <option value={0}>—</option>
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
-                </select>
-              </div>
-            ))}
-          </div>
+           {showCriteriaSelect && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+               {allCriteria.filter(c => !selectedCriteriaIds.includes(c.id)).map(criterion => (
+                 <button
+                   type="button"
+                   key={criterion.id}
+                   onClick={() => toggleCriteria(criterion)}
+                   className="p-3 text-left bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-300 rounded-xl transition-colors"
+                 >
+                   <p className="text-sm font-medium text-gray-900">{criterion.name}</p>
+                   <p className="text-xs text-gray-500">Peso: {criterion.weight}% • Máx: {criterion.max_score} pts</p>
+                 </button>
+               ))}
+             </div>
+           )}
+         </div>
+
+         {/* 13.2 Avaliação de Performance */}
+         <div className="space-y-6">
+           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+             <Scale size={22} className="text-amber-600" />
+             <h3 className="text-lg font-bold text-gray-900">
+               {evalType === 'Satisfaction' ? 'Pesquisa de Satisfação' : 'Avaliação de Performance'}
+             </h3>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             {criteria.map(c => (
+               <div key={c.id} className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                 <div className="flex-1">
+                   <span className="text-sm font-medium text-gray-700">{c.name}</span>
+                   <span className="text-xs text-gray-400 ml-2">({c.weight}%)</span>
+                 </div>
+                 <select
+                   value={c.score}
+                   onChange={(e) => handleCriteriaChange(c.id, Number(e.target.value))}
+                   className="w-24 px-3 py-1.5 text-center text-sm font-bold bg-purple-50 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                 >
+                   <option value={0}>—</option>
+                   {Array.from({length: c.max_score || 5}, (_, i) => i + 1).map(num => (
+                     <option key={num} value={num}>{num}</option>
+                   ))}
+                 </select>
+               </div>
+             ))}
+           </div>
 
           <button
             type="button"

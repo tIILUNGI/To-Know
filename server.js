@@ -70,14 +70,36 @@ dotenv_1.default.config();
 var app = (0, express_1.default)();
 var PORT = 3000;
 var db = new better_sqlite3_1.default("toknow.db");
-var SECRET_KEY = process.env.JWT_SECRET || "toknow-secret-key";
-app.use(express_1.default.json());
-var __filename = (0, url_1.fileURLToPath)(import.meta.url);
-var __dirname = path_1.default.dirname(__filename);
-// ============================================================
-// MIDDLEWARE: CORS
+
+console.log("=== INICIANDO SERVER ===");
+// Init DB
+try { db.exec("CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, message TEXT, is_read INTEGER DEFAULT 0, created_at TEXT DEFAULT CURRENT_TIMESTAMP, type TEXT DEFAULT 'Alert', priority TEXT DEFAULT 'Info')"); console.log("Tabela notifications OK"); } catch(e) { console.log("notifications erro:", e.message); }
+try { db.exec("ALTER TABLE notifications ADD COLUMN type TEXT DEFAULT 'Alert'"); } catch(e) {}
+try { db.exec("ALTER TABLE notifications ADD COLUMN priority TEXT DEFAULT 'Info'"); } catch(e) {}
+
+// Debug endpoints ANTES de tudo
+app.get("/debug/test", function(req, res) {
+    console.log("[DEBUG] /debug/test chamado!");
+    res.json({ok: true, msg: "Debug funciona"});
+});
+app.get("/debug/createdemo", function(req, res) {
+    console.log("[SEED] Criando dados demo...");
+    try {
+        db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run("SUP-001", "Fornecedor Demo Lda", "Fornecedor Demo", "Supplier", "Ativo", "Tecnologia", "500001234", "Médio", "Crítico", "Médio");
+        var sid = db.prepare("SELECT last_insert_rowid() as id").get().id;
+        db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run("CLI-001", "Cliente Demo SA", "Cliente Demo", "Client", "Ativo", "Retail", "500005678", "Baixo", "Alto", "Baixo");
+        db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-001', 'Qualidade', 10, 5, 1)").run();
+        db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-002', 'Prazo', 8, 5, 1)").run();
+        db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-003', 'Compliance', 10, 5, 1)").run();
+        res.json({success: true, supplierId: sid});
+    } catch(e) {
+        res.status(500).json({error: e.message});
+    }
+});
+
 // ============================================================
 app.use(function (req, res, next) {
+    console.log("[REQ]", req.method, req.path);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -85,8 +107,9 @@ app.use(function (req, res, next) {
         return res.sendStatus(200);
     next();
 });
+
 // ============================================================
-// MIDDLEWARE: Rate Limiting (in-memory)
+    // MIDDLEWARE: Rate Limiting (in-memory)
 // ============================================================
 var rateLimitStore = new Map();
 var rateLimit = function (maxRequests, windowMs) { return function (req, res, next) {
@@ -772,20 +795,120 @@ app.post("/api/processes", authenticateToken, function (req, res) {
         db.prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?").run(req.user.id);
         res.json({ message: "Todas as notificações marcadas como lidas." });
     });
-    var checkExpiringApprovals = function () {
+    
+    // ============================================================
+    // ALERTS SYSTEM
+    // ============================================================
+    var generateAlerts = function () {
+        try {
         var users = db.prepare("SELECT id FROM users").all();
-        var expiring = db.prepare("\n    SELECT p.id, p.process_number, p.validity_date, e.name as entity_name \n    FROM processes p \n    JOIN entities e ON p.entity_id = e.id \n    WHERE p.status = 'Aprovado' \n    AND p.validity_date IS NOT NULL \n    AND date(p.validity_date) <= date('now', '+30 days')\n  ").all();
+        
+        // 1. ALERTAS DE PROCESSOS A EXPIRAR (validity_date nos proximos 30 dias)
+        var expiring = db.prepare("SELECT p.id, p.process_number, p.validity_date, e.name as entity_name FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Aprovado' AND p.validity_date IS NOT NULL AND date(p.validity_date) <= date('now', '+30 days') AND date(p.validity_date) >= date('now')").all();
+        
         for (var _i = 0, expiring_1 = expiring; _i < expiring_1.length; _i++) {
             var proc = expiring_1[_i];
+            var daysLeft = Math.ceil((new Date(proc.validity_date) - new Date()) / (1000 * 60 * 60 * 24));
+            var urgency = daysLeft <= 7 ? 'Critical' : daysLeft <= 14 ? 'Warning' : 'Info';
+            var message = "Processo ".concat(proc.process_number, " expira em ").concat(daysLeft, " dia(s) - ").concat(proc.entity_name);
             for (var _a = 0, users_1 = users; _a < users_1.length; _a++) {
                 var user = users_1[_a];
-                var message = "O processo ".concat(proc.process_number, " (").concat(proc.entity_name, ") expira em ").concat(proc.validity_date);
                 var exists = db.prepare("SELECT id FROM notifications WHERE user_id = ? AND message = ?").get(user.id, message);
                 if (!exists) {
-                    db.prepare("INSERT INTO notifications (user_id, message, type) VALUES (?, ?, 'Alert')").run(user.id, message);
+                    db.prepare("INSERT INTO notifications (user_id, message, type, priority) VALUES (?, ?, 'ProcessExpiry', ?)").run(user.id, message, urgency);
                 }
             }
         }
+        
+        // 2. ALERTAS DE AVALIACOES PENDENTES (processos de avaliacao nao encerrados)
+        var pendingEvals = db.prepare("\n    SELECT p.id, p.process_number, p.type, e.name as entity_name, p.created_at\n    FROM processes p \n    JOIN entities e ON p.entity_id = e.id \n    WHERE p.type IN ('Avaliação', 'Reavaliação', 'Pesquisa de Satisfação') \n    AND p.status NOT IN ('Encerrado', 'Reprovado', 'Aprovado')\n  ").all();
+        
+        for (var _b = 0, pendingEvals_1 = pendingEvals; _b < pendingEvals_1.length; _b++) {
+            var eval_1 = pendingEvals_1[_b];
+            var daysPending = Math.ceil((new Date() - new Date(eval_1.created_at)) / (1000 * 60 * 60 * 24));
+            var urgency_1 = daysPending > 30 ? 'Critical' : daysPending > 14 ? 'Warning' : 'Info';
+            var message_1 = "Avaliação pendente: ".concat(eval_1.process_number, " (").concat(eval_1.entity_name, ") - ").concat(daysPending, " dia(s) sem conclusão");
+            for (var _c = 0, users_2 = users; _c < users_2.length; _c++) {
+                var user = users_2[_c];
+                var exists_1 = db.prepare("SELECT id FROM notifications WHERE user_id = ? AND message = ?").get(user.id, message_1);
+                if (!exists_1) {
+                    db.prepare("INSERT INTO notifications (user_id, message, type, priority) VALUES (?, ?, 'EvaluationPending', ?)").run(user.id, message_1, urgency_1);
+                }
+            }
+        }
+        
+        // 3. ALERTAS DE ENTIDADES CRITICAS (fornecedores/clientes com risco alto)
+        var criticalEntities = db.prepare("\n    SELECT id, name, entity_type, final_risk_rating, operational_impact\n    FROM entities\n    WHERE final_risk_rating = 'Alto'\n  ").all();
+        
+        for (var _d = 0, criticalEntities_1 = criticalEntities; _d < criticalEntities_1.length; _d++) {
+            var entity = criticalEntities_1[_d];
+            var message_2 = "Entidade crítica: ".concat(entity.name, " (Risco ").concat(entity.final_risk_rating, ")");
+            for (var _e = 0, users_3 = users; _e < users_3.length; _e++) {
+                var user = users_3[_e];
+                var exists_2 = db.prepare("SELECT id FROM notifications WHERE user_id = ? AND message = ?").get(user.id, message_2);
+                if (!exists_2) {
+                    db.prepare("INSERT INTO notifications (user_id, message, type, priority) VALUES (?, ?, 'CriticalEntity', ?)").run(user.id, message_2, 'Warning');
+                }
+            }
+        }
+        
+        // 4. ALERTAS DE AVALIACOES PROGRAMADAS (baseado na periodicidade)
+        var scheduledEvals = db.prepare("\n    SELECT ev.id, ev.evaluation_number, ev.entity_id, e.name as entity_name, ev.periodicity, ev.evaluation_date, ev.period_end\n    FROM evaluations ev\n    JOIN entities e ON ev.entity_id = e.id\n    WHERE ev.status IS NULL OR ev.status != 'Encerrada'\n  ").all();
+        
+        var today = new Date();
+        for (var _f = 0, scheduledEvals_1 = scheduledEvals; _f < scheduledEvals_1.length; _f++) {
+            var sev = scheduledEvals_1[_f];
+            var nextDue = null;
+            var periodicity = sev.periodicity || 'Trimestral';
+            
+            if (sev.period_end) {
+                var lastEnd = new Date(sev.period_end);
+                if (periodicity === 'Mensal') nextDue = new Date(lastEnd.getFullYear(), lastEnd.getMonth() + 1, lastEnd.getDate());
+                else if (periodicity === 'Trimestral') nextDue = new Date(lastEnd.getFullYear(), lastEnd.getMonth() + 3, lastEnd.getDate());
+                else if (periodicity === 'Semestral') nextDue = new Date(lastEnd.getFullYear(), lastEnd.getMonth() + 6, lastEnd.getDate());
+                else if (periodicity === 'Anual') nextDue = new Date(lastEnd.getFullYear() + 1, lastEnd.getMonth(), lastEnd.getDate());
+                
+                if (nextDue) {
+                    var daysToDue = Math.ceil((nextDue - today) / (1000 * 60 * 60 * 24));
+                    if (daysToDue <= 14 && daysToDue >= 0) {
+                        var urgency_2 = daysToDue <= 3 ? 'Critical' : daysToDue <= 7 ? 'Warning' : 'Info';
+                        var message_3 = "Avaliação ".concat(periodicity, " deve ser realizada para ").concat(sev.entity_name, " em ").concat(nextDue.toLocaleDateString('pt-PT'));
+                        for (var _g = 0, users_4 = users; _g < users_4.length; _g++) {
+                            var user = users_4[_g];
+                            var exists_3 = db.prepare("SELECT id FROM notifications WHERE user_id = ? AND message = ?").get(user.id, message_3);
+                            if (!exists_3) {
+                                db.prepare("INSERT INTO notifications (user_id, message, type, priority) VALUES (?, ?, 'ScheduledEvaluation', ?)").run(user.id, message_3, urgency_2);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        } catch(e) { console.error("[ALERTS] Erro:", e.message); }
+    };
+    
+    app.get("/api/alerts", authenticateToken, function (req, res) {
+        generateAlerts();
+        var alerts = db.prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 100").all(req.user.id);
+        var unreadCount = db.prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0").get(req.user.id);
+        res.json({ alerts: alerts, unreadCount: unreadCount.count });
+    });
+    app.get("/api/alerts/all", authenticateToken, function (req, res) {
+        generateAlerts();
+        var alerts = db.prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50").all(req.user.id);
+        res.json(alerts);
+    });
+    app.post("/api/alerts/:id/dismiss", authenticateToken, function (req, res) {
+        db.prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?").run(req.params.id, req.user.id);
+        res.sendStatus(200);
+    });
+    app.post("/api/alerts/dismiss-all", authenticateToken, function (req, res) {
+        db.prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?").run(req.user.id);
+        res.json({ message: "Todos os alertas descartados." });
+    });
+    
+    var checkExpiringApprovals = function () {
+        generateAlerts();
     };
     // ============================================================
     // DASHBOARD & REPORTS
@@ -862,7 +985,7 @@ app.post("/api/processes", authenticateToken, function (req, res) {
                     case 0:
                         if (!(process.env.NODE_ENV !== "production")) return [3 /*break*/, 2];
                         return [4 /*yield*/, (0, vite_1.createServer)({
-                                server: { middlewareMode: true },
+                                server: { middlewareMode: true, proxy: {} },
                                 appType: "spa",
                             })];
                     case 1:
@@ -876,6 +999,22 @@ app.post("/api/processes", authenticateToken, function (req, res) {
                         });
                         _a.label = 3;
                     case 3:
+                        // SEED DATA (Demo)
+                        try {
+                            var existingSupplier = db.prepare("SELECT id FROM entities WHERE entity_type = 'Supplier' AND name LIKE '%Demo%'").get();
+                            if (!existingSupplier) {
+                                db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run("SUP-001", "Fornecedor Demo Lda", "Fornecedor Demo", "Supplier", "Ativo", "Tecnologia", "500001234", "Médio", "Crítico", "Médio");
+                                var supplierId = db.prepare("SELECT last_insert_rowid() as id").get().id;
+                                db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run("CLI-001", "Cliente Demo SA", "Cliente Demo", "Client", "Ativo", "Retail", "500005678", "Baixo", "Alto", "Baixo");
+                                var clientId = db.prepare("SELECT last_insert_rowid() as id").get().id;
+                                db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-001', 'Qualidade', 10, 5, 1)").run();
+                                db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-002', 'Prazo', 8, 5, 1)").run();
+                                db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-003', 'Compliance', 10, 5, 1)").run();
+                                db.prepare("INSERT INTO evaluations (evaluation_number, name, entity_id, type, periodicity, evaluation_date, period_start, period_end, total_score, percentage, classification, status) VALUES (?, ?, ?, ?, ?, date('now'), date('now', '-3 months'), date('now'), ?, ?, ?, ?)").run("EVL-001", "Avaliação Demo Fornecedor", supplierId, "Performance", "Trimestral", "8.5", "85", "Bom", "Ativa");
+                                db.prepare("INSERT INTO evaluations (evaluation_number, name, entity_id, type, periodicity, evaluation_date, period_start, period_end, total_score, percentage, classification, status) VALUES (?, ?, ?, ?, ?, date('now'), date('now', '-3 months'), date('now'), ?, ?, ?, ?)").run("EVL-002", "Avaliação Demo Cliente", clientId, "Satisfaction", "Anual", "9.0", "90", "Excelente", "Ativa");
+                                console.log("[SEED] Dados demo criados!");
+                            }
+                        } catch (e) { console.error("[SEED] Erro:", e.message); }
                         app.listen(PORT, "0.0.0.0", function () {
                             console.log("Server running on http://localhost:".concat(PORT));
                         });

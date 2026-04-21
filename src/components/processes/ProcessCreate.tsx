@@ -190,10 +190,9 @@ useEffect(() => {
            <button onClick={() => navigate("/processos")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Novo Processo</h2>
-            <p className="text-sm text-gray-500 mt-1">Crie um novo processo de aprovação ou avaliação.</p>
-          </div>
+           <div>
+             <h2 className="text-2xl font-bold text-gray-900">Novo Processo</h2>
+           </div>
         </div>
         <button
           type="submit"

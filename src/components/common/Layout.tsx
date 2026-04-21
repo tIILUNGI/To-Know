@@ -6,6 +6,7 @@ import {
   ChevronRight, CheckSquare, Star, Scale, Shield, GitFork, ListFilter
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import AlertsPanel from "./AlertsPanel";
 
 const Logo = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
   const sizeClasses = {
@@ -22,7 +23,7 @@ const Logo = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
   );
 };
 
-const NavItem = ({ to, icon: Icon, label, description, active }: any) => (
+const NavItem = ({ to, icon: Icon, label, active }: any) => (
   <Link
     to={to}
     className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all relative group ${
@@ -36,7 +37,6 @@ const NavItem = ({ to, icon: Icon, label, description, active }: any) => (
     )}
     <Icon size={15} />
     <span className="hidden xl:inline">{label}</span>
-    <span className="hidden xl:inline text-[9px] text-gray-400 dark:text-gray-500 font-normal">{description}</span>
   </Link>
 );
 
@@ -46,9 +46,6 @@ export default function Layout() {
   const navigate = useNavigate();
 
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-   const [notifications, setNotifications] = useState<any[]>([]);
-   const [showNotifications, setShowNotifications] = useState(false);
-  const notifRef = useRef<HTMLDivElement>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
@@ -83,7 +80,6 @@ export default function Layout() {
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false);
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSearch(false);
       if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) setShowUserDropdown(false);
     };
@@ -112,42 +108,24 @@ export default function Layout() {
     }, 300);
   };
 
-  const markAsRead = async (id: number) => {
-    await fetch(`/api/notifications/${id}/read`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    });
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: 1 } : n)));
-  };
-
-  const markAllRead = async () => {
-    await fetch("/api/notifications/read-all", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    });
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
-  };
-
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   const navItems = [
-    { to: "/", icon: LayoutDashboard, label: "Dashboard", description: "Visão geral" },
-    { to: "/entities/suppliers", icon: Users, label: "Fornecedores", description: "Cadastro de fornecedores" },
-    { to: "/entities/clients", icon: Users, label: "Clientes", description: "Cadastro de clientes" },
-    { to: "/processos", icon: FileText, label: "Processos", description: "Selecione o tipo de processo" },
-    { to: "/avaliacoes", icon: ClipboardList, label: "Avaliações", description: "Avaliações e reavaliações" },
-
-    { to: "/relatorios", icon: BarChart3, label: "Relatórios", description: "Indicadores e históricos" },
+    { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/entities/suppliers", icon: Users, label: "Fornecedores" },
+    { to: "/entities/clients", icon: Users, label: "Clientes" },
+    { to: "/processos", icon: FileText, label: "Processos" },
+    { to: "/avaliacoes", icon: ClipboardList, label: "Avaliações" },
+    { to: "/relatorios", icon: BarChart3, label: "Relatórios" },
   ];
 
   if (user?.role === "Administrator") {
-    navItems.push({ to: "/configuracoes", icon: Settings, label: "Configurações", description: "Parametrização do sistema" });
+    navItems.push({ to: "/configuracoes", icon: Settings, label: "Configurações" });
   }
 
    const isActive = (path: string) => path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -228,33 +206,7 @@ export default function Layout() {
               )}
             </div>
 
-            <div ref={notifRef} className="relative">
-              <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-                <Bell size={18} />
-                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>}
-              </button>
-
-              {showNotifications && (
-                <div className="absolute right-0 top-12 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
-                  <div className="flex justify-between items-center px-3 py-2 bg-gray-50 border-b">
-                    <h4 className="text-xs font-semibold text-gray-900">Notificações</h4>
-                    {unreadCount > 0 && <button onClick={markAllRead} className="text-xs text-blue-600 hover:text-blue-700">Marcar lidas</button>}
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-gray-400">Sem notificações.</div>
-                    ) : (
-                      notifications.slice(0, 10).map((n) => (
-                        <button key={n.id} onClick={() => markAsRead(n.id)} className={`w-full text-left px-3 py-2 border-b border-gray-50 hover:bg-gray-50 ${!n.is_read ? "bg-blue-50/50" : ""}`}>
-                          <p className={`text-xs ${!n.is_read ? "font-medium" : "text-gray-600"}`}>{n.message}</p>
-                          <p className="text-[10px] text-gray-400 mt-1">{new Date(n.created_at).toLocaleDateString("pt-BR")}</p>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <AlertsPanel />
 
             <div ref={userDropdownRef} className="relative">
               <button onClick={() => setShowUserDropdown(!showUserDropdown)} className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-lg">
@@ -328,22 +280,19 @@ export default function Layout() {
           </div>
            <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
              {navItems.map((item) => (
-               <Link
-                 key={item.to}
-                 to={item.to}
-                 onClick={closeMobileMenu}
-                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                   isActive(item.to)
-                     ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
-                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                 }`}
-               >
-                 <item.icon size={18} />
-                 <div className="flex flex-col">
-                   <span>{item.label}</span>
-                   {item.description && <span className="text-[10px] text-gray-400 dark:text-gray-500 font-normal">{item.description}</span>}
-                 </div>
-               </Link>
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={closeMobileMenu}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(item.to)
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </Link>
              ))}
             <div className="pt-2 border-t border-gray-100 dark:border-gray-700 mt-2">
               <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 w-full">

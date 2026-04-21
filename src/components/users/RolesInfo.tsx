@@ -1,4 +1,4 @@
-import { Shield, CheckCircle, AlertCircle, Users } from "lucide-react";
+import { Shield, CheckCircle, AlertCircle, Users, ArrowLeft } from "lucide-react";
 
 export default function RolesInfo() {
   const roles = [
@@ -51,11 +51,11 @@ export default function RolesInfo() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
+      <div className="flex items-center gap-4">
+        <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+          <ArrowLeft size={20} />
+        </button>
         <h2 className="text-2xl font-bold text-gray-900">Perfis de Utilizador</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Conheça os papéis disponíveis no sistema e suas permissões.
-        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

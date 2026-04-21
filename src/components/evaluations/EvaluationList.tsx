@@ -93,9 +93,6 @@ export default function EvaluationList() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-900">Avaliações</h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-              Histórico de avaliações de performance e satisfação.
-            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Plus, Edit2, Trash2, X } from "lucide-react";
+import { Settings, Plus, Edit2, Trash2, X, ArrowLeft } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 
@@ -226,11 +226,13 @@ export default function CriteriaSettings() {
       )}
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
-        <div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+            <ArrowLeft size={20} />
+          </button>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
             <Settings size={20} className="text-blue-600" /> Critérios
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">Defina pesos e pontuações.</p>
         </div>
         <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-700">
           <Plus size={16} /> Novo

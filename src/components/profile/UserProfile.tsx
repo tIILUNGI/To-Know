@@ -99,14 +99,13 @@ export default function UserProfile() {
 
   return (
     <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-500 pb-16">
-      <div className="flex justify-between items-center bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-            <User className="text-blue-600" size={20} /> Meu Perfil
-          </h2>
-          <p className="text-xs text-gray-500 mt-0.5">Gerencie suas informações pessoais.</p>
-        </div>
-      </div>
+       <div className="flex justify-between items-center bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
+         <div>
+           <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+             <User className="text-blue-600" size={20} /> Meu Perfil
+           </h2>
+         </div>
+       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         {/* Profile Info Form */}
