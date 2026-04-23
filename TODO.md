@@ -1,20 +1,23 @@
-# TODO: Fix ClientEvaluationForm.tsx Parse Error
+# ToKnow Reports Fix - TODO Progress
 
-## Plan Breakdown (Approved)
-- [x] Step 1: Fix imports (add X, Plus icons)
-- [x] Step 2: Add missing resultData state
-- [ ] Step 3: Remove duplicate criteria declaration (line 73+) and hardcoded array
-- [ ] Step 4: Clean up duplicate/malformed JSX in criteria scoring section
-- [ ] Step 5: Fix toggleCriteria button (use correct criteria)
-- [ ] Step 6: Test Vite reload (error should be gone)
-- [ ] Step 7: attempt_completion
+## ✅ Phase 1: Fix Gestão Blank Screen (EM PROGRESSO)
+- [x] Create TODO.md ✅
+- [ ] 1. Improve error handling + empty states in ReportsView.tsx
+- [ ] 2. Add debug data preview
+- [ ] 3. Test all 7 management reports with demo data
+- [ ] 4. Verify no API errors (401/500)
 
-**Current Progress:** Completed Steps 1-4 (duplicate removed, JSX cleaned)**
+## ⏳ Phase 2: Professional Exports (NEXT)
+- [ ] 1. Install deps: xlsx, jspdf, jspdf-autotable
+- [ ] 2. Replace XLS hack → proper Excel
+- [ ] 3. PDF with jsPDF + autotable (headers/logo/totals)
+- [ ] 4. Export buttons: CSV | Excel | PDF
+- [ ] 5. Test all formats per category
 
-- [x] Step 1: Fix imports (add X, Plus icons)
-- [x] Step 2: Add missing resultData state  
-- [x] Step 3: Remove duplicate criteria declaration (line 73+) and hardcoded array
-- [x] Step 4: Clean up duplicate/malformed JSX in criteria scoring section
-- [ ] Step 5: Fix toggleCriteria button (use correct criteria)
-- [ ] Step 6: Test Vite reload (error should be gone)
-- [ ] Step 7: attempt_completion
+## 🔧 Backend Optimizations (OPTIONAL)
+- [ ] Add date filters to /management/:type endpoints
+- [ ] Cache reports if slow
+
+## ✅ Completed
+```
+

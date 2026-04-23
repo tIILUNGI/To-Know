@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, AlertTriangle, Clock, AlertCircle, CheckCircle, Info, Filter, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, AlertTriangle, Clock, AlertCircle, CheckCircle, Info, Trash2 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
 type Priority = "Critical" | "Warning" | "Info";
 
-const priorityConfig: Record<Priority, { color: string; bg: string; border: string; icon: any }> = {
+const priorityConfig: Record<string, { color: string; bg: string; border: string; icon: any }> = {
   Critical: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle },
   Warning: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", icon: AlertCircle },
   Info: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", icon: Info },
@@ -29,12 +29,12 @@ export default function AlertsPage() {
 
   const fetchAlerts = () => {
     setLoading(true);
-    fetch("/api/alerts/all", {
+    fetch("/api/notifications", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then((res) => res.json())
       .then((data) => {
-        setAlerts(data || []);
+        setAlerts(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(() => {
@@ -49,27 +49,27 @@ export default function AlertsPage() {
 
   const handleDismiss = async (id: number) => {
     try {
-      await fetch(`/api/alerts/${id}/dismiss`, {
+      await fetch(`/api/notifications/${id}/read`, {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAlerts((prev) => prev.filter((a) => a.id !== id));
-      addToast("Alerta descartado.", "success");
+      addToast("Notificação dispensada.", "success");
     } catch {
-      addToast("Erro ao descartar alerta.", "error");
+      addToast("Erro ao dispensar.", "error");
     }
   };
 
   const handleDismissAll = async () => {
     try {
-      await fetch("/api/alerts/dismiss-all", {
+      await fetch("/api/notifications/read-all", {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAlerts([]);
-      addToast("Todos os alertas descartados.", "success");
+      addToast("Todas dispensadas.", "success");
     } catch {
-      addToast("Erro ao descartar alertas.", "error");
+      addToast("Erro ao dispensar.", "error");
     }
   };
 
@@ -101,7 +101,7 @@ export default function AlertsPage() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Bell size={24} className="text-amber-500" />
-            Alertas do Sistema
+            Notificações
           </h2>
         </div>
       </div>
@@ -154,23 +154,23 @@ export default function AlertsPage() {
               onClick={handleDismissAll}
               className="flex items-center gap-1 text-xs px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             >
-              <Trash2 size={14} /> Descartar Todos
+              <Trash2 size={14} /> Dispensar Todas
             </button>
           )}
         </div>
 
         <div className="space-y-2">
           {loading ? (
-            <div className="p-8 text-center text-gray-400">Carregando alertas...</div>
+            <div className="p-8 text-center text-gray-400">Carregando...</div>
           ) : filteredAlerts.length === 0 ? (
             <div className="p-8 text-center">
               <CheckCircle size={48} className="mx-auto text-green-200 mb-2" />
-              <p className="text-gray-500">Nenhum alerta encontrado</p>
+              <p className="text-gray-500">Nenhuma notificação</p>
             </div>
           ) : (
             filteredAlerts.map((alert) => {
-              const config = priorityConfig[alert.priority as Priority] || priorityConfig.Info;
-              const typeInfo = typeLabels[alert.type] || { label: alert.type, icon: Bell, color: "text-gray-600" };
+              const config = priorityConfig[alert.priority] || priorityConfig.Info;
+              const typeInfo = typeLabels[alert.type] || { label: alert.type || "Notificação", icon: Bell, color: "text-gray-600" };
               const Icon = config.icon;
               const TypeIcon = typeInfo.icon;
               return (

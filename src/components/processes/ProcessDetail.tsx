@@ -185,13 +185,13 @@ export default function ProcessDetail() {
 
   const getStepActions = (step: number) => {
     switch(step) {
-      case 1: return { label: "Submeter", action: () => setTargetStep(2), hidden: false };
-      case 2: return { label: "Iniciar Validação", action: () => setTargetStep(3), hidden: false };
-      case 3: return { label: "Iniciar Avaliação", action: () => setTargetStep(4), hidden: false };
-      case 4: return { label: "Enviar para Aprovação", action: () => setTargetStep(5), hidden: false };
+      case 1: return { label: "Submeter", action: () => { setTargetStep(2); setShowTransition(true); }, hidden: false };
+      case 2: return { label: "Iniciar Validação", action: () => { setTargetStep(3); setShowTransition(true); }, hidden: false };
+      case 3: return { label: "Iniciar Avaliação", action: () => { setTargetStep(4); setShowTransition(true); }, hidden: false };
+      case 4: return { label: "Enviar para Aprovação", action: () => { setTargetStep(5); setShowTransition(true); }, hidden: false };
       case 5: return { label: "Abrir Decisão", action: () => setShowApproval(true), hidden: false };
-      case 6: return { label: "Comunicar Resultado", action: () => setTargetStep(7), hidden: false };
-      case 7: return { label: "Iniciar Monitorização", action: () => setTargetStep(8), hidden: false };
+      case 6: return { label: "Comunicar Resultado", action: () => { setTargetStep(7); setShowTransition(true); }, hidden: false };
+      case 7: return { label: "Iniciar Monitorização", action: () => { setTargetStep(8); setShowTransition(true); }, hidden: false };
       default: return null;
     }
   };

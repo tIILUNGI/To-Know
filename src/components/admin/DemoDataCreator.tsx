@@ -5,6 +5,7 @@ import { useToast } from "../../context/ToastContext";
 
 export default function DemoDataCreator() {
   const { addToast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
 
@@ -20,7 +21,25 @@ export default function DemoDataCreator() {
       } else {
         addToast("Erro: " + (data.error || "?"), "error");
       }
-    } catch (err) {
+    } catch (err: any) {
+      addToast("Erro: " + err.message, "error");
+    }
+    setLoading(false);
+  };
+
+  const createFullDemo = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/debug/fulldemo", { method: "POST" });
+      const data = await res.json();
+      
+      if (data.success) {
+        addToast(`Criado: ${data.suppliers} fornecedores, ${data.clients} clientes, ${data.processes} processos, ${data.evaluations} avaliações!`, "success");
+        setCreated(true);
+      } else {
+        addToast("Erro: " + (data.error || "?"), "error");
+      }
+    } catch (err: any) {
       addToast("Erro: " + err.message, "error");
     }
     setLoading(false);
@@ -38,7 +57,7 @@ export default function DemoDataCreator() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
               <Users size={18} className="text-blue-600" />
@@ -74,19 +93,23 @@ export default function DemoDataCreator() {
           </div>
         </div>
 
-        <button
-          onClick={createDemoData}
-          disabled={loading}
-          className="w-full bg-purple-600 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors disabled:opacity-50"
-        >
-          {loading ? (
-            "A criar..."
-          ) : (
-            <>
-              <Plus size={20} /> Criar Dados Demo
-            </>
-          )}
-        </button>
+        <div className="space-y-3">
+          <button
+            onClick={createFullDemo}
+            disabled={loading}
+            className="w-full bg-purple-600 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors disabled:opacity-50"
+          >
+            {loading ? "A criar..." : <><Plus size={20} /> Criar Dados Demo Completos</>}
+          </button>
+          
+          <button
+            onClick={createDemoData}
+            disabled={loading}
+            className="w-full bg-gray-100 text-gray-700 px-6 py-2 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm"
+          >
+            {loading ? "A criar..." : "Criar Dados Básicos (deprecated)"}
+          </button>
+        </div>
       </div>
     </div>
   );

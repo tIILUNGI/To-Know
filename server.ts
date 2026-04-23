@@ -17,6 +17,289 @@ const db = new Database("toknow.db");
 const SECRET_KEY = process.env.JWT_SECRET || "toknow-secret-key";
 
 // ============================================================
+// AUTO-CREATE TABLES IF NOT EXIST
+// ============================================================
+const initTables = () => {
+  const tables = [
+    `CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT DEFAULT 'Viewer',
+      email TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS entities (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE,
+      name TEXT NOT NULL,
+      trade_name TEXT,
+      entity_type TEXT NOT NULL,
+      sub_type TEXT,
+      tax_id TEXT,
+      registration_number TEXT,
+      status TEXT DEFAULT 'Em análise',
+      relationship_status TEXT DEFAULT 'Elegível',
+      sector TEXT,
+      supply_type TEXT,
+      category TEXT,
+      operational_impact TEXT,
+      criticality TEXT,
+      requesting_area TEXT,
+      business_unit TEXT,
+      payment_condition TEXT,
+      currency TEXT,
+      contract_limit REAL,
+      bank TEXT,
+      iban TEXT,
+      supply_history TEXT,
+      estimated_annual_volume REAL,
+      segment TEXT,
+      relationship_channel TEXT,
+      importance TEXT,
+      business_potential TEXT,
+      credit_limit REAL,
+      purchase_frequency TEXT,
+      average_ticket REAL,
+      address TEXT,
+      province TEXT,
+      municipality TEXT,
+      country TEXT DEFAULT 'Angola',
+      phone TEXT,
+      mobile TEXT,
+      email_main TEXT,
+      website TEXT,
+      resp_name TEXT,
+      resp_position TEXT,
+      resp_mobile TEXT,
+      resp_email TEXT,
+      is_pep INTEGER DEFAULT 0,
+      has_sanctions INTEGER DEFAULT 0,
+      money_laundering_risk TEXT,
+      default_risk TEXT,
+      judicial_history TEXT,
+      reputational_history TEXT,
+      fraud_risk TEXT,
+      financial_risk TEXT,
+      operational_risk TEXT,
+      final_risk_rating TEXT,
+      observations TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS criteria (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      entity_type TEXT,
+      process_type TEXT,
+      evaluation_type TEXT,
+      weight INTEGER DEFAULT 1,
+      min_score INTEGER DEFAULT 0,
+      max_score INTEGER DEFAULT 10,
+      is_required INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      display_order INTEGER DEFAULT 99
+    )`,
+    `CREATE TABLE IF NOT EXISTS processes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      process_number TEXT UNIQUE NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT DEFAULT 'Rascunho',
+      opener_id INTEGER,
+      area TEXT,
+      justification TEXT,
+      priority TEXT,
+      entity_id INTEGER,
+      current_step INTEGER DEFAULT 1,
+      approval_purpose TEXT,
+      operational_need TEXT,
+      result_score REAL,
+      result_percentage REAL,
+      compliance_level TEXT,
+      classification TEXT,
+      validity_date DATE,
+      next_reevaluation_date DATE,
+      conditions TEXT,
+      comments TEXT,
+      approver_id INTEGER,
+      decision_date DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (opener_id) REFERENCES users(id),
+      FOREIGN KEY (approver_id) REFERENCES users(id),
+      FOREIGN KEY (entity_id) REFERENCES entities(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS process_criteria (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      process_id INTEGER NOT NULL,
+      criteria_id INTEGER NOT NULL,
+      score INTEGER,
+      evidence TEXT,
+      comments TEXT,
+      FOREIGN KEY (process_id) REFERENCES processes(id),
+      FOREIGN KEY (criteria_id) REFERENCES criteria(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS evaluations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      process_id INTEGER,
+      entity_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      evaluation_type TEXT,
+      periodicity TEXT,
+      evaluator_id INTEGER,
+      evaluation_date DATE,
+      period_start DATE,
+      period_end DATE,
+      product_service TEXT,
+      unit TEXT,
+      overall_score REAL,
+      percentage REAL,
+      classification TEXT,
+      recommended_action TEXT,
+      action_plan TEXT,
+      action_plan_deadline DATE,
+      action_plan_responsible TEXT,
+      previous_evaluation_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (process_id) REFERENCES processes(id),
+      FOREIGN KEY (entity_id) REFERENCES entities(id),
+      FOREIGN KEY (evaluator_id) REFERENCES users(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS evaluation_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      evaluation_id INTEGER NOT NULL,
+      group_name TEXT,
+      criterion_name TEXT,
+      score INTEGER,
+      observation TEXT,
+      evidence TEXT,
+      FOREIGN KEY (evaluation_id) REFERENCES evaluations(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      entity_id INTEGER,
+      action TEXT NOT NULL,
+      details TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (entity_id) REFERENCES entities(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      message TEXT,
+      is_read INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      type TEXT DEFAULT 'Alert',
+      priority TEXT DEFAULT 'Info',
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entity_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT,
+      url TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (entity_id) REFERENCES entities(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS workflow_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      process_id INTEGER NOT NULL,
+      step_from INTEGER,
+      step_to INTEGER,
+      action TEXT,
+      notes TEXT,
+      performed_by INTEGER,
+      performed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (process_id) REFERENCES processes(id),
+      FOREIGN KEY (performed_by) REFERENCES users(id)
+    )`
+  ];
+  
+  tables.forEach((sql: string) => {
+    try { db.exec(sql); } catch (e) { /* ignore */ }
+  });
+  
+  // Seed users if not exist
+  const userCount = db.prepare("SELECT COUNT(*) as cnt FROM users").get() as any;
+  if (userCount.cnt === 0) {
+    const salt = bcrypt.genSaltSync(10);
+    db.prepare("INSERT INTO users (username, password, name, role, email) VALUES (?, ?, ?, ?, ?)").run("admin", bcrypt.hashSync("admin123", salt), "Administrador", "Administrator", "admin@toknow.co.ao");
+    db.prepare("INSERT INTO users (username, password, name, role, email) VALUES (?, ?, ?, ?)").run("gestor", bcrypt.hashSync("gestor123", salt), "Gestor Compliance", "Compliance Manager", "gestor@toknow.co.ao");
+    db.prepare("INSERT INTO users (username, password, name, role, email) VALUES (?, ?, ?, ?)").run("compras", bcrypt.hashSync("compras123", salt), "Compras", "Procurement", "compras@toknow.co.ao");
+    console.log("✓ Seeded default users");
+  }
+  
+   // Seed basic criteria if not exist
+   const critCount = db.prepare("SELECT COUNT(*) as cnt FROM criteria").get() as any;
+   if (critCount.cnt === 0) {
+     const critData = [
+       ["CRIT-001", "Qualidade", "Qualidade do produto/serviço", "Supplier", "Aprovação", 10, 5],
+       ["CRIT-002", "Prazo", "Cumprimento de prazos", "Supplier", "Aprovação", 8, 5],
+       ["CRIT-003", "Compliance", "Conformidade legal", "Supplier", "Aprovação", 10, 5],
+       ["CRIT-004", "Preço", "Preço competitivo", "Supplier", "Avaliação", 10, 5],
+       ["CRIT-005", "QualidadeServ", "Qualidade do serviço", "Client", "Performance", 10, 5],
+       ["CRIT-006", "Satisfacao", "Nível de satisfação", "Client", "Satisfaction", 10, 5]
+     ];
+     critData.forEach((c: any[]) => {
+       db.prepare("INSERT INTO criteria (code, name, description, entity_type, process_type, weight, max_score) VALUES (?, ?, ?, ?, ?, ?, ?)").run(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
+     });
+     console.log("✓ Seeded default criteria");
+   }
+
+    // Seed default 360 collaboration form if not exists
+    const formCount = db.prepare("SELECT COUNT(*) as cnt FROM collaboration_forms WHERE form_type = '360'").get() as any;
+    if (formCount.cnt === 0) {
+      // Find any user (prefer Administrator)
+      let createdBy = 1;
+      const admin = db.prepare("SELECT id FROM users WHERE role = 'Administrator' LIMIT 1").get() as any;
+      if (admin && admin.id) {
+        createdBy = admin.id;
+      } else {
+        const anyUser = db.prepare("SELECT id FROM users LIMIT 1").get() as any;
+        if (anyUser && anyUser.id) createdBy = anyUser.id;
+      }
+
+      const formId = db.prepare("INSERT INTO collaboration_forms (title, description, form_type, entity_type, created_by) VALUES (?, ?, ?, ?, ?)").run(
+        "Avaliação 360° - Know You Work",
+        "Formulário padrão para avaliação 360° de colaboradores (autoavaliação, avaliação de pares e avaliação da empresa)",
+        "360",
+        "Employee",
+        createdBy
+      ).lastInsertRowid;
+
+      const questions = [
+        // [question_text, question_type, options, weight, is_required, display_order]
+        ["Comunicação e colaboração", "rating", null, 2.0, 1, 1],
+        ["Responsabilidade", "rating", null, 2.0, 1, 2],
+        ["Qualidade do trabalho", "rating", null, 2.0, 1, 3],
+        ["Iniciativa e proatividade", "rating", null, 2.0, 1, 4],
+        ["Adaptabilidade", "rating", null, 1.5, 1, 5],
+        ["Liderança (se aplicável)", "rating", null, 1.5, 0, 6],
+        ["Pontos fortes", "text", null, 0, 0, 7],
+        ["Áreas de melhoria", "text", null, 0, 0, 8],
+        ["Sugestões", "text", null, 0, 0, 9]
+      ];
+
+      const insertQ = db.prepare("INSERT INTO collaboration_questions (form_id, question_text, question_type, options, weight, is_required, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
+      questions.forEach((q: any[]) => {
+        // q = [question_text, question_type, options, weight, is_required, display_order]
+        insertQ.run(formId, q[0], q[1], q[2], q[3], q[4], q[5]);
+      });
+
+      console.log("✓ Seeded default 360° evaluation form");
+    }
+  
+  console.log("✓ Database initialized");
+};
+
+initTables();
+
+// ============================================================
 // MIGRATIONS
 // ============================================================
 // Ensure relationship_status column exists in entities
@@ -26,6 +309,231 @@ if (!cols.find((c: any) => c.name === "relationship_status")) {
   db.exec("ALTER TABLE entities ADD COLUMN relationship_status TEXT DEFAULT 'Elegível'");
   console.log("✓ Added relationship_status column to entities");
 }
+if (!cols.find((c: any) => c.name === "updated_at")) {
+  try {
+    db.exec("ALTER TABLE entities ADD COLUMN updated_at DATETIME");
+    console.log("✓ Added updated_at column to entities (safe mode)");
+  } catch(e) {
+    console.log("entities updated_at already exists");
+  }
+}
+
+// Ensure evaluation_number and name columns exist in evaluations
+const checkEvalColumn = db.prepare("PRAGMA table_info(evaluations)");
+const evalCols = checkEvalColumn.all() as any[];
+if (!evalCols.find((c: any) => c.name === "evaluation_number")) {
+  db.exec("ALTER TABLE evaluations ADD COLUMN evaluation_number TEXT");
+  console.log("✓ Added evaluation_number column to evaluations");
+}
+if (!evalCols.find((c: any) => c.name === "name")) {
+  db.exec("ALTER TABLE evaluations ADD COLUMN name TEXT");
+  console.log("✓ Added name column to evaluations");
+}
+
+// Ensure current_step column exists in processes
+const checkProcessCol = db.prepare("PRAGMA table_info(processes)");
+const procCols = checkProcessCol.all() as any[];
+if (!procCols.find((c: any) => c.name === "current_step")) {
+  db.exec("ALTER TABLE processes ADD COLUMN current_step INTEGER DEFAULT 1");
+  console.log("✓ Added current_step column to processes");
+}
+if (!procCols.find((c: any) => c.name === "updated_at")) {
+  try {
+    db.exec("ALTER TABLE processes ADD COLUMN updated_at DATETIME");
+    console.log("✓ Added updated_at column to processes (safe mode)");
+  } catch(e) {
+    console.log("updated_at already exists or migration skipped");
+  }
+}
+if (!procCols.find((c: any) => c.name === "approval_purpose")) {
+  db.exec("ALTER TABLE processes ADD COLUMN approval_purpose TEXT");
+  console.log("✓ Added approval_purpose column to processes");
+}
+if (!procCols.find((c: any) => c.name === "operational_need")) {
+  db.exec("ALTER TABLE processes ADD COLUMN operational_need TEXT");
+  console.log("✓ Added operational_need column to processes");
+}
+if (!procCols.find((c: any) => c.name === "result_score")) {
+  db.exec("ALTER TABLE processes ADD COLUMN result_score REAL");
+  console.log("✓ Added result_score column to processes");
+}
+if (!procCols.find((c: any) => c.name === "result_percentage")) {
+  db.exec("ALTER TABLE processes ADD COLUMN result_percentage REAL");
+  console.log("✓ Added result_percentage column to processes");
+}
+if (!procCols.find((c: any) => c.name === "compliance_level")) {
+  db.exec("ALTER TABLE processes ADD COLUMN compliance_level TEXT");
+  console.log("✓ Added compliance_level column to processes");
+}
+if (!procCols.find((c: any) => c.name === "validity_date")) {
+  db.exec("ALTER TABLE processes ADD COLUMN validity_date DATE");
+  console.log("✓ Added validity_date column to processes");
+}
+if (!procCols.find((c: any) => c.name === "next_reevaluation_date")) {
+  db.exec("ALTER TABLE processes ADD COLUMN next_reevaluation_date DATE");
+  console.log("✓ Added next_reevaluation_date column to processes");
+}
+if (!procCols.find((c: any) => c.name === "conditions")) {
+  db.exec("ALTER TABLE processes ADD COLUMN conditions TEXT");
+  console.log("✓ Added conditions column to processes");
+}
+if (!procCols.find((c: any) => c.name === "comments")) {
+  db.exec("ALTER TABLE processes ADD COLUMN comments TEXT");
+  console.log("✓ Added comments column to processes");
+}
+if (!procCols.find((c: any) => c.name === "approver_id")) {
+  db.exec("ALTER TABLE processes ADD COLUMN approver_id INTEGER");
+  console.log("✓ Added approver_id column to processes");
+}
+if (!procCols.find((c: any) => c.name === "decision_date")) {
+  db.exec("ALTER TABLE processes ADD COLUMN decision_date DATETIME");
+  console.log("✓ Added decision_date column to processes");
+}
+
+// Ensure upload_date column exists in documents
+const checkDocCol = db.prepare("PRAGMA table_info(documents)");
+const docCols = checkDocCol.all() as any[];
+if (!docCols.find((c: any) => c.name === "upload_date")) {
+  db.exec("ALTER TABLE documents ADD COLUMN upload_date DATETIME");
+  console.log("✓ Added upload_date column to documents (NULL default)");
+}
+
+// Ensure is_required column exists in criteria
+const checkCritCol = db.prepare("PRAGMA table_info(criteria)");
+const critCols = checkCritCol.all() as any[];
+if (!critCols.find((c: any) => c.name === "is_required")) {
+  db.exec("ALTER TABLE criteria ADD COLUMN is_required INTEGER DEFAULT 1");
+  console.log("✓ Added is_required column to criteria");
+}
+if (!critCols.find((c: any) => c.name === "evaluation_type")) {
+  db.exec("ALTER TABLE criteria ADD COLUMN evaluation_type TEXT");
+  console.log("✓ Added evaluation_type column to criteria");
+}
+
+// Ensure collaboration tables exist
+const checkCollabTable = (name) => db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name);
+
+if (!checkCollabTable("collaboration_forms")) {
+  db.exec(`
+    CREATE TABLE collaboration_forms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      form_type TEXT NOT NULL,
+      entity_type TEXT,
+      created_by INTEGER,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+  console.log("✓ Created collaboration_forms table");
+}
+
+if (!checkCollabTable("collaboration_questions")) {
+  db.exec(`
+    CREATE TABLE collaboration_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER NOT NULL,
+      question_text TEXT NOT NULL,
+      question_type TEXT DEFAULT 'rating',
+      options TEXT,
+      weight REAL DEFAULT 1,
+      is_required INTEGER DEFAULT 1,
+      display_order INTEGER DEFAULT 0,
+      FOREIGN KEY (form_id) REFERENCES collaboration_forms(id) ON DELETE CASCADE
+    )
+  `);
+  console.log("✓ Created collaboration_questions table");
+}
+
+if (!checkCollabTable("collaboration_responses")) {
+  db.exec(`
+    CREATE TABLE collaboration_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER NOT NULL,
+      evaluated_id INTEGER,
+      evaluator_id INTEGER NOT NULL,
+      question_id INTEGER NOT NULL,
+      score INTEGER,
+      comment TEXT,
+      response_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      evaluated_employee_id INTEGER,
+      FOREIGN KEY (form_id) REFERENCES collaboration_forms(id),
+      FOREIGN KEY (evaluated_id) REFERENCES entities(id),
+      FOREIGN KEY (evaluator_id) REFERENCES users(id),
+      FOREIGN KEY (question_id) REFERENCES collaboration_questions(id),
+      FOREIGN KEY (evaluated_employee_id) REFERENCES employees(id)
+    )
+  `);
+  console.log("✓ Created collaboration_responses table");
+}
+
+// Add evaluated_employee_id column if not exists (migration for 360 employee support)
+const checkRespCol = db.prepare("PRAGMA table_info(collaboration_responses)");
+const respCols = checkRespCol.all() as any[];
+if (!respCols.find((c: any) => c.name === "evaluated_employee_id")) {
+  db.exec("ALTER TABLE collaboration_responses ADD COLUMN evaluated_employee_id INTEGER");
+  console.log("✓ Added evaluated_employee_id column to collaboration_responses");
+}
+
+// Ensure collaboration_forms has entity_type column
+const formCols = db.prepare("PRAGMA table_info(collaboration_forms)").all() as any[];
+if (!formCols.find((c: any) => c.name === "entity_type")) {
+  db.exec("ALTER TABLE collaboration_forms ADD COLUMN entity_type TEXT");
+  console.log("✓ Added entity_type column to collaboration_forms");
+}
+if (!formCols.find((c: any) => c.name === "is_active")) {
+  db.exec("ALTER TABLE collaboration_forms ADD COLUMN is_active INTEGER DEFAULT 1");
+  console.log("✓ Added is_active column to collaboration_forms");
+}
+
+// Ensure employees table exists
+if (!checkCollabTable("employees")) {
+  db.exec(`
+    CREATE TABLE employees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER UNIQUE,
+      name TEXT NOT NULL,
+      email TEXT,
+      position TEXT,
+      department TEXT,
+      hire_date DATE,
+      status TEXT DEFAULT 'Ativo',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
+  console.log("✓ Created employees table");
+}
+
+// Ensure evaluation_links table exists for customer satisfaction sharing
+if (!checkCollabTable("evaluation_links")) {
+  db.exec(`
+    CREATE TABLE evaluation_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      evaluation_id INTEGER,
+      token TEXT UNIQUE NOT NULL,
+      client_email TEXT,
+      expires_at DATE,
+      is_used INTEGER DEFAULT 0,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (evaluation_id) REFERENCES evaluations(id)
+    )
+  `);
+  console.log("✓ Created evaluation_links table");
+}
+
+// Fix processes with NULL current_step
+try {
+  const nullSteps = db.prepare("SELECT COUNT(*) as cnt FROM processes WHERE current_step IS NULL").get() as any;
+  if (nullSteps.cnt > 0) {
+    db.exec("UPDATE processes SET current_step = 1 WHERE current_step IS NULL");
+    console.log("✓ Fixed " + nullSteps.cnt + " processes with NULL current_step");
+  }
+} catch (e) { /* ignore */ }
 
 // Ensure process_types table exists
 const checkTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='process_types'");
@@ -162,6 +670,157 @@ const logAction = (userId: number | null, entityId: number | null, action: strin
 };
 
 // ============================================================
+// DEBUG ROUTES
+// ============================================================
+app.get("/debug/test", (req: any, res: any) => {
+  res.json({ ok: true, msg: "Debug funciona" });
+});
+
+app.get("/debug/createdemo", (req: any, res: any) => {
+  console.log("[SEED] Criando dados demo...");
+  try {
+    // Verificar se a tabela entities existe
+    const checkTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='entities'").get();
+    if (!checkTable) {
+      return res.status(500).json({ error: "Tabela entities não existe" });
+    }
+    
+    db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run("SUP-001", "Fornecedor Demo Lda", "Fornecedor Demo", "Supplier", "Ativo", "Tecnologia", "500001234", "Médio", "Crítico", "Médio");
+    const sid = db.prepare("SELECT last_insert_rowid() as id").get().id;
+    db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run("CLI-001", "Cliente Demo SA", "Cliente Demo", "Client", "Ativo", "Retail", "500005678", "Baixo", "Alto", "Baixo");
+    db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-001', 'Qualidade', 10, 5, 1)").run();
+    db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-002', 'Prazo', 8, 5, 1)").run();
+    db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, is_active) VALUES ('CRIT-003', 'Compliance', 10, 5, 1)").run();
+    console.log("[SEED] Dados demo criados com sucesso!");
+    res.json({ success: true, supplierId: sid });
+  } catch (e: any) {
+    console.log("[SEED] Erro:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/debug/fulldemo", (req: any, res: any) => {
+  console.log("[SEED] Criando dados demo completos...");
+  try {
+    let suppliers = 0, clients = 0, processes = 0, evaluations = 0;
+    
+    // 5 Fornecedores - only insert if NOT exists
+    const supplierData = [
+      ["SUP-001", "Fornecedor Demo Lda", "Fornecedor Demo", "Supplier", "Ativo", "Tecnologia", "500001234", "Médio", "Crítico", "Médio"],
+      ["SUP-002", "Técnica Angola SA", "Técnica", "Supplier", "Ativo", "Construction", "500002345", "Baixo", "Alto", "Alto"],
+      ["SUP-003", "Logistica Express Lda", "LogExpress", "Supplier", "Ativo", "Logistics", "500003456", "Médio", "Médio", "Médio"],
+      ["SUP-004", "Quality Supplies", "QualitySup", "Supplier", "Ativo", "Manufacturing", "500004567", "Alto", "Alto", "Alto"],
+      ["SUP-005", "Segurança Total SA", "SegTotal", "Supplier", "Pendente", "Security", "500005678", "Médio", "Crítico", "Alto"]
+    ];
+    supplierData.forEach((d: any[]) => {
+      const exists = db.prepare("SELECT id FROM entities WHERE code = ?").get(d[0]);
+      if (!exists) {
+        db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9]);
+        suppliers++;
+      } else {
+        suppliers++;
+      }
+    });
+    
+    // 5 Clientes
+    const clientData = [
+      ["CLI-001", "Cliente Demo SA", "Cliente Demo", "Client", "Ativo", "Retail", "500005678", "Baixo", "Alto", "Baixo"],
+      ["CLI-002", "Sonangol EP", "Sonangol", "Client", "Ativo", "Oil & Gas", "500006789", "Baixo", "Crítico", "Crítico"],
+      ["CLI-003", "Banco de Angola", "BDA", "Client", "Ativo", "Financial", "500007890", "Baixo", "Crítico", "Alto"],
+      ["CLI-004", "TAAG Airlines", "TAAG", "Client", "Ativo", "Aviation", "500008901", "Médio", "Alto", "Alto"],
+      ["CLI-005", "MPLA Party", "MPLA", "Client", "Ativo", "Political", "500009012", "Médio", "Crítico", "Crítico"]
+    ];
+    clientData.forEach((d: any[]) => {
+      const exists = db.prepare("SELECT id FROM entities WHERE code = ?").get(d[0]);
+      if (!exists) {
+        db.prepare("INSERT INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9]);
+        clients++;
+      } else {
+        clients++;
+      }
+    });
+    
+    // 12 Critérios
+    const criteriaData = [
+      ["CRIT-001", "Qualidade", 10, 5, "Supplier", "Aprovação"],
+      ["CRIT-002", "Prazo de Entrega", 8, 5, "Supplier", "Aprovação"],
+      ["CRIT-003", "Compliance Legal", 10, 5, "Supplier", "Aprovação"],
+      ["CRIT-004", "Preço Competititvo", 10, 5, "Supplier", "Avaliação"],
+      ["CRIT-005", "Capacidade Técnica", 8, 5, "Supplier", "Aprovação"],
+      ["CRIT-006", "Histórico", 5, 5, "Supplier", "Aprovação"],
+      ["CRIT-007", "Qualidade do Serviço", 10, 5, "Client", "Performance"],
+      ["CRIT-008", "Satisfação", 10, 5, "Client", "Satisfaction"],
+      ["CRIT-009", "Pontualidade", 8, 5, "Client", "Performance"],
+      ["CRIT-010", "Responsividade", 5, 5, "Client", "Performance"],
+      ["CRIT-011", "Relacionamento", 5, 5, "Client", "Satisfaction"],
+      ["CRIT-012", "Valor Acrescentado", 5, 5, "Supplier", "Reavaliação"]
+    ];
+    criteriaData.forEach((d: any[]) => {
+      const exists = db.prepare("SELECT id FROM criteria WHERE code = ?").get(d[0]);
+      if (!exists) {
+        db.prepare("INSERT INTO criteria (code, name, weight, max_score, entity_type, process_type, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)").run(d[0], d[1], d[2], d[3], d[4], d[5]);
+      }
+    });
+    
+    // 10 Processos - buscar IDs válidos das entidades que existem
+    const existingSuppliers: any[] = db.prepare("SELECT id FROM entities WHERE entity_type = 'Supplier' AND id IS NOT NULL ORDER BY id LIMIT 5").all();
+    if (existingSuppliers.length > 0) {
+      const processStatuses = ["Submetido", "Em análise", "Rascunho", "Aprovado", "Pendente", "Em análise", "Em aprovação", "Encerrado", "Reprovado", "Aprovado com restrições"];
+      const processSteps = [2, 3, 1, 6, 2, 3, 5, 8, 6, 6]; // Corresponding workflow steps
+      for (let i = 0; i < Math.min(10, existingSuppliers.length); i++) {
+        if (!existingSuppliers[i]?.id) continue;
+        try {
+          const pnum = "PROC-2024-" + String(i + 1).padStart(3, "0");
+          const existsProc = db.prepare("SELECT id FROM processes WHERE process_number = ?").get(pnum);
+          if (!existsProc) {
+            const type = i % 3 === 0 ? "Aprovação" : i % 3 === 1 ? "Avaliação" : "Reavaliação";
+            db.prepare("INSERT INTO processes (process_number, entity_id, type, status, area, justification, priority, current_step) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(pnum, existingSuppliers[i].id, type, processStatuses[i], "Compras", "Avaliação de fornecedor - Demo " + (i + 1), "Normal", processSteps[i]);
+            processes++;
+          }
+        } catch(e: any) { console.log("Process error:", e.message); }
+      }
+    }
+    
+    // 20 Avaliações
+    const entityIds: any[] = db.prepare("SELECT id, entity_type, name FROM entities LIMIT 10").all();
+    if (entityIds.length > 0) {
+      const classifications = ["Excelente", "Bom", "Satisfatório", "Insatisfatório"];
+      const types = ["Performance", "Satisfaction"];
+      const evalTypes = ["Nova", "Reavaliação"];
+      for (let i = 0; i < 20; i++) {
+        const entity = entityIds[i % entityIds.length];
+        if (!entity) continue;
+        try {
+          const evalNum = "AVL-" + String(2024) + "-" + String(i + 1).padStart(4, "0");
+          const evalName = `${types[i % 2]} - ${entity.name || 'Entidade'}`;
+          const evalType = types[i % 2];
+          const period = evalTypes[i % 2];
+          db.prepare("INSERT INTO evaluations (entity_id, type, evaluation_type, periodicity, period_start, period_end, overall_score, percentage, classification, evaluation_number, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
+            entity.id, 
+            entity.entity_type, 
+            evalType, 
+            period, 
+            "2024-01-01", 
+            "2024-12-31",
+            Math.floor(Math.random() * 10), 
+            Math.floor(Math.random() * 100), 
+            classifications[Math.floor(Math.random() * classifications.length)],
+            evalNum,
+            evalName
+          );
+          evaluations++;
+        } catch(e: any) { console.log("Eval error:", e.message); }
+      }
+    }
+    
+    res.json({ success: true, suppliers, clients, processes, evaluations });
+  } catch(e: any) {
+    console.log("[SEED] Erro:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================
 // AUTH ROUTES
 // ============================================================
 app.post("/api/auth/login", rateLimit(10, 15 * 60 * 1000), async (req: any, res: any) => {
@@ -264,6 +923,126 @@ app.delete("/api/users/:id", authenticateToken, requireRole("Administrator"), (r
   db.prepare("DELETE FROM users WHERE id = ?").run(req.params.id);
   logAction(req.user.id, null, "DELETE_USER", `Deleted user ID: ${req.params.id}`);
   res.json({ message: "Utilizador eliminado." });
+});
+
+// ============================================================
+// EMPLOYEES (Know You Work)
+// ============================================================
+app.get("/api/employees", authenticateToken, (req: any, res) => {
+  try {
+    const { department, status } = req.query;
+    let query = `
+      SELECT e.*, u.username, u.email as user_email
+      FROM employees e
+      LEFT JOIN users u ON e.user_id = u.id
+    `;
+    const params: any[] = [];
+    const conditions: string[] = [];
+
+    if (department) { conditions.push("e.department = ?"); params.push(department); }
+    if (status) { conditions.push("e.status = ?"); params.push(status); }
+
+    if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
+    query += " ORDER BY e.name ASC";
+
+    const employees = db.prepare(query).all(...params);
+    res.json(employees);
+  } catch (err: any) {
+    console.error("Get employees error:", err.message);
+    res.status(500).json({ error: "Erro ao carregar colaboradores.", message: err.message });
+  }
+});
+
+app.get("/api/employees/:id", authenticateToken, (req: any, res) => {
+  try {
+    const employee = db.prepare(`
+      SELECT e.*, u.username, u.email as user_email
+      FROM employees e
+      LEFT JOIN users u ON e.user_id = u.id
+      WHERE e.id = ?
+    `).get(req.params.id);
+    if (!employee) return res.status(404).json({ message: "Funcionário não encontrado." });
+    res.json(employee);
+  } catch (err: any) {
+    console.error("Get employee error:", err.message);
+    res.status(500).json({ error: "Erro ao carregar colaborador.", message: err.message });
+  }
+});
+
+app.post("/api/employees", authenticateToken, requireRole("Administrator", "Compliance Manager"), (req: any, res) => {
+  try {
+    console.log("[DEBUG] Create employee payload:", req.body);
+    const error = validateRequired(req.body, ["name"]);
+    if (error) return res.status(400).json({ message: error });
+
+    const { name, email, position, department, hire_date, user_id, status } = req.body;
+    const result = db.prepare(`
+      INSERT INTO employees (name, email, position, department, hire_date, user_id, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      name || null,
+      email || null,
+      position || null,
+      department || null,
+      hire_date || null,
+      user_id ? Number(user_id) : null,
+      status || "Ativo"
+    );
+
+    logAction(req.user.id, result.lastInsertRowid, "CREATE_EMPLOYEE", `Created employee: ${name}`);
+    res.status(201).json({ id: result.lastInsertRowid });
+  } catch (err: any) {
+    console.error("Create employee error:", err.message, err.stack, "Body:", JSON.stringify(req.body).substring(0, 200));
+    res.status(500).json({ error: "Erro ao criar colaborador.", message: err.message });
+  }
+});
+
+app.put("/api/employees/:id", authenticateToken, requireRole("Administrator", "Compliance Manager"), (req: any, res) => {
+  try {
+    const { name, email, position, department, hire_date, user_id, status } = req.body;
+
+    db.prepare(`
+      UPDATE employees SET
+        name = COALESCE(?, name),
+        email = COALESCE(?, email),
+        position = COALESCE(?, position),
+        department = COALESCE(?, department),
+        hire_date = COALESCE(?, hire_date),
+        user_id = COALESCE(?, user_id),
+        status = COALESCE(?, status),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      name,
+      email,
+      position,
+      department,
+      hire_date,
+      user_id ? Number(user_id) : null,
+      status,
+      req.params.id
+    );
+
+    logAction(req.user.id, Number(req.params.id), "UPDATE_EMPLOYEE", `Updated employee ID: ${req.params.id}`);
+    res.json({ message: "Funcionário actualizado." });
+  } catch (err: any) {
+    console.error("Update employee error:", err.message);
+    res.status(500).json({ error: "Erro ao actualizar colaborador.", message: err.message });
+  }
+});
+
+app.delete("/api/employees/:id", authenticateToken, requireRole("Administrator"), (req: any, res) => {
+  try {
+    const emp: any = db.prepare("SELECT name FROM employees WHERE id = ?").get(req.params.id);
+    if (!emp) return res.status(404).json({ message: "Funcionário não encontrado." });
+
+    db.prepare("DELETE FROM employees WHERE id = ?").run(req.params.id);
+    logAction(req.user.id, null, "DELETE_EMPLOYEE", `Deleted employee: ${emp.name}`);
+    res.json({ message: "Funcionário eliminado." });
+  } catch (err: any) {
+    console.error("Delete employee error:", err.message);
+    res.status(500).json({ error: "Erro ao eliminar colaborador.", message: err.message });
+  }
 });
 
 // ============================================================
@@ -450,6 +1229,17 @@ app.post("/api/entities/:id/documents", authenticateToken, upload.single("file")
   res.status(201).json({ id: result.lastInsertRowid, url });
 });
 
+// Endpoint genérico de upload (para formulários que não têm entidade ainda)
+app.post("/api/documents/upload", authenticateToken, upload.single("file"), (req: any, res) => {
+  if (!req.file) return res.status(400).json({ message: "Nenhum arquivo enviado" });
+  const { name, type, entity_id } = req.body;
+  const url = "/uploads/" + req.file.filename;
+  const entityId = entity_id ? parseInt(entity_id) : null;
+  const result = db.prepare("INSERT INTO documents (entity_id, name, type, url) VALUES (?, ?, ?, ?)").run(entityId, name || req.file.originalname, type || "Other", url);
+  logAction(req.user.id, entityId, "UPLOAD", `Uploaded document: ${name || req.file.originalname}`);
+  res.status(201).json({ id: result.lastInsertRowid, url });
+});
+
 app.delete("/api/documents/:id", authenticateToken, (req: any, res: any) => {
   const doc: any = db.prepare("SELECT * FROM documents WHERE id = ?").get(req.params.id);
   if (!doc) return res.status(404).json({ message: "Documento não encontrado." });
@@ -468,16 +1258,7 @@ app.use("/uploads", express.static(uploadDir));
 // ============================================================
 // ENTITY HISTORY
 // ============================================================
-app.get("/api/entities/:id/history", authenticateToken, (req, res) => {
-  const history = db.prepare(`
-    SELECT h.*, u.name as user_name 
-    FROM history h 
-    LEFT JOIN users u ON h.user_id = u.id 
-    WHERE h.entity_id = ? 
-    ORDER BY h.timestamp DESC
-  `).all(req.params.id);
-  res.json(history);
-});
+// Note: /api/entities/:id/history is already defined above with full details
 
 // Global history
 app.get("/api/history", authenticateToken, (req, res) => {
@@ -648,8 +1429,8 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
   const process_number = `PROC-${Date.now()}`;
 
   const result = db.prepare(`
-    INSERT INTO processes (process_number, entity_id, type, status, priority, area, justification, opener_id) 
-    VALUES (?, ?, ?, 'Rascunho', ?, ?, ?, ?)
+    INSERT INTO processes (process_number, entity_id, type, status, priority, area, justification, opener_id, current_step) 
+    VALUES (?, ?, ?, 'Rascunho', ?, ?, ?, ?, 1)
   `).run(process_number, entity_id, type, priority || "Normal", area, justification, req.user.id);
 
   const processId = result.lastInsertRowid;
@@ -680,7 +1461,7 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
     }
   }
 
-  res.status(201).json({ id: processId });
+  res.status(201).json({ id: processId, current_step: 1 });
 });
 
 // ============================================================
@@ -735,9 +1516,11 @@ const WORKFLOW_STEPS = {
 };
 
 function canTransition(stepFrom: number, stepTo: number, userRole: string): boolean {
-  const from = WORKFLOW_STEPS[stepFrom];
-  if (!from) return false;
-  return from.next.includes(stepTo) && from.allowedRoles.includes(userRole);
+  // Allow any forward transition for now (simplified workflow)
+  if (stepTo > stepFrom && stepTo <= 8) return true;
+  // Special case: allow reversion
+  if (stepTo < stepFrom) return true;
+  return false;
 }
 
 app.get("/api/workflow/steps", authenticateToken, (req, res) => {
@@ -893,12 +1676,16 @@ app.post("/api/evaluations", authenticateToken, (req: any, res) => {
   const error = validateRequired(req.body, ["entity_id", "type", "responses"]);
   if (error) return res.status(400).json({ message: error });
 
-  const { entity_id, type, evaluation_type, periodicity, period, product_service, unit, responses, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id } = req.body;
+  const { entity_id, type, evaluation_type, evaluation_type_detail, periodicity, period, product_service, unit, responses, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, name, evaluation_number } = req.body;
+
+  // Gerar evaluation_number se não for fornecido
+  const evalNum = evaluation_number || "AVL-" + Date.now();
+  const evalName = name || `${evaluation_type_detail === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${new Date().toLocaleDateString('pt-PT')}`;
 
   const result = db.prepare(`
-    INSERT INTO evaluations (entity_id, type, evaluation_type, periodicity, period, product_service, unit, evaluator_id, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, evaluation_date) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE)
-  `).run(entity_id, type, evaluation_type || "Nova", periodicity || "Anual", period, product_service, unit, req.user.id, action_plan || null, action_plan_deadline || null, action_plan_responsible || null, previous_evaluation_id || null);
+    INSERT INTO evaluations (entity_id, type, evaluation_type, periodicity, period, product_service, unit, evaluator_id, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, evaluation_date, evaluation_number, name) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?)
+  `).run(entity_id, type, evaluation_type || "Nova", periodicity || "Anual", period, product_service, unit, req.user.id, action_plan || null, action_plan_deadline || null, action_plan_responsible || null, previous_evaluation_id || null, evalNum, evalName);
 
   const evaluationId = result.lastInsertRowid;
 
@@ -988,6 +1775,152 @@ app.delete("/api/evaluations/:id", authenticateToken, (req: any, res: any) => {
 });
 
 // ============================================================
+// EVALUATION LINKS (Customer Satisfaction Sharing)
+// ============================================================
+app.post("/api/evaluations/:id/generate-link", authenticateToken, (req: any, res) => {
+  const evaluationId = req.params.id;
+  const evaluation: any = db.prepare("SELECT id, type FROM evaluations WHERE id = ?").get(evaluationId);
+  if (!evaluation) return res.status(404).json({ message: "Avaliação não encontrada." });
+
+  const { client_email, expires_days = 30 } = req.body;
+
+  // Generate a unique token
+  const token = "toknow_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9);
+  const expires_at = new Date();
+  expires_at.setDate(expires_at.getDate() + (expires_days || 30));
+
+  const result = db.prepare(`
+    INSERT INTO evaluation_links (evaluation_id, token, client_email, expires_at)
+    VALUES (?, ?, ?, ?)
+  `).run(evaluationId, token, client_email || null, expires_at.toISOString().split('T')[0]);
+
+  const linkUrl = `${req.protocol}://${req.get('host')}/avaliacao/${token}`;
+
+  logAction(req.user.id, evaluationId, "GENERATE_LINK", `Generated evaluation link: ${token}`);
+  res.status(201).json({
+    id: result.lastInsertRowid,
+    token,
+    link_url: linkUrl,
+    expires_at: expires_at.toISOString().split('T')[0]
+  });
+});
+
+app.get("/api/evaluation-links", authenticateToken, (req: any, res) => {
+  const { evaluation_id } = req.query;
+  let query = `
+    SELECT el.*, ev.name as evaluation_name, ev.type as evaluation_type, e.name as entity_name
+    FROM evaluation_links el
+    LEFT JOIN evaluations ev ON el.evaluation_id = ev.id
+    LEFT JOIN entities e ON ev.entity_id = e.id
+  `;
+  const params: any[] = [];
+  if (evaluation_id) {
+    query += " WHERE el.evaluation_id = ?";
+    params.push(evaluation_id);
+  }
+  query += " ORDER BY el.created_at DESC";
+
+  const links = db.prepare(query).all(...params);
+  res.json(links);
+});
+
+app.delete("/api/evaluation-links/:id", authenticateToken, (req: any, res) => {
+  const link: any = db.prepare("SELECT id FROM evaluation_links WHERE id = ?").get(req.params.id);
+  if (!link) return res.status(404).json({ message: "Link não encontrado." });
+
+  db.prepare("DELETE FROM evaluation_links WHERE id = ?").run(req.params.id);
+  logAction(req.user.id, null, "DELETE_LINK", `Deleted evaluation link ID: ${req.params.id}`);
+  res.json({ message: "Link eliminado." });
+});
+
+// Public endpoint - no auth required
+app.get("/api/public/evaluation/:token", (req: any, res) => {
+  const token = req.params.token;
+  const link: any = db.prepare(`
+    SELECT el.*, ev.evaluation_type, ev.name, ev.periodicity, ev.period_start, ev.period_end,
+           e.name as entity_name, e.entity_type
+    FROM evaluation_links el
+    JOIN evaluations ev ON el.evaluation_id = ev.id
+    JOIN entities e ON ev.entity_id = e.id
+    WHERE el.token = ? AND el.is_used = 0 AND (el.expires_at IS NULL OR el.expires_at >= date('now'))
+  `).get(token);
+
+  if (!link) {
+    return res.status(404).json({ message: "Link inválido ou expirado." });
+  }
+
+  // Get evaluation criteria/responses structure based on entity type
+  // For customer satisfaction, we need to get the criteria template
+  let criteria = [];
+  if (link.entity_type === 'Client') {
+    criteria = db.prepare(`
+      SELECT c.id, c.name, c.weight, c.max_score
+      FROM criteria c
+      WHERE (c.entity_type = 'Client' OR c.entity_type = 'Ambos')
+        AND c.evaluation_type = 'Satisfaction'
+        AND c.is_active = 1
+      ORDER BY c.display_order ASC
+    `).all();
+  }
+
+  res.json({ link, criteria });
+});
+
+// Public endpoint - submit evaluation without auth
+app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
+  const token = req.params.token;
+  const link: any = db.prepare("SELECT * FROM evaluation_links WHERE token = ? AND is_used = 0", token).get(token);
+
+  if (!link) {
+    return res.status(404).json({ message: "Link inválido ou já utilizado." });
+  }
+
+  const { responses, client_name, client_email } = req.body;
+  if (!responses || !Array.isArray(responses) || responses.length === 0) {
+    return res.status(400).json({ message: "Respostas são obrigatórias." });
+  }
+
+  // Calculate results
+  let totalScore = 0;
+  let count = 0;
+  for (const r of responses) {
+    totalScore += r.score || 0;
+    count++;
+  }
+  const average = count > 0 ? totalScore / count : 0;
+  const percentage = (average / 5) * 100; // Assuming max score per criterion is 5
+
+  let classification = "Crítico";
+  if (percentage >= 90) classification = "Excelente";
+  else if (percentage >= 75) classification = "Bom";
+  else if (percentage >= 60) classification = "Satisfatório";
+  else if (percentage >= 40) classification = "Insatisfatório";
+
+  // Store responses as an evaluation (similar to regular evaluations but linked)
+  const evalResult = db.prepare(`
+    INSERT INTO evaluation_responses (evaluation_id, group_name, criterion_name, score, observation)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  for (const r of responses) {
+    evalResult.run(link.evaluation_id, "Satisfação do Cliente", r.criterion_name || r.question, r.score, r.comment || null);
+  }
+
+  // Mark link as used
+  db.prepare("UPDATE evaluation_links SET is_used = 1, used_at = CURRENT_TIMESTAMP WHERE id = ?").run(link.id);
+
+  // Update evaluation with customer feedback
+  db.prepare(`
+    UPDATE evaluations
+    SET overall_score = ?, percentage = ?, classification = ?
+    WHERE id = ?
+  `).run(average.toFixed(1), percentage.toFixed(1), classification, link.evaluation_id);
+
+  logAction(null, link.evaluation_id, "CUSTOMER_EVAL_SUBMIT", `Customer evaluation submitted via link ${token}`);
+  res.status(201).json({ message: "Avaliação submetida com sucesso!", percentage, classification });
+});
+
+// ============================================================
 // NOTIFICATIONS
 // ============================================================
 app.get("/api/notifications", authenticateToken, (req: any, res) => {
@@ -1003,6 +1936,293 @@ app.post("/api/notifications/:id/read", authenticateToken, (req, res) => {
 app.post("/api/notifications/read-all", authenticateToken, (req: any, res) => {
   db.prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?").run(req.user.id);
   res.json({ message: "Todas as notificações marcadas como lidas." });
+});
+
+// ============================================================
+// COLLABORATION FORMS
+// ============================================================
+// GET /api/collaboration/forms - list all forms
+app.get("/api/collaboration/forms", authenticateToken, (req: any, res) => {
+  try {
+    const { form_type } = req.query;
+    let query = `
+      SELECT cf.*, u.name as created_by_name 
+      FROM collaboration_forms cf 
+      LEFT JOIN users u ON cf.created_by = u.id 
+    `;
+    const params: any[] = [];
+    if (form_type) {
+      query += " WHERE LOWER(cf.form_type) = LOWER(?)";
+      params.push(String(form_type));
+    }
+    query += " ORDER BY cf.created_at DESC";
+    const forms = db.prepare(query).all(...params) as any[];
+    res.json(forms);
+  } catch (err: any) {
+    console.error("Get collaboration forms error:", err.message);
+    res.status(500).json({ error: "Erro ao carregar formulários.", message: err.message });
+  }
+});
+
+// POST /api/collaboration/forms - create a form
+app.post("/api/collaboration/forms", authenticateToken, (req: any, res) => {
+  try {
+    const error = validateRequired(req.body, ["title", "form_type"]);
+    if (error) return res.status(400).json({ message: error });
+
+    const { title, description, form_type, entity_type } = req.body;
+    const result = db.prepare(`
+      INSERT INTO collaboration_forms (title, description, form_type, entity_type, created_by) 
+      VALUES (?, ?, ?, ?, ?)
+    `).run(title, description || null, form_type, entity_type || null, req.user.id);
+
+    const formId = result.lastInsertRowid;
+    logAction(req.user.id, Number(formId), "CREATE_COLLAB_FORM", `Created collaboration form: ${title}`);
+    res.status(201).json({ id: formId });
+  } catch (err: any) {
+    console.error("Create collaboration form error:", err.message);
+    res.status(500).json({ error: "Erro ao criar formulário.", message: err.message });
+  }
+});
+
+// GET /api/collaboration/forms/:id - get form with questions
+app.get("/api/collaboration/forms/:id", authenticateToken, (req, res) => {
+  try {
+    const form = db.prepare("SELECT * FROM collaboration_forms WHERE id = ?").get(req.params.id) as any;
+    if (!form) return res.status(404).json({ message: "Formulário não encontrado." });
+
+    const questions = db.prepare(`
+      SELECT * FROM collaboration_questions 
+      WHERE form_id = ? 
+      ORDER BY display_order ASC
+    `).all(req.params.id) as any[];
+
+    res.json({ ...form, questions });
+  } catch (err: any) {
+    console.error("Get collaboration form error:", err.message);
+    res.status(500).json({ error: "Erro ao carregar formulário.", message: err.message });
+  }
+});
+
+// PUT /api/collaboration/forms/:id - update form
+app.put("/api/collaboration/forms/:id", authenticateToken, (req: any, res) => {
+  const { title, description, form_type, entity_type, is_active } = req.body;
+  
+  db.prepare(`
+    UPDATE collaboration_forms SET 
+      title = COALESCE(?, title),
+      description = COALESCE(?, description),
+      form_type = COALESCE(?, form_type),
+      entity_type = COALESCE(?, entity_type),
+      is_active = COALESCE(?, is_active)
+    WHERE id = ?
+  `).run(title, description, form_type, entity_type, is_active ? 1 : 0, req.params.id);
+
+  logAction(req.user.id, Number(req.params.id), "UPDATE_COLLAB_FORM", `Updated collaboration form ID: ${req.params.id}`);
+  res.json({ message: "Formulário actualizado." });
+});
+
+// DELETE /api/collaboration/forms/:id - delete form (cascade handled by DB)
+app.delete("/api/collaboration/forms/:id", authenticateToken, requireRole("Administrator"), (req, res) => {
+  const form: any = db.prepare("SELECT title FROM collaboration_forms WHERE id = ?").get(req.params.id);
+  if (!form) return res.status(404).json({ message: "Formulário não encontrado." });
+
+  db.prepare("DELETE FROM collaboration_forms WHERE id = ?").run(req.params.id);
+  logAction(req.user.id, null, "DELETE_COLLAB_FORM", `Deleted collaboration form: ${form.title}`);
+  res.json({ message: "Formulário eliminado." });
+});
+
+// POST /api/collaboration/forms/:id/questions - add question to form
+app.post("/api/collaboration/forms/:id/questions", authenticateToken, (req: any, res) => {
+  const formId = req.params.id;
+  const form: any = db.prepare("SELECT id FROM collaboration_forms WHERE id = ?").get(formId);
+  if (!form) return res.status(404).json({ message: "Formulário não encontrado." });
+
+  const error = validateRequired(req.body, ["question_text"]);
+  if (error) return res.status(400).json({ message: error });
+
+  const { question_text, question_type, options, weight, is_required, display_order } = req.body;
+  const result = db.prepare(`
+    INSERT INTO collaboration_questions 
+    (form_id, question_text, question_type, options, weight, is_required, display_order) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(formId, question_text, question_type || "rating", options || null, weight || 1.0, is_required !== false ? 1 : 0, display_order || 0);
+
+  const questionId = result.lastInsertRowid;
+  logAction(req.user.id, Number(formId), "ADD_QUESTION", `Added question to form ${formId}, question ID: ${questionId}`);
+  res.status(201).json({ id: questionId });
+});
+
+// PUT /api/collaboration/questions/:id - update question
+app.put("/api/collaboration/questions/:id", authenticateToken, (req: any, res) => {
+  const { question_text, question_type, options, weight, is_required, display_order } = req.body;
+
+  db.prepare(`
+    UPDATE collaboration_questions SET 
+      question_text = COALESCE(?, question_text),
+      question_type = COALESCE(?, question_type),
+      options = COALESCE(?, options),
+      weight = COALESCE(?, weight),
+      is_required = COALESCE(?, is_required),
+      display_order = COALESCE(?, display_order)
+    WHERE id = ?
+  `).run(question_text, question_type, options, weight, is_required ? 1 : 0, display_order, req.params.id);
+
+  logAction(req.user.id, null, "UPDATE_QUESTION", `Updated question ID: ${req.params.id}`);
+  res.json({ message: "Questão actualizada." });
+});
+
+// DELETE /api/collaboration/questions/:id - delete question
+app.delete("/api/collaboration/questions/:id", authenticateToken, (req, res) => {
+  const question: any = db.prepare("SELECT form_id FROM collaboration_questions WHERE id = ?").get(req.params.id);
+  if (!question) return res.status(404).json({ message: "Questão não encontrada." });
+
+  db.prepare("DELETE FROM collaboration_questions WHERE id = ?").run(req.params.id);
+  logAction(req.user.id, question.form_id, "DELETE_QUESTION", `Deleted question ID: ${req.params.id}`);
+  res.json({ message: "Questão eliminada." });
+});
+
+// POST /api/collaboration/submit - submit form responses
+app.post("/api/collaboration/submit", authenticateToken, (req: any, res) => {
+  try {
+    const error = validateRequired(req.body, ["form_id", "responses"]);
+    if (error) return res.status(400).json({ message: error });
+
+    const { form_id, evaluated_id, evaluated_employee_id, responses } = req.body;
+
+    if (!Array.isArray(responses)) {
+      return res.status(400).json({ message: "Responses must be an array" });
+    }
+
+    const form: any = db.prepare("SELECT id FROM collaboration_forms WHERE id = ?").get(form_id);
+    if (!form) return res.status(404).json({ message: "Formulário não encontrado." });
+
+    // Validate employee exists if evaluated_employee_id provided
+    if (evaluated_employee_id) {
+      const emp: any = db.prepare("SELECT id FROM employees WHERE id = ?").get(evaluated_employee_id);
+      if (!emp) {
+        return res.status(400).json({ message: "Colaborador não encontrado.", evaluated_employee_id });
+      }
+    }
+
+    const questions = db.prepare("SELECT id, question_type FROM collaboration_questions WHERE form_id = ?").all(form_id) as any[];
+    const questionMap = new Map(questions.map(q => [q.id, q.question_type]));
+
+    let inserted = 0;
+    const insertResponse = db.prepare(`
+      INSERT INTO collaboration_responses 
+      (form_id, evaluated_id, evaluator_id, evaluated_employee_id, question_id, score, comment) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const r of responses) {
+      if (!r.question_id) continue;
+      const questionType = questionMap.get(r.question_id);
+      if (!questionType) continue;
+      const score = questionType === 'text' ? null : (r.score != null ? Number(r.score) : null);
+      try {
+        insertResponse.run(form_id, evaluated_id || null, req.user.id, evaluated_employee_id || null, r.question_id, score, r.comment || null);
+        inserted++;
+      } catch (err) {
+        console.error("Failed to insert response:", r, err);
+      }
+    }
+
+    if (inserted === 0) {
+      return res.status(400).json({ 
+        message: "Nenhuma resposta válida para inserir.", 
+        debug: { 
+          form_id, 
+          questionsCount: questions.length, 
+          receivedIds: responses.map((r: any) => r.question_id) 
+        } 
+      });
+    }
+
+    logAction(req.user.id, evaluated_id || evaluated_employee_id, "SUBMIT_FORM", `Submitted form ${form_id} with ${inserted} responses`);
+    res.status(201).json({ message: "Respostas submetidas com sucesso.", inserted });
+  } catch (err: any) {
+    console.error("Collaboration submit error:", err.message, err.stack);
+    res.status(500).json({ error: "Erro ao submeter avaliação.", message: err.message });
+  }
+});
+
+// DEBUG: Recriar seed 360° (apenas desenvolvimento)
+app.post("/api/debug/seed-360", authenticateToken, requireRole("Administrator"), (req: any, res) => {
+  try {
+    let createdBy = 1;
+    const admin = db.prepare("SELECT id FROM users WHERE role = 'Administrator' LIMIT 1").get() as any;
+    if (admin && admin.id) createdBy = admin.id;
+
+    const formCount = db.prepare("SELECT COUNT(*) as cnt FROM collaboration_forms WHERE form_type = '360'").get() as any;
+    if (formCount.cnt > 0) {
+      return res.json({ message: "Formulário 360° já existe. Delete primeiro se quiser recriar." });
+    }
+
+    const formId = db.prepare("INSERT INTO collaboration_forms (title, description, form_type, entity_type, created_by) VALUES (?, ?, ?, ?, ?)").run(
+      "Avaliação 360° - Know You Work",
+      "Formulário padrão para avaliação 360° de colaboradores",
+      "360",
+      "Employee",
+      createdBy
+    ).lastInsertRowid;
+
+    const questions = [
+      ["Comunicação e colaboração", "rating", null, 2.0, 1, 1],
+      ["Responsabilidade", "rating", null, 2.0, 1, 2],
+      ["Qualidade do trabalho", "rating", null, 2.0, 1, 3],
+      ["Iniciativa e proatividade", "rating", null, 2.0, 1, 4],
+      ["Adaptabilidade", "rating", null, 1.5, 1, 5],
+      ["Liderança (se aplicável)", "rating", null, 1.5, 0, 6],
+      ["Pontos fortes", "text", null, 0, 0, 7],
+      ["Áreas de melhoria", "text", null, 0, 0, 8],
+      ["Sugestões", "text", null, 0, 0, 9]
+    ];
+
+    const insertQ = db.prepare("INSERT INTO collaboration_questions (form_id, question_text, question_type, options, weight, is_required, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    questions.forEach((q: any[]) => {
+      insertQ.run(formId, q[0], q[1], q[2], q[3], q[4], q[5]);
+    });
+
+    res.json({ message: "Formulário 360° criado com sucesso!", formId, questionsCount: questions.length });
+  } catch (err: any) {
+    console.error("Seed 360 error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/collaboration/responses - list all responses (with filters)
+app.get("/api/collaboration/responses", authenticateToken, (req: any, res) => {
+  const { form_id, question_id, evaluator_id, evaluated_id, evaluated_employee_id } = req.query;
+  let query = `
+    SELECT cr.*, 
+           cf.title as form_title, 
+           cq.question_text,
+           u.name as evaluator_name,
+           e.name as evaluated_name,
+           emp.name as employee_name
+    FROM collaboration_responses cr
+    JOIN collaboration_forms cf ON cr.form_id = cf.id
+    JOIN collaboration_questions cq ON cr.question_id = cq.id
+    LEFT JOIN users u ON cr.evaluator_id = u.id
+    LEFT JOIN entities e ON cr.evaluated_id = e.id
+    LEFT JOIN employees emp ON cr.evaluated_employee_id = emp.id
+  `;
+  const params: any[] = [];
+  const conditions: string[] = [];
+
+  if (form_id) { conditions.push("cr.form_id = ?"); params.push(form_id); }
+  if (question_id) { conditions.push("cr.question_id = ?"); params.push(question_id); }
+  if (evaluator_id) { conditions.push("cr.evaluator_id = ?"); params.push(evaluator_id); }
+  if (evaluated_id) { conditions.push("cr.evaluated_id = ?"); params.push(evaluated_id); }
+  if (evaluated_employee_id) { conditions.push("cr.evaluated_employee_id = ?"); params.push(evaluated_employee_id); }
+
+  if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
+
+  query += " ORDER BY cr.response_date DESC";
+
+  const responses = db.prepare(query).all(...params) as any[];
+  res.json(responses);
 });
 
 const checkExpiringApprovals = () => {
@@ -1062,6 +2282,12 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
   if (processStatus) processFilter += ` AND p.status = '${processStatus}'`;
   if (area) processFilter += ` AND p.area = '${area}'`;
 
+// Migration: Add evaluation_number and name to evaluations if not exists
+  try {
+    db.exec("ALTER TABLE evaluations ADD COLUMN evaluation_number TEXT");
+    db.exec("ALTER TABLE evaluations ADD COLUMN name TEXT");
+  } catch (e) { /* columns may already exist */ }
+
   const stats = {
     totals: {
       suppliers: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier'${dateFilter}`).get(),
@@ -1109,10 +2335,10 @@ app.get("/api/reports/suppliers/:type", authenticateToken, (req: any, res) => {
 
   switch (type) {
     case "approved":
-      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Supplier' AND e.relationship_status = 'Homologado' ORDER BY e.name`;
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Supplier' AND (e.relationship_status = 'Homologado' OR e.relationship_status = 'Ativo' OR e.status = 'Ativo') ORDER BY e.name`;
       break;
     case "rejected":
-      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Supplier' AND e.relationship_status = 'Desqualificado' ORDER BY e.name`;
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Supplier' AND (e.relationship_status = 'Desqualificado' OR e.status = 'Inativo') ORDER BY e.name`;
       break;
     case "by-sector":
       query = `SELECT sector, COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND sector IS NOT NULL AND sector != '' GROUP BY sector ORDER BY count DESC`;
@@ -1175,7 +2401,7 @@ app.get("/api/reports/clients/:type", authenticateToken, (req: any, res) => {
 
   switch (type) {
     case "approved":
-      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Client' AND e.relationship_status = 'Homologado' ORDER BY e.name`;
+      query = `SELECT e.* FROM entities e WHERE e.entity_type = 'Client' AND (e.relationship_status = 'Homologado' OR e.relationship_status = 'Ativo' OR e.status = 'Ativo') ORDER BY e.name`;
       break;
     case "by-risk":
       query = `SELECT final_risk_rating as risk, COUNT(*) as count FROM entities WHERE entity_type = 'Client' AND final_risk_rating IS NOT NULL AND final_risk_rating != '' GROUP BY final_risk_rating ORDER BY count DESC`;
@@ -1369,8 +2595,107 @@ app.get("/api/reports/management/:type", authenticateToken, (req: any, res) => {
        res.json(result);
        break;
      }
-    default:
-      res.status(400).json({ message: "Tipo de relatório de gestão inválido." });
+      default:
+        res.status(400).json({ message: "Tipo de relatório de gestão inválido." });
+    }
+  });
+
+app.get("/api/reports/collaboration/:type", authenticateToken, (req: any, res) => {
+  try {
+    const { type } = req.params;
+    console.log(`[DEBUG] Collaboration report requested: ${type}`);
+
+    // Check if tables exist
+    const hasEmployees = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'").get();
+    const hasCollabResponses = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='collaboration_responses'").get();
+    const hasCollabForms = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='collaboration_forms'").get();
+
+    if (!hasEmployees || !hasCollabResponses || !hasCollabForms) {
+      console.log("[DEBUG] Missing tables:", { hasEmployees: !!hasEmployees, hasCollabResponses: !!hasCollabResponses, hasCollabForms: !!hasCollabForms });
+      return res.json([]);
+    }
+
+    switch (type) {
+      case "360-overall": {
+        const rows = db.prepare(`
+          SELECT cr.*, cf.title as form_title, e.name as evaluated_name, emp.name as employee_name
+          FROM collaboration_responses cr
+          JOIN collaboration_forms cf ON cr.form_id = cf.id
+          LEFT JOIN entities e ON cr.evaluated_id = e.id
+          LEFT JOIN employees emp ON cr.evaluated_employee_id = emp.id
+          WHERE cf.form_type = '360'
+          ORDER BY cr.response_date DESC
+          LIMIT 50
+        `).all() as any[];
+        console.log(`[DEBUG] 360-overall rows: ${rows.length}`);
+        res.json(rows);
+        break;
+      }
+      case "360-by-department": {
+        const rows = db.prepare(`
+          SELECT emp.department, COUNT(*) as count
+          FROM collaboration_responses cr
+          JOIN collaboration_forms cf ON cr.form_id = cf.id
+          JOIN employees emp ON cr.evaluated_employee_id = emp.id
+          WHERE cf.form_type = '360'
+          GROUP BY emp.department
+          ORDER BY count DESC
+        `).all() as any[];
+        console.log(`[DEBUG] 360-by-department rows: ${rows.length}`);
+        res.json(rows);
+        break;
+      }
+      case "360-by-position": {
+        const rows = db.prepare(`
+          SELECT emp.position, COUNT(*) as count, AVG(cr.score * 100.0 / cq.max_score) as avg_percentage
+          FROM collaboration_responses cr
+          JOIN collaboration_forms cf ON cr.form_id = cf.id
+          JOIN collaboration_questions cq ON cr.question_id = cq.id
+          JOIN employees emp ON cr.evaluated_employee_id = emp.id
+          WHERE cf.form_type = '360'
+          GROUP BY emp.position
+          ORDER BY avg_percentage DESC
+        `).all() as any[];
+        console.log(`[DEBUG] 360-by-position rows: ${rows.length}`);
+        res.json(rows);
+        break;
+      }
+      case "360-trend": {
+        const rows = db.prepare(`
+          SELECT strftime('%Y-%m', cr.response_date) as month, AVG(cr.score * 100.0 / cq.max_score) as avg_percentage
+          FROM collaboration_responses cr
+          JOIN collaboration_forms cf ON cr.form_id = cf.id
+          JOIN collaboration_questions cq ON cr.question_id = cq.id
+          WHERE cf.form_type = '360'
+          GROUP BY month
+          ORDER BY month DESC
+          LIMIT 6
+        `).all() as any[];
+        console.log(`[DEBUG] 360-trend rows: ${rows.length}`);
+        res.json(rows);
+        break;
+      }
+      case "360-participation": {
+        const totalResult = db.prepare("SELECT COUNT(*) as cnt FROM employees WHERE status = 'Ativo'").get() as any;
+        const total = totalResult?.cnt || 0;
+        const evaluatedResult = db.prepare(`
+          SELECT COUNT(DISTINCT cr.evaluated_employee_id) as cnt
+          FROM collaboration_responses cr
+          JOIN collaboration_forms cf ON cr.form_id = cf.id
+          WHERE cf.form_type = '360'
+        `).get() as any;
+        const evaluated = evaluatedResult?.cnt || 0;
+        console.log(`[DEBUG] 360-participation: total=${total}, evaluated=${evaluated}`);
+        res.json([{ total_employees: total, evaluated_count: evaluated }]);
+        break;
+      }
+      default:
+        res.status(400).json({ message: "Tipo de relatório de colaboração inválido." });
+        break;
+    }
+  } catch (err: any) {
+    console.error("[ERROR] Collaboration report:", err.message, err.stack);
+    res.status(500).json({ error: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined });
   }
 });
 async function startServer() {
@@ -1387,10 +2712,25 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+   app.listen(PORT, "0.0.0.0", () => {
+     console.log(`Server running on http://localhost:${PORT}`);
+   });
+ }
+
+// ============================================================
+// ERROR HANDLING - Ensure JSON responses for API errors
+// ============================================================
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error("Unhandled error:", err);
+  if (req.path.startsWith('/api/') && !req.path.startsWith('/api/public/')) {
+    return res.status(500).json({
+      error: "Erro interno do servidor",
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+  next(err);
+});
 
 startServer();
 

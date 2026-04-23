@@ -794,9 +794,115 @@ app.post("/api/processes", authenticateToken, function (req, res) {
     app.post("/api/notifications/read-all", authenticateToken, function (req, res) {
         db.prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?").run(req.user.id);
         res.json({ message: "Todas as notificações marcadas como lidas." });
-    });
-    
-    // ============================================================
+});
+app.post("/debug/fulldemo", function(req, res) {
+    console.log("[SEED] Criando dados demo completos...");
+    try {
+        var suppliers = 0, clients = 0, processes = 0, evaluations = 0;
+        
+        // 5 Fornecedores
+        var supplierData = [
+            ["SUP-001", "Fornecedor Demo Lda", "Fornecedor Demo", "Supplier", "Ativo", "Tecnologia", "500001234", "Médio", "Crítico", "Médio", "info@fornecedordemo.co.ao", "+244 222 000 001", "Luanda, Angola"],
+            ["SUP-002", "Técnica Angola SA", "Técnica", "Supplier", "Ativo", "Construction", "500002345", "Baixo", "Alto", "Alto", "geral@tecnica.co.ao", "+244 222 333 444", "Luanda, Talatona"],
+            ["SUP-003", "Logistica Express Lda", "LogExpress", "Supplier", "Ativo", "Logistics", "500003456", "Médio", "Médio", "Médio", "transporte@logexpress.co.ao", "+244 222 555 666", "Luanda, Bengo"],
+            ["SUP-004", "Quality Supplies", "QualitySup", "Supplier", "Ativo", "Manufacturing", "500004567", "Alto", "Alto", "Alto", "vendas@qualitysup.co.ao", "+244 222 777 888", "Luanda, Cazenga"],
+            ["SUP-005", "Segurança Total SA", "SegTotal", "Supplier", "Pendente", "Security", "500005678", "Médio", "Crítico", "Alto", "seguranca@segtotal.co.ao", "+244 222 999 000", "Luanda,/Isto"]
+        ];
+        supplierData.forEach(function(d) {
+            try { db.prepare("INSERT OR IGNORE INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality, email_main, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12]); suppliers++; } catch(e) {}
+        });
+        
+        // 5 Clientes
+        var clientData = [
+            ["CLI-001", "Cliente Demo SA", "Cliente Demo", "Client", "Ativo", "Retail", "500005678", "Baixo", "Alto", "Baixo", "compras@cliente-demo.co.ao", "+244 222 111 222", "Luanda"],
+            ["CLI-002", "Sonangol EP", "Sonangol", "Client", "Ativo", "Oil & Gas", "500006789", "Baixo", "Crítico", "Crítico", "parcerias@sonangol.co.ao", "+244 222 333 444", "Luanda"],
+            ["CLI-003", "Banco de Angola", "BDA", "Client", "Ativo", "Financial", "500007890", "Baixo", "Crítico", "Alto", "fornecedores@bda.ao", "+244 222 555 666", "Luanda"],
+            ["CLI-004", "TAAG Airlines", "TAAG", "Client", "Ativo", "Aviation", "500008901", "Médio", "Alto", "Alto", "compras@taag.co.ao", "+244 222 777 888", "Luanda"],
+            ["CLI-005", "MPLA Party", "MPLA", "Client", "Ativo", "Political", "500009012", "Médio", "Crítico", "Crítico", "finance@mpla.ao", "+244 222 999 000", "Luanda"]
+        ];
+        clientData.forEach(function(d) {
+            try { db.prepare("INSERT OR IGNORE INTO entities (code, name, trade_name, entity_type, status, sector, tax_id, final_risk_rating, operational_impact, criticality, email_main, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12]); clients++; } catch(e) {}
+        });
+        
+        // 12 Critérios
+        var criteriaData = [
+            ["CRIT-001", "Qualidade", 10, 5, "Supplier", "Aprovação"],
+            ["CRIT-002", "Prazo de Entrega", 8, 5, "Supplier", "Aprovação"],
+            ["CRIT-003", "Compliance Legal", 10, 5, "Supplier", "Aprovação"],
+            ["CRIT-004", "Preço Competititvo", 10, 5, "Supplier", "Avaliação"],
+            ["CRIT-005", "Capacidade Técnica", 8, 5, "Supplier", "Aprovação"],
+            ["CRIT-006", "Histórico", 5, 5, "Supplier", "Aprovação"],
+            ["CRIT-007", "Qualidade do Serviço", 10, 5, "Client", "Performance"],
+            ["CRIT-008", "Satisfação", 10, 5, "Client", "Satisfaction"],
+            ["CRIT-009", "Pontualidade", 8, 5, "Client", "Performance"],
+            ["CRIT-010", "Responsividade", 5, 5, "Client", "Performance"],
+            ["CRIT-011", "Relacionamento", 5, 5, "Client", "Satisfaction"],
+            ["CRIT-012", "Valor Acrescentado", 5, 5, "Supplier", "Reavaliação"]
+        ];
+        criteriaData.forEach(function(d) {
+            try { db.prepare("INSERT OR IGNORE INTO criteria (code, name, weight, max_score, entity_type, process_type, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)").run(d[0], d[1], d[2], d[3], d[4], d[5]); } catch(e) {}
+        });
+        
+        // 10 Processos
+        var supplierIds = db.prepare("SELECT id FROM entities WHERE entity_type = 'Supplier' LIMIT 5").all();
+        if (supplierIds.length > 0) {
+            var processData = [
+                [supplierIds[0].id, "Aprovação", "Submetido"],
+                [supplierIds[0].id || 1, "Avaliação", "Em análise"],
+                [supplierIds[1].id || 2, "Aprovação", "Rascunho"],
+                [supplierIds[2].id || 3, "Reavaliação", "Aprovado"],
+                [supplierIds[3].id || 4, "Aprovação", "Pendente"],
+                [supplierIds[4].id || 5, "Avaliação", "Em análise"]
+            ];
+            processData.forEach(function(d, i) {
+                try { 
+                    var pnum = "PROC-2024-00" + (i + 1);
+                    db.prepare("INSERT OR IGNORE INTO processes (process_number, entity_id, type, status, area, justification, priority, opener_id) VALUES (?, ?, ?, ?, ?, ?, ?, 1)").run(pnum, d[0], d[1], d[2], "Compras", "Avaliação de fornecedor", "Normal");
+                    processes++;
+                } catch(e) {}
+            });
+        }
+        
+        // 20 Avaliações
+        var entityIds = db.prepare("SELECT id, entity_type FROM entities LIMIT 10").all();
+        if (entityIds.length > 0) {
+            var evalData = [
+                [entityIds[0].id, "Supplier", "Performance", "Nova"],
+                [entityIds[0].id, "Supplier", "Performance", "Reavaliação"],
+                [entityIds[1].id, "Supplier", "Satisfaction", "Nova"],
+                [entityIds[2].id, "Client", "Performance", "Nova"],
+                [entityIds[3].id, "Client", "Satisfaction", "Nova"],
+                [entityIds[4].id, "Supplier", "Performance", "Reavaliação"],
+                [entityIds[0].id || 1, "Supplier", "Performance", "Nova"],
+                [entityIds[1].id || 2, "Supplier", "Performance", "Nova"],
+                [entityIds[2].id || 3, "Supplier", "Satisfaction", "Nova"],
+                [entityIds[3].id || 4, "Client", "Performance", "Nova"],
+                [entityIds[4].id || 5, "Client", "Satisfaction", "Nova"],
+                [entityIds[0].id || 1, "Supplier", "Performance", "Reavaliação"],
+                [entityIds[1].id || 2, "Supplier", "Performance", "Reavaliação"],
+                [entityIds[2].id || 3, "Supplier", "Satisfaction", "Nova"],
+                [entityIds[3].id || 4, "Client", "Performance", "Reavaliação"],
+                [entityIds[4].id || 5, "Client", "Satisfaction", "Nova"],
+                [entityIds[0].id || 1, "Supplier", "Performance", "Nova"],
+                [entityIds[1].id || 2, "Supplier", "Satisfaction", "Nova"],
+                [entityIds[2].id || 3, "Client", "Performance", "Nova"],
+                [entityIds[3].id || 4, "Client", "Satisfaction", "Nova"]
+            ];
+            evalData.forEach(function(d, i) {
+                try {
+                    db.prepare("INSERT INTO evaluations (entity_id, type, evaluation_type, periodicity, period, evaluator_id, overall_score, percentage, classification) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?)").run(d[0], d[1], d[2], d[3], "Anual", "2024", Math.floor(Math.random() * 10), Math.floor(Math.random() * 100), ["Excelente", "Bom", "Satisfatório", "Insatisfatório"][Math.floor(Math.random() * 4)]);
+                    evaluations++;
+                } catch(e) {}
+            });
+        }
+        
+        res.json({success: true, suppliers: suppliers, clients: clients, processes: processes, evaluations: evaluations});
+    } catch(e) {
+        res.status(500).json({error: e.message});
+    }
+});
+
+// ============================================================
     // ALERTS SYSTEM
     // ============================================================
     var generateAlerts = function () {

@@ -92,9 +92,10 @@ export default function ApprovalForm() {
     const formDataUpload = new FormData();
     formDataUpload.append('file', file);
     formDataUpload.append('name', file.name);
+    formDataUpload.append('type', 'Approval');
 
     try {
-      const res = await fetch("/api/uploads", {
+      const res = await fetch("/api/documents/upload", {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: formDataUpload
@@ -183,21 +184,31 @@ export default function ApprovalForm() {
     }
     setLoading(true);
 
+    // Criar um processo para cada fornecedor selecionado
+    const firstSupplier = selectedSuppliers[0];
     try {
-      const res = await fetch("/api/approvals", {
+      const res = await fetch("/api/processes", {
         method: "POST",
         headers: { 
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ ...formData, supplier_ids: selectedSuppliers.map(s => s.id), documents, criteria, result: resultData })
+        body: JSON.stringify({ 
+          entity_id: firstSupplier.id,
+          type: formData.approval_type || "Aprovação",
+          area: formData.requesting_area || "Compras",
+          justification: formData.approval_reason,
+          priority: formData.priority
+        })
       });
 
       if (res.ok) {
+        const data = await res.json();
         addToast("Aprovação salva com sucesso!", "success");
-        navigate("/processos");
+        navigate(`/processos/${data.id}`);
       } else {
-        addToast("Erro ao salvar aprovação.", "error");
+        const err = await res.json();
+        addToast(err.message || "Erro ao salvar aprovação.", "error");
       }
     } catch {
       addToast("Erro de conexão.", "error");

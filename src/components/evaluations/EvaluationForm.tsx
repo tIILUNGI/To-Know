@@ -28,57 +28,57 @@ export default function EvaluationForm() {
   const getQuestions = () => {
     // Supplier Performance
     if (isSupplier && isPerformance) return [
-      { id: "PER_QLD", label: "Qualidade do Fornecimento", description: "Conformidade com especificações técnicas" },
-      { id: "PER_PRA", label: "Cumprimento de Prazos", description: "Entregas dentro do prazo acordado" },
-      { id: "PER_DOC", label: "Conformidade Documental", description: "Documentação completa e correta" },
-      { id: "PER_CON", label: "Confiabilidade", description: "Consistência no cumprimento de entregas" },
-      { id: "PER_RES", label: "Capacidade de Resposta", description: "Agilidade em demandas e alterações" },
-      { id: "PER_FLX", label: "Flexibilidade", description: "Adaptação a mudanças solicitadas" },
-      { id: "PER_ATD", label: "Atendimento", description: "Qualidade do suporte e comunicação" },
-      { id: "PER_PV", label: "Preço vs Valor", description: "Custo-benefício oferecidos" },
-      { id: "PER_REC", label: "Gestão de Reclamações", description: "Tratamento de queixas e problemas" },
-      { id: "PER_CONT", label: "Continuidade Operacional", description: "Garantia de fornecimento contínuo" },
-      { id: "PER_HSE", label: "Segurança/HSE", description: "Compliance de segurança" },
-      { id: "PER_INV", label: "Inovação e Melhoria", description: "Melhorias propostas" },
+      { id: "PER_QLD", label: "Qualidade do Fornecimento" },
+      { id: "PER_PRA", label: "Cumprimento de Prazos" },
+      { id: "PER_DOC", label: "Conformidade Documental" },
+      { id: "PER_CON", label: "Confiabilidade" },
+      { id: "PER_RES", label: "Capacidade de Resposta" },
+      { id: "PER_FLX", label: "Flexibilidade" },
+      { id: "PER_ATD", label: "Atendimento" },
+      { id: "PER_PV", label: "Preço vs Valor" },
+      { id: "PER_REC", label: "Gestão de Reclamações" },
+      { id: "PER_CONT", label: "Continuidade Operacional" },
+      { id: "PER_HSE", label: "Segurança/HSE" },
+      { id: "PER_INV", label: "Inovação e Melhoria" },
     ];
     // Supplier Satisfaction
     if (isSupplier && !isPerformance) return [
-      { id: "SUP_SAT_REQ", label: "Clareza dos Requisitos", description: "Clareza nas especificações e requisitos" },
-      { id: "SUP_SAT_COM", label: "Facilidade de Comunicação", description: "Eficácia na comunicação" },
-      { id: "SUP_SAT_TEM", label: "Tempo de Resposta", description: "Rapidez no retorno" },
-      { id: "SUP_SAT_TRAT", label: "Justiça no Tratamento", description: "Equidade comercial" },
-      { id: "SUP_SAT_CONTR", label: "Clareza Contratual", description: "Transparência nos contratos" },
-      { id: "SUP_SAT_PAG", label: "Cumprimento de Pagamentos", description: "Pontualidade nos pagamentos" },
-      { id: "SUP_SAT_COOP", label: "Cooperação Operacional", description: "Trabalho em equipa" },
-      { id: "SUP_SAT_RES", label: "Resolução de Problemas", description: "Capacidade de resolver issues" },
-      { id: "SUP_SAT_TRANS", label: "Transparência", description: "Clareza na relação" },
-      { id: "SUP_SAT_CONT", label: "Interesse em Continuidade", description: "Parceria de longo prazo" },
+      { id: "SUP_SAT_REQ", label: "Clareza dos Requisitos" },
+      { id: "SUP_SAT_COM", label: "Facilidade de Comunicação" },
+      { id: "SUP_SAT_TEM", label: "Tempo de Resposta" },
+      { id: "SUP_SAT_TRAT", label: "Justiça no Tratamento" },
+      { id: "SUP_SAT_CONTR", label: "Clareza Contratual" },
+      { id: "SUP_SAT_PAG", label: "Cumprimento de Pagamentos" },
+      { id: "SUP_SAT_COOP", label: "Cooperação Operacional" },
+      { id: "SUP_SAT_RES", label: "Resolução de Problemas" },
+      { id: "SUP_SAT_TRANS", label: "Transparência" },
+      { id: "SUP_SAT_CONT", label: "Interesse em Continuidade" },
     ];
     // Client Performance
     if (!isSupplier && isPerformance) return [
-      { id: "CLI_PER_PAG", label: "Pontualidade no Pagamento", description: "Cumprimento de prazos de pagamento" },
-      { id: "CLI_PER_VOL", label: "Volume de Compras", description: "Volume de negócio" },
-      { id: "CLI_PER_FREQ", label: "Frequência de Relacionamento", description: "Constância" },
-      { id: "CLI_PER_CONTR", label: "Cumprimento Contratual", description: "Adesão aos termos" },
-      { id: "CLI_PER_COM", label: "Qualidade da Comunicação", description: "Clareza e eficácia" },
-      { id: "CLI_PER_EST", label: "Estabilidade da Relação", description: "Consistência" },
-      { id: "CLI_PER_LIT", label: "Ocorrência de Litígios", description: "Conflitos" },
-      { id: "CLI_PER_RENT", label: "Rentabilidade", description: "Margem de lucro" },
-      { id: "CLI_PER_FIDEL", label: "Fidelização", description: "Lealdade" },
-      { id: "CLI_PER_POT", label: "Potencial de Crescimento", description: "Crescimento esperado" },
+      { id: "CLI_PER_PAG", label: "Pontualidade no Pagamento" },
+      { id: "CLI_PER_VOL", label: "Volume de Compras" },
+      { id: "CLI_PER_FREQ", label: "Frequência de Relacionamento" },
+      { id: "CLI_PER_CONTR", label: "Cumprimento Contratual" },
+      { id: "CLI_PER_COM", label: "Qualidade da Comunicação" },
+      { id: "CLI_PER_EST", label: "Estabilidade da Relação" },
+      { id: "CLI_PER_LIT", label: "Ocorrência de Litígios" },
+      { id: "CLI_PER_RENT", label: "Rentabilidade" },
+      { id: "CLI_PER_FIDEL", label: "Fidelização" },
+      { id: "CLI_PER_POT", label: "Potencial de Crescimento" },
     ];
     // Client Satisfaction (default)
     return [
-      { id: "SAT_GER", label: "Satisfação Geral", description: "Avaliação holística geral" },
-      { id: "SAT_CAL", label: "Qualidade do Atendimento", description: "Excelência no suporte" },
-      { id: "SAT_TEM", label: "Tempo de Resposta", description: "Rapidez no retorno" },
-      { id: "SAT_PRO", label: "Qualidade do Produto", description: "Conformidade com esperado" },
-      { id: "SAT_PRA", label: "Cumprimento de Prazos", description: "Entregas no prazo" },
-      { id: "SAT_VAL", label: "Valor", description: "Custo-benefício" },
-      { id: "SAT_COM", label: "Comunicação", description: "Clareza e eficácia" },
-      { id: "SAT_REC", label: "Resolução de Reclamações", description: "Tratamento de queixas" },
-      { id: "SAT_CON", label: "Confiança", description: "Segurança na parceria" },
-      { id: "SAT_NPS", label: "NPS", description: "Net Promoter Score" },
+      { id: "SAT_GER", label: "Satisfação Geral" },
+      { id: "SAT_CAL", label: "Qualidade do Atendimento" },
+      { id: "SAT_TEM", label: "Tempo de Resposta" },
+      { id: "SAT_PRO", label: "Qualidade do Produto" },
+      { id: "SAT_PRA", label: "Cumprimento de Prazos" },
+      { id: "SAT_VAL", label: "Valor" },
+      { id: "SAT_COM", label: "Comunicação" },
+      { id: "SAT_REC", label: "Resolução de Reclamações" },
+      { id: "SAT_CON", label: "Confiança" },
+      { id: "SAT_NPS", label: "NPS" },
     ];
   };
 
@@ -243,30 +243,29 @@ onChange={(e) => setFormData({...formData, previous_evaluation_id: e.target.valu
           const maxScale = !isPerformance ? 5 : 10;
           const scaleLabels = !isPerformance ? ["Muito Insatisfeito", "Insatisfeito", "Neutro", "Satisfeito", "Muito Satisfeito"] : null;
           return (
-          <div key={q.id} className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">{q.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{q.description}</p>
-              {scaleLabels && <p className="text-[10px] text-blue-500 mt-1">{scaleLabels[responses[q.id] ? responses[q.id]-1 : 0] || "Selecione"}</p>}
+            <div key={q.id} className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900">{q.label}</p>
+                {scaleLabels && <p className="text-[10px] text-blue-500 mt-1">{scaleLabels[(responses[q.id] || 1) - 1] || "Selecione"}</p>}
+              </div>
+              <div className="flex gap-1.5 bg-gray-50 p-1 rounded-lg border border-gray-100">
+                {Array.from({ length: maxScale }, (_, i) => i + 1).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setScore(q.id, n)}
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs sm:text-sm transition-all ${
+                      responses[q.id] === n
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-400 hover:bg-white hover:text-gray-600"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-1.5 bg-gray-50 p-1 rounded-lg border border-gray-100">
-              {Array.from({length: maxScale}, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setScore(q.id, n)}
-                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded font-medium text-xs sm:text-sm transition-all ${
-                    responses[q.id] === n 
-                      ? "bg-blue-600 text-white" 
-                      : "text-gray-400 hover:bg-white hover:text-gray-600"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
       </div>
 
       {/* Action Plan Section */}

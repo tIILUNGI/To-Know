@@ -105,21 +105,40 @@ export default function ReevaluationForm() {
     }
     setLoading(true);
 
+    const responses = (selectedCriteria || []).map(c => ({
+      group_name: "Reavaliação",
+      criterion_name: c.name,
+      score: c.score || 0,
+      observation: ""
+    }));
+
+    const evalName = formData.name || `Reavaliação - ${selectedSupplier.name}`;
+
     try {
-      const res = await fetch("/api/reevaluations", {
+      const res = await fetch("/api/evaluations", {
         method: "POST",
         headers: { 
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ ...formData, supplier_id: selectedSupplier.id, criteria: selectedCriteria })
+        body: JSON.stringify({ 
+          entity_id: selectedSupplier.id,
+          type: 'Supplier',
+          evaluation_type: 'Reavaliação',
+          evaluation_type_detail: 'Reavaliação',
+          name: evalName,
+          periodicity: "Pontual",
+          period: formData.evaluation_date,
+          responses: responses
+        })
       });
 
        if (res.ok) {
           addToast("Reavaliação salva com sucesso!", "success");
           navigate("/avaliacoes");
         } else {
-          addToast("Erro ao salvar reavaliação.", "error");
+          const err = await res.json();
+          addToast(err.message || "Erro ao salvar reavaliação.", "error");
         }
     } catch {
       addToast("Erro de conexão.", "error");

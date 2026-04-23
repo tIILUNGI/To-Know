@@ -162,20 +162,27 @@ export default function ClientApprovalForm() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/client-approvals", {
+      const res = await fetch("/api/processes", {
         method: "POST",
         headers: { 
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ ...formData, client_id: selectedClient.id, criteria, result: resultData })
+        body: JSON.stringify({ 
+          entity_id: selectedClient.id,
+          type: formData.process_type,
+          area: "Comercial",
+          justification: formData.approval_reason
+        })
       });
 
       if (res.ok) {
+        const data = await res.json();
         addToast("Aprovação salva com sucesso!", "success");
-        navigate("/processos");
+        navigate(`/processos/${data.id}`);
       } else {
-        addToast("Erro ao salvar aprovação.", "error");
+        const err = await res.json();
+        addToast(err.message || "Erro ao salvar aprovação.", "error");
       }
     } catch {
       addToast("Erro de conexão.", "error");

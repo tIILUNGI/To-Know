@@ -22,79 +22,63 @@ db.exec(`
   );
 
    CREATE TABLE entities (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    code TEXT UNIQUE,
-    name TEXT NOT NULL,
-    trade_name TEXT,
-    entity_type TEXT NOT NULL, -- 'Supplier' or 'Client'
-    sub_type TEXT, -- 'Company', 'Individual', 'Public'
-    tax_id TEXT, -- NIF
-    registration_number TEXT,
-    status TEXT DEFAULT 'Em análise',
-    relationship_status TEXT DEFAULT 'Elegível',
-    sector TEXT,
-    supply_type TEXT,
-    category TEXT,
-    operational_impact TEXT,
-    criticality TEXT,
-    requesting_area TEXT,
-    business_unit TEXT,
-    
-    -- Classificação - Cliente
-    activity_sector TEXT,
-    client_type TEXT,
-    commercial_category TEXT,
-    
-    -- Financeiro/Comercial
-    payment_condition TEXT,
-    currency TEXT,
-    contract_limit REAL,
-    bank TEXT,
-    iban TEXT,
-    supply_history TEXT,
-    estimated_annual_volume REAL,
-    
-    -- Clientes específicos
-    segment TEXT,
-    relationship_channel TEXT,
-    importance TEXT,
-    business_potential TEXT,
-    credit_limit REAL,
-    purchase_frequency TEXT,
-    average_ticket REAL,
-    
-    -- Localização
-    address TEXT,
-    province TEXT,
-    municipality TEXT,
-    country TEXT DEFAULT 'Angola',
-    phone TEXT,
-    mobile TEXT,
-    email_main TEXT,
-    website TEXT,
-    
-    -- Responsável
-    resp_name TEXT,
-    resp_position TEXT,
-    resp_mobile TEXT,
-    resp_email TEXT,
-
-    -- Compliance e Risco
-    is_pep INTEGER DEFAULT 0,
-    has_sanctions INTEGER DEFAULT 0,
-    money_laundering_risk TEXT,
-    default_risk TEXT,
-    judicial_history TEXT,
-    reputational_history TEXT,
-    fraud_risk TEXT,
-    financial_risk TEXT,
-    operational_risk TEXT,
-    final_risk_rating TEXT,
-    observations TEXT,
-    
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     code TEXT UNIQUE,
+     name TEXT NOT NULL,
+     trade_name TEXT,
+     entity_type TEXT NOT NULL, -- 'Supplier', 'Client', 'Employee'
+     sub_type TEXT, -- 'Company', 'Individual', 'Public'
+     tax_id TEXT,
+     registration_number TEXT,
+     status TEXT DEFAULT 'Ativo',
+     relationship_status TEXT DEFAULT 'Elegível',
+     sector TEXT,
+     supply_type TEXT,
+     category TEXT,
+     operational_impact TEXT,
+     criticality TEXT,
+     requesting_area TEXT,
+     business_unit TEXT,
+     payment_condition TEXT,
+     currency TEXT,
+     contract_limit REAL,
+     bank TEXT,
+     iban TEXT,
+     supply_history TEXT,
+     estimated_annual_volume REAL,
+     segment TEXT,
+     relationship_channel TEXT,
+     importance TEXT,
+     business_potential TEXT,
+     credit_limit REAL,
+     purchase_frequency TEXT,
+     average_ticket REAL,
+     address TEXT,
+     province TEXT,
+     municipality TEXT,
+     country TEXT DEFAULT 'Angola',
+     phone TEXT,
+     mobile TEXT,
+     email_main TEXT,
+     website TEXT,
+     resp_name TEXT,
+     resp_position TEXT,
+     resp_mobile TEXT,
+     resp_email TEXT,
+     is_pep INTEGER DEFAULT 0,
+     has_sanctions INTEGER DEFAULT 0,
+     money_laundering_risk TEXT,
+     default_risk TEXT,
+     judicial_history TEXT,
+     reputational_history TEXT,
+     fraud_risk TEXT,
+     financial_risk TEXT,
+     operational_risk TEXT,
+     final_risk_rating TEXT,
+     observations TEXT,
+     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   );
 
   CREATE TABLE documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,37 +90,118 @@ db.exec(`
     FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
   );
 
-  CREATE TABLE processes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    process_number TEXT UNIQUE NOT NULL,
-    type TEXT NOT NULL,
-    status TEXT DEFAULT 'Rascunho',
-    opener_id INTEGER,
-    area TEXT,
-    justification TEXT,
-    priority TEXT, -- 'Normal', 'High', 'Critical'
-    entity_id INTEGER,
-    current_step INTEGER DEFAULT 1, -- 1: Draft, 2: Submitted, 3: Document Validation, 4: Technical Evaluation, 5: Approval, 6: Communication, 7: Monitoring, 8: Reevaluation
-    
-    -- Approval specific
-    approval_purpose TEXT, -- 'Partnership', 'Purchase', 'Subcontracting'
-    operational_need TEXT,
-    
-    result_score REAL,
-    result_percentage REAL,
-    compliance_level TEXT, -- 'Non-compliant', 'Partially compliant', 'Compliant'
-    classification TEXT,
-    validity_date DATE,
-    next_reevaluation_date DATE,
-    conditions TEXT,
-    comments TEXT,
-    approver_id INTEGER,
-    decision_date DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (opener_id) REFERENCES users(id),
-    FOREIGN KEY (approver_id) REFERENCES users(id),
-    FOREIGN KEY (entity_id) REFERENCES entities(id)
+   CREATE TABLE processes (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     process_number TEXT UNIQUE NOT NULL,
+     type TEXT NOT NULL,
+     status TEXT DEFAULT 'Rascunho',
+     opener_id INTEGER,
+     area TEXT,
+     justification TEXT,
+     priority TEXT, -- 'Normal', 'High', 'Critical'
+     entity_id INTEGER,
+     current_step INTEGER DEFAULT 1,
+     approval_purpose TEXT, -- 'Partnership', 'Purchase', 'Subcontracting'
+     operational_need TEXT,
+     result_score REAL,
+     result_percentage REAL,
+     compliance_level TEXT, -- 'Non-compliant', 'Partially compliant', 'Compliant'
+     classification TEXT,
+     validity_date DATE,
+     next_reevaluation_date DATE,
+     conditions TEXT,
+     comments TEXT,
+     approver_id INTEGER,
+     decision_date DATETIME,
+     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+     FOREIGN KEY (opener_id) REFERENCES users(id),
+     FOREIGN KEY (approver_id) REFERENCES users(id),
+     FOREIGN KEY (entity_id) REFERENCES entities(id)
+    );
+
+   -- Collaboration & 360° Evaluation Tables
+   CREATE TABLE IF NOT EXISTS collaboration_forms (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     title TEXT NOT NULL,
+     description TEXT,
+     form_type TEXT NOT NULL, -- 'self_assessment', 'peer_review', 'company_review', 'client_satisfaction'
+     entity_type TEXT, -- 'Employee', 'Company', 'Client'
+     created_by INTEGER,
+     is_active INTEGER DEFAULT 1,
+     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+     FOREIGN KEY (created_by) REFERENCES users(id)
    );
+
+   CREATE TABLE IF NOT EXISTS collaboration_questions (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     form_id INTEGER NOT NULL,
+     question_text TEXT NOT NULL,
+     question_type TEXT DEFAULT 'rating', -- 'rating', 'text', 'multiple_choice'
+     options TEXT, -- JSON array for multiple choice
+     weight REAL DEFAULT 1,
+     is_required INTEGER DEFAULT 1,
+     display_order INTEGER DEFAULT 0,
+     FOREIGN KEY (form_id) REFERENCES collaboration_forms(id) ON DELETE CASCADE
+   );
+
+   CREATE TABLE IF NOT EXISTS collaboration_responses (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     form_id INTEGER NOT NULL,
+     evaluated_id INTEGER, -- quem está sendo avaliado (colaborador ou empresa)
+     evaluator_id INTEGER NOT NULL, -- quem está avaliando
+     question_id INTEGER NOT NULL,
+     score INTEGER,
+     comment TEXT,
+     response_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+     FOREIGN KEY (form_id) REFERENCES collaboration_forms(id),
+     FOREIGN KEY (evaluated_id) REFERENCES entities(id),
+     FOREIGN KEY (evaluator_id) REFERENCES users(id),
+     FOREIGN KEY (question_id) REFERENCES collaboration_questions(id)
+   );
+
+   -- Workflow History
+
+   -- Collaboration & 360° Evaluation Tables
+   CREATE TABLE IF NOT EXISTS collaboration_forms (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     title TEXT NOT NULL,
+     description TEXT,
+     form_type TEXT NOT NULL, -- 'self_assessment', 'peer_review', 'company_review', 'client_satisfaction'
+     entity_type TEXT, -- 'Employee', 'Company', 'Client'
+     created_by INTEGER,
+     is_active INTEGER DEFAULT 1,
+     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+     FOREIGN KEY (created_by) REFERENCES users(id)
+   );
+
+   CREATE TABLE IF NOT EXISTS collaboration_questions (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     form_id INTEGER NOT NULL,
+     question_text TEXT NOT NULL,
+     question_type TEXT DEFAULT 'rating', -- 'rating', 'text', 'multiple_choice'
+     options TEXT, -- JSON array for multiple choice
+     weight REAL DEFAULT 1,
+     is_required INTEGER DEFAULT 1,
+     display_order INTEGER DEFAULT 0,
+     FOREIGN KEY (form_id) REFERENCES collaboration_forms(id) ON DELETE CASCADE
+   );
+
+   CREATE TABLE IF NOT EXISTS collaboration_responses (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     form_id INTEGER NOT NULL,
+     evaluated_id INTEGER, -- quem está sendo avaliado (colaborador ou empresa)
+     evaluator_id INTEGER NOT NULL, -- quem está avaliando
+     question_id INTEGER NOT NULL,
+     score INTEGER,
+     comment TEXT,
+     response_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+     FOREIGN KEY (form_id) REFERENCES collaboration_forms(id),
+     FOREIGN KEY (evaluated_id) REFERENCES entities(id),
+     FOREIGN KEY (evaluator_id) REFERENCES users(id),
+     FOREIGN KEY (question_id) REFERENCES collaboration_questions(id)
+   );
+
+   -- Workflow History
 
    -- Process Types
    CREATE TABLE IF NOT EXISTS process_types (

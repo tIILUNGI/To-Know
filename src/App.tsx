@@ -15,6 +15,9 @@ import ReevaluationForm from "./components/evaluations/ReevaluationForm";
 import ClientEvaluationForm from "./components/evaluations/ClientEvaluationForm";
 import EvaluationForm from "./components/evaluations/EvaluationForm";
 import EvaluationList from "./components/evaluations/EvaluationList";
+import Evaluation360Form from "./components/evaluations/Evaluation360Form";
+import SharedEvaluationForm from "./components/evaluations/SharedEvaluationForm";
+import EvaluationLinksManager from "./components/evaluations/EvaluationLinksManager";
 import CriteriaSettings from "./components/admin/CriteriaSettings";
 import ReportsView from "./components/reports/ReportsView";
 import UserProfile from "./components/profile/UserProfile";
@@ -25,6 +28,8 @@ import RolesInfo from "./components/users/RolesInfo";
 import ProcessTypesSettings from "./components/settings/ProcessTypesSettings";
 import AlertsPage from "./components/common/AlertsPage";
 import DemoDataCreator from "./components/admin/DemoDataCreator";
+import EmployeeList from "./components/employees/EmployeeList";
+import EmployeeForm from "./components/employees/EmployeeForm";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -48,6 +53,8 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
+            {/* Public evaluation link - no authentication required */}
+            <Route path="/avaliacao/:token" element={<SharedEvaluationForm />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="entities/suppliers" element={<EntityList type="Supplier" />} />
@@ -61,12 +68,20 @@ export default function App() {
               <Route path="processos/novo" element={<ProcessCreate />} />
               <Route path="processos/:id" element={<ProcessDetail />} />
               
-              {/* Avaliações */}
-              <Route path="avaliacoes" element={<EvaluationList />} />
-              <Route path="avaliacoes/nova" element={<EvaluationFormNew />} />
-              <Route path="avaliacoes/reevaluation" element={<ReevaluationForm />} />
-              <Route path="avaliacoes/cliente" element={<ClientEvaluationForm />} />
-              <Route path="avaliacoes/:id" element={<EvaluationForm />} />
+               {/* Avaliações */}
+               <Route path="avaliacoes" element={<EvaluationList />} />
+               <Route path="avaliacoes/nova" element={<EvaluationFormNew />} />
+               <Route path="avaliacoes/reevaluation" element={<ReevaluationForm />} />
+               <Route path="avaliacoes/cliente" element={<ClientEvaluationForm />} />
+               <Route path="avaliacoes/:id" element={<EvaluationForm />} />
+               <Route path="avaliacoes/360" element={<Evaluation360Form />} />
+               <Route path="avaliacoes/links" element={<EvaluationLinksManager />} />
+               
+               {/* Know You Work - Colaboradores */}
+               <Route path="colaboradores" element={<EmployeeList />} />
+               <Route path="colaboradores/novo" element={<EmployeeForm />} />
+               <Route path="colaboradores/:id/editar" element={<EmployeeForm />} />
+               <Route path="colaboradores/:id/avaliacao-360" element={<Evaluation360Form />} />
               
 
               

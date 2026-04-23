@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, Calendar, Trash2, Eye, BarChart3, Users, RotateCcw, Heart } from "lucide-react";
+import { Plus, Search, Filter, Calendar, Trash2, Eye, BarChart3, Users, RotateCcw, Heart, Link2 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 
@@ -94,38 +94,50 @@ export default function EvaluationList() {
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-900">Avaliações</h2>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/avaliacoes/nova"
-              className="btn btn-primary text-sm"
-            >
-              <Plus size={16} strokeWidth={2} /> Avaliar Fornecedor
-            </Link>
-            <Link
-              to="/avaliacoes/reevaluation"
-              className="btn btn-secondary text-sm"
-            >
-              <RotateCcw size={16} strokeWidth={2} /> Reavaliação
-            </Link>
-             <Link
-               to="/avaliacoes/cliente"
-               className="btn btn-secondary text-sm"
-             >
-               <Users size={16} strokeWidth={2} /> Avaliar Cliente
-             </Link>
-             <Link
-               to="/avaliacoes/nova?type=Satisfaction&entity=Supplier"
-               className="btn btn-secondary text-sm"
-             >
-               <Heart size={16} strokeWidth={2} /> Satisfação Fornecedor
-             </Link>
-             <Link
-               to="/avaliacoes/cliente?type=Satisfaction"
-               className="btn btn-secondary text-sm"
-             >
-               <Heart size={16} strokeWidth={2} /> Satisfação Cliente
-             </Link>
-           </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/avaliacoes/nova"
+                className="btn btn-primary text-sm"
+              >
+                <Plus size={16} strokeWidth={2} /> Avaliar Fornecedor
+              </Link>
+              <Link
+                to="/avaliacoes/reevaluation"
+                className="btn btn-secondary text-sm"
+              >
+                <RotateCcw size={16} strokeWidth={2} /> Reavaliação
+              </Link>
+              <Link
+                to="/avaliacoes/cliente"
+                className="btn btn-secondary text-sm"
+              >
+                <Users size={16} strokeWidth={2} /> Avaliar Cliente
+              </Link>
+              <Link
+                to="/avaliacoes/360"
+                className="btn btn-secondary text-sm"
+              >
+                <Users size={16} strokeWidth={2} /> Avaliação 360°
+              </Link>
+              <Link
+                to="/avaliacoes/links"
+                className="btn btn-secondary text-sm"
+              >
+                <Link2 size={16} strokeWidth={2} /> Links Clientes
+              </Link>
+              <Link
+                to="/avaliacoes/nova?type=Satisfaction&entity=Supplier"
+                className="btn btn-secondary text-sm"
+              >
+                <Heart size={16} strokeWidth={2} /> Satisfação Fornecedor
+              </Link>
+              <Link
+                to="/avaliacoes/cliente?type=Satisfaction"
+                className="btn btn-secondary text-sm"
+              >
+                <Heart size={16} strokeWidth={2} /> Satisfação Cliente
+              </Link>
+            </div>
         </div>
 
       <div className="card overflow-hidden">

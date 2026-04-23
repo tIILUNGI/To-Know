@@ -146,8 +146,11 @@ useEffect(() => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          ...formData,
           entity_id: selectedEntity?.id,
+          type: formData.process_type,
+          priority: formData.priority,
+          area: formData.requesting_area,
+          justification: formData.justification,
           criteria_ids: selectedCriteria.map((c: any) => c.id)
         })
       });

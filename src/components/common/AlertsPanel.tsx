@@ -3,10 +3,16 @@ import { Link } from "react-router-dom";
 import { Bell, X, AlertTriangle, Clock, AlertCircle, CheckCircle, Info, Filter } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
-type AlertType = "ProcessExpiry" | "EvaluationPending" | "CriticalEntity" | "ScheduledEvaluation" | "Alert";
-type Priority = "Critical" | "Warning" | "Info";
+type Alert = {
+  id: number;
+  type: string;
+  priority: string;
+  message: string;
+  is_read: number;
+  created_at: string;
+};
 
-const priorityConfig: Record<Priority, { color: string; bg: string; icon: any }> = {
+const priorityConfig: Record<string, { color: string; bg: string; icon: any }> = {
   Critical: { color: "text-red-600", bg: "bg-red-50 border-red-200", icon: AlertTriangle },
   Warning: { color: "text-amber-600", bg: "bg-amber-50 border-amber-200", icon: AlertCircle },
   Info: { color: "text-blue-600", bg: "bg-blue-50 border-blue-200", icon: Info },
@@ -22,7 +28,7 @@ const typeLabels: Record<string, string> = {
 
 export default function AlertsPanel() {
   const { addToast } = useToast();
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>("all");
@@ -30,20 +36,19 @@ export default function AlertsPanel() {
 
   const fetchAlerts = () => {
     setLoading(true);
-    fetch("/api/alerts", {
+    fetch("/api/notifications", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then((res) => {
         if (!res.ok) throw new Error("API error");
         return res.json();
       })
-      .then((data) => {
-        setAlerts(data.alerts || []);
-        setUnreadCount(data.unreadCount || 0);
+      .then((data: Alert[]) => {
+        setAlerts(data);
+        setUnreadCount(data.filter((n) => !n.is_read).length);
         setLoading(false);
       })
       .catch(() => {
-        // Silencioso - não mostrar erro sempre
         setAlerts([]);
         setUnreadCount(0);
         setLoading(false);
@@ -58,29 +63,29 @@ export default function AlertsPanel() {
 
   const handleDismiss = async (id: number) => {
     try {
-      await fetch(`/api/alerts/${id}/dismiss`, {
+      await fetch(`/api/notifications/${id}/read`, {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAlerts((prev) => prev.filter((a) => a.id !== id));
       setUnreadCount((prev) => Math.max(0, prev - 1));
-      addToast("Alerta descartado.", "success");
+      addToast("Notificação dispensada.", "success");
     } catch {
-      addToast("Erro ao descartar alerta.", "error");
+      addToast("Erro ao dispensar.", "error");
     }
   };
 
   const handleDismissAll = async () => {
     try {
-      await fetch("/api/alerts/dismiss-all", {
+      await fetch("/api/notifications/read-all", {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setAlerts([]);
       setUnreadCount(0);
-      addToast("Todos os alertas descartados.", "success");
+      addToast("Todas dispensadas.", "success");
     } catch {
-      addToast("Erro ao descartar alertas.", "error");
+      addToast("Erro ao dispensar.", "error");
     }
   };
 
@@ -125,10 +130,10 @@ export default function AlertsPanel() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bell size={18} className="text-gray-600" />
-                  <h3 className="font-bold text-gray-900">Alertas</h3>
+                  <h3 className="font-bold text-gray-900">Notificações</h3>
                   {unreadCount > 0 && (
                     <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
-                      {unreadCount} novo(s)
+                      {unreadCount} nova(s)
                     </span>
                   )}
                 </div>
@@ -141,38 +146,22 @@ export default function AlertsPanel() {
                   onClick={handleDismissAll}
                   className="mt-2 text-xs text-gray-500 hover:text-red-600 transition-colors"
                 >
-                  Descartar todos
+                  Dispensar todos
                 </button>
               )}
             </div>
 
-            <div className="p-2 border-b border-gray-100 flex gap-1 flex-wrap">
-              {["all", "ProcessExpiry", "EvaluationPending", "ScheduledEvaluation", "CriticalEntity"].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setFilterType(type)}
-                  className={`text-[10px] px-2 py-1 rounded-full font-medium transition-colors ${
-                    filterType === type
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {type === "all" ? "Todos" : typeLabels[type] || type}
-                </button>
-              ))}
-            </div>
-
             <div className="max-h-80 overflow-y-auto">
               {loading ? (
-                <div className="p-6 text-center text-gray-400 text-sm">Carregando alertas...</div>
+                <div className="p-6 text-center text-gray-400 text-sm">Carregando...</div>
               ) : filteredAlerts.length === 0 ? (
                 <div className="p-6 text-center">
                   <CheckCircle size={32} className="mx-auto text-green-300 mb-2" />
-                  <p className="text-sm text-gray-500">Nenhum alerta pendente</p>
+                  <p className="text-sm text-gray-500">Nenhuma notificação</p>
                 </div>
               ) : (
                 filteredAlerts.map((alert) => {
-                  const config = priorityConfig[alert.priority as Priority] || priorityConfig.Info;
+                  const config = priorityConfig[alert.priority] || priorityConfig.Info;
                   const Icon = config.icon;
                   return (
                     <div
@@ -184,7 +173,7 @@ export default function AlertsPanel() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-[10px] px-1.5 py-0.5 bg-white rounded font-medium text-gray-600">
-                              {typeLabels[alert.type] || alert.type}
+                              {typeLabels[alert.type] || alert.type || "Notificação"}
                             </span>
                             <span className="text-[10px] text-gray-400">{formatDate(alert.created_at)}</span>
                           </div>
@@ -215,7 +204,7 @@ export default function AlertsPanel() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Link to="/alertas" onClick={() => setIsOpen(false)} className="text-blue-600 hover:text-blue-700 font-medium">
-                    Ver todos
+                    Ver todas
                   </Link>
                 </div>
               </div>

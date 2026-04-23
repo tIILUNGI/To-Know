@@ -201,6 +201,17 @@ export default function EvaluationFormNew() {
     }
     setLoading(true);
 
+    const supplier = selectedSuppliers[0];
+    const responses = criteria.map(c => ({
+      group_name: "Avaliação",
+      criterion_name: c.name,
+      score: c.score || 0,
+      observation: c.observation || ""
+    }));
+
+    const evalType = formData.evaluation_type_detail === 'Satisfaction' ? 'Satisfaction' : 'Performance';
+    const evalName = formData.name || `${evalType === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${supplier.name}`;
+
     try {
       const res = await fetch("/api/evaluations", {
         method: "POST",
@@ -208,14 +219,24 @@ export default function EvaluationFormNew() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ ...formData, supplier_ids: selectedSuppliers.map(s => s.id), criteria, result: resultData })
+        body: JSON.stringify({ 
+          entity_id: supplier.id,
+          type: 'Supplier',
+          evaluation_type: evalType,
+          evaluation_type_detail: evalType,
+          name: evalName,
+          periodicity: formData.periodicity,
+          period: formData.period_start && formData.period_end ? `${formData.period_start} a ${formData.period_end}` : formData.evaluation_date,
+          responses: responses
+        })
       });
 
       if (res.ok) {
         addToast("Avaliação salva com sucesso!", "success");
         navigate("/avaliacoes");
       } else {
-        addToast("Erro ao salvar avaliação.", "error");
+        const err = await res.json();
+        addToast(err.message || "Erro ao salvar avaliação.", "error");
       }
     } catch {
       addToast("Erro de conexão.", "error");

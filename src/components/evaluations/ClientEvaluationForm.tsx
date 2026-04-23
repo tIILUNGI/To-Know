@@ -157,21 +157,43 @@ export default function ClientEvaluationForm() {
     }
     setLoading(true);
 
+    const responses = criteria.map(c => ({
+      group_name: "Avaliação",
+      criterion_name: c.name,
+      score: c.score || 0,
+      observation: ""
+    }));
+
+    const evalType = evalType === 'Satisfaction' ? 'Satisfaction' : 'Performance';
+    const evalName = formData.name || `${evalType === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${selectedClient.name}`;
+
     try {
-      const res = await fetch("/api/client-evaluations", {
+      const res = await fetch("/api/evaluations", {
         method: "POST",
         headers: { 
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json"
         },
-         body: JSON.stringify({ ...formData, client_id: selectedClient.id, criteria, result: resultData })
+        body: JSON.stringify({ 
+          entity_id: selectedClient.id,
+          type: 'Client',
+          evaluation_type: evalType === 'Satisfaction' ? 'Satisfaction' : 'Performance',
+          evaluation_type_detail: evalType,
+          name: evalName,
+          periodicity: "Pontual",
+          period: formData.period_start && formData.period_end 
+            ? `${formData.period_start} a ${formData.period_end}`
+            : formData.evaluation_date,
+          responses: responses
+        })
       });
 
         if (res.ok) {
           addToast("Avaliação salva com sucesso!", "success");
           navigate("/avaliacoes");
         } else {
-          addToast("Erro ao salvar avaliação.", "error");
+          const err = await res.json();
+          addToast(err.message || "Erro ao salvar avaliação.", "error");
         }
     } catch {
       addToast("Erro de conexão.", "error");

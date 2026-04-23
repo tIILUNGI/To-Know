@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, BarChart3, Settings, LogOut,
   Search, User, Bell, Menu, ClipboardList, Moon, Sun, X, Building2,
-  ChevronRight, CheckSquare, Star, Scale, Shield, GitFork, ListFilter
+  ChevronRight, CheckSquare, Star, Scale, Shield, GitFork, ListFilter, UserPlus
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import AlertsPanel from "./AlertsPanel";
@@ -121,6 +121,7 @@ export default function Layout() {
     { to: "/entities/clients", icon: Users, label: "Clientes" },
     { to: "/processos", icon: FileText, label: "Processos" },
     { to: "/avaliacoes", icon: ClipboardList, label: "Avaliações" },
+    { to: "/colaboradores", icon: UserPlus, label: "Colaboradores" },
     { to: "/relatorios", icon: BarChart3, label: "Relatórios" },
   ];
 
