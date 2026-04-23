@@ -149,7 +149,7 @@ export default function ClientEvaluationForm() {
     setResultData({ total_score: weightedScore.toFixed(1), percentage: percentage.toFixed(1), classification, decision });
   };
 
-  const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedClient) {
       addToast("Selecione um cliente.", "error");
@@ -164,8 +164,8 @@ export default function ClientEvaluationForm() {
       observation: ""
     }));
 
-    const evalType = evalType === 'Satisfaction' ? 'Satisfaction' : 'Performance';
-    const evalName = formData.name || `${evalType === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${selectedClient.name}`;
+    const submissionEvalType = evalType === 'Satisfaction' ? 'Satisfaction' : 'Performance';
+    const evalName = formData.name || `${submissionEvalType === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${selectedClient.name}`;
 
     try {
       const res = await fetch("/api/evaluations", {
@@ -177,8 +177,8 @@ export default function ClientEvaluationForm() {
         body: JSON.stringify({ 
           entity_id: selectedClient.id,
           type: 'Client',
-          evaluation_type: evalType === 'Satisfaction' ? 'Satisfaction' : 'Performance',
-          evaluation_type_detail: evalType,
+          evaluation_type: submissionEvalType === 'Satisfaction' ? 'Satisfaction' : 'Performance',
+          evaluation_type_detail: submissionEvalType,
           name: evalName,
           periodicity: "Pontual",
           period: formData.period_start && formData.period_end 
@@ -188,13 +188,13 @@ export default function ClientEvaluationForm() {
         })
       });
 
-        if (res.ok) {
-          addToast("Avaliação salva com sucesso!", "success");
-          navigate("/avaliacoes");
-        } else {
-          const err = await res.json();
-          addToast(err.message || "Erro ao salvar avaliação.", "error");
-        }
+      if (res.ok) {
+        addToast("Avaliação salva com sucesso!", "success");
+        navigate("/avaliacoes");
+      } else {
+        const err = await res.json();
+        addToast(err.message || "Erro ao salvar avaliação.", "error");
+      }
     } catch {
       addToast("Erro de conexão.", "error");
     }
