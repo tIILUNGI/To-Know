@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, Calendar, Trash2, Eye, BarChart3, Users, RotateCcw, Heart, Link2 } from "lucide-react";
+import { Plus, Search, Filter, Calendar, Trash2, Eye, BarChart3, Users, RotateCcw, Heart, Mail } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 
@@ -117,13 +117,7 @@ export default function EvaluationList() {
                 to="/avaliacoes/360"
                 className="btn btn-secondary text-sm"
               >
-                <Users size={16} strokeWidth={2} /> Avaliação 360°
-              </Link>
-              <Link
-                to="/avaliacoes/links"
-                className="btn btn-secondary text-sm"
-              >
-                <Link2 size={16} strokeWidth={2} /> Links Clientes
+                <Mail size={16} strokeWidth={2} /> Avaliação 360° por Email
               </Link>
               <Link
                 to="/avaliacoes/nova?type=Satisfaction&entity=Supplier"

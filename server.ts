@@ -16,6 +16,263 @@ const PORT = 3000;
 const db = new Database("toknow.db");
 const SECRET_KEY = process.env.JWT_SECRET || "toknow-secret-key";
 
+type Evaluation360SectionKey = "self" | "peer" | "manager";
+
+type Evaluation360QuestionSeed = {
+  section_key: Evaluation360SectionKey;
+  question_text: string;
+  display_order: number;
+  weight: number;
+  max_score: number;
+};
+
+const EVALUATION_360_SECTIONS = [
+  {
+    key: "self" as const,
+    title: "Parte 1: Autoavaliação do Funcionário",
+    description: "Por favor, avalie seu próprio desempenho de forma honesta e reflexiva."
+  },
+  {
+    key: "peer" as const,
+    title: "Parte 2: Avaliação de Colega",
+    description: "Por favor, avalie o desempenho do seu colega com base no relacionamento de trabalho."
+  },
+  {
+    key: "manager" as const,
+    title: "Parte 3: Avaliação do Gestor",
+    description: "Por favor, avalie a liderança e suporte do seu gestor."
+  }
+];
+
+const EVALUATION_360_SCALE = [
+  { value: 1, label: "Discordo Totalmente" },
+  { value: 2, label: "Discordo" },
+  { value: 3, label: "Neutro" },
+  { value: 4, label: "Concordo" },
+  { value: 5, label: "Concordo Totalmente" }
+];
+
+const DEFAULT_360_QUESTIONS: Evaluation360QuestionSeed[] = [
+  {
+    section_key: "self",
+    question_text: "Eu consistentemente alcanço ou supero minhas metas e objetivos de desempenho.",
+    display_order: 1,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "self",
+    question_text: "Eu me comunico efetivamente com membros da equipe e partes interessadas.",
+    display_order: 2,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "self",
+    question_text: "Eu tomo iniciativa para resolver problemas e melhorar processos.",
+    display_order: 3,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "self",
+    question_text: "Eu me adapto bem a mudanças e novos desafios na minha função.",
+    display_order: 4,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "self",
+    question_text: "Eu contribuo positivamente para a cultura da equipe e colaboração.",
+    display_order: 5,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "peer",
+    question_text: "Este colega é confiável e entrega trabalho de qualidade no prazo.",
+    display_order: 6,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "peer",
+    question_text: "Este colega se comunica claramente e responde prontamente.",
+    display_order: 7,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "peer",
+    question_text: "Este colega é colaborativo e apoia os objetivos da equipe.",
+    display_order: 8,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "peer",
+    question_text: "Este colega demonstra profissionalismo e respeito.",
+    display_order: 9,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "peer",
+    question_text: "Este colega contribui com ideias e soluções valiosas.",
+    display_order: 10,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager",
+    question_text: "Meu gestor fornece direção e expectativas claras.",
+    display_order: 11,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager",
+    question_text: "Meu gestor dá feedback construtivo e reconhecimento.",
+    display_order: 12,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager",
+    question_text: "Meu gestor apoia meu desenvolvimento profissional e crescimento.",
+    display_order: 13,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager",
+    question_text: "Meu gestor está acessível e responde às preocupações.",
+    display_order: 14,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager",
+    question_text: "Meu gestor cria um ambiente de equipe positivo e inclusivo.",
+    display_order: 15,
+    weight: 1,
+    max_score: 5
+  }
+];
+
+const generatePublicToken = (prefix: string) =>
+  `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 11)}`;
+
+const getAppBaseUrl = (req: any) => `${req.protocol}://${req.get("host")}`;
+
+const classifyPercentage = (percentage: number) => {
+  if (percentage >= 90) return "Excelente";
+  if (percentage >= 75) return "Bom";
+  if (percentage >= 60) return "Satisfatório";
+  if (percentage >= 40) return "Insatisfatório";
+  return "Crítico";
+};
+
+const buildEvaluation360EmailDraft = (employeeName: string, linkUrl: string) => {
+  const subject = `Avaliação 360° - ${employeeName}`;
+  const body = [
+    `Olá ${employeeName},`,
+    "",
+    "Foi iniciada uma nova avaliação 360° no To Know.",
+    "Use o link abaixo para preencher o formulário completo:",
+    linkUrl,
+    "",
+    "Obrigado."
+  ].join("\n");
+
+  return {
+    subject,
+    body,
+    mailto_url: `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  };
+};
+
+function ensureDefault360Template() {
+  const form = db.prepare(`
+    SELECT id
+    FROM collaboration_forms
+    WHERE LOWER(form_type) = '360'
+    ORDER BY id ASC
+    LIMIT 1
+  `).get() as any;
+
+  let formId: number;
+  if (!form?.id) {
+    let createdBy = 1;
+    const admin = db.prepare("SELECT id FROM users WHERE role = 'Administrator' LIMIT 1").get() as any;
+    if (admin?.id) createdBy = Number(admin.id);
+
+    formId = Number(
+      db.prepare(`
+        INSERT INTO collaboration_forms (title, description, form_type, entity_type, created_by, is_active)
+        VALUES (?, ?, ?, ?, ?, 1)
+      `).run(
+        "Avaliação 360° - Know You Work",
+        "Formulário padrão para avaliação 360° enviada por email a colaboradores.",
+        "360",
+        "Employee",
+        createdBy
+      ).lastInsertRowid
+    );
+  } else {
+    formId = Number(form.id);
+    db.prepare(`
+      UPDATE collaboration_forms
+      SET title = ?, description = ?, entity_type = 'Employee', is_active = 1
+      WHERE id = ?
+    `).run(
+      "Avaliação 360° - Know You Work",
+      "Formulário padrão para avaliação 360° enviada por email a colaboradores.",
+      formId
+    );
+  }
+
+  const questions = db.prepare(`
+    SELECT id, question_text, COALESCE(section_key, '') as section_key, display_order, COALESCE(max_score, 5) as max_score
+    FROM collaboration_questions
+    WHERE form_id = ?
+    ORDER BY display_order ASC
+  `).all(formId) as any[];
+
+  const templateMismatch =
+    questions.length !== DEFAULT_360_QUESTIONS.length ||
+    questions.some((question: any, index: number) => {
+      const seed = DEFAULT_360_QUESTIONS[index];
+      return !seed ||
+        question.question_text !== seed.question_text ||
+        question.section_key !== seed.section_key ||
+        Number(question.display_order) !== seed.display_order ||
+        Number(question.max_score || 5) !== seed.max_score;
+    });
+
+  if (templateMismatch) {
+    db.prepare("DELETE FROM collaboration_questions WHERE form_id = ?").run(formId);
+    const insertQuestion = db.prepare(`
+      INSERT INTO collaboration_questions
+      (form_id, question_text, question_type, options, weight, is_required, display_order, max_score, section_key)
+      VALUES (?, ?, 'rating', NULL, ?, 1, ?, ?, ?)
+    `);
+
+    DEFAULT_360_QUESTIONS.forEach((question) => {
+      insertQuestion.run(
+        formId,
+        question.question_text,
+        question.weight,
+        question.display_order,
+        question.max_score,
+        question.section_key
+      );
+    });
+  }
+
+  return formId;
+}
+
 // ============================================================
 // AUTO-CREATE TABLES IF NOT EXIST
 // ============================================================
@@ -251,49 +508,6 @@ const initTables = () => {
      console.log("✓ Seeded default criteria");
    }
 
-    // Seed default 360 collaboration form if not exists
-    const formCount = db.prepare("SELECT COUNT(*) as cnt FROM collaboration_forms WHERE form_type = '360'").get() as any;
-    if (formCount.cnt === 0) {
-      // Find any user (prefer Administrator)
-      let createdBy = 1;
-      const admin = db.prepare("SELECT id FROM users WHERE role = 'Administrator' LIMIT 1").get() as any;
-      if (admin && admin.id) {
-        createdBy = admin.id;
-      } else {
-        const anyUser = db.prepare("SELECT id FROM users LIMIT 1").get() as any;
-        if (anyUser && anyUser.id) createdBy = anyUser.id;
-      }
-
-      const formId = db.prepare("INSERT INTO collaboration_forms (title, description, form_type, entity_type, created_by) VALUES (?, ?, ?, ?, ?)").run(
-        "Avaliação 360° - Know You Work",
-        "Formulário padrão para avaliação 360° de colaboradores (autoavaliação, avaliação de pares e avaliação da empresa)",
-        "360",
-        "Employee",
-        createdBy
-      ).lastInsertRowid;
-
-      const questions = [
-        // [question_text, question_type, options, weight, is_required, display_order]
-        ["Comunicação e colaboração", "rating", null, 2.0, 1, 1],
-        ["Responsabilidade", "rating", null, 2.0, 1, 2],
-        ["Qualidade do trabalho", "rating", null, 2.0, 1, 3],
-        ["Iniciativa e proatividade", "rating", null, 2.0, 1, 4],
-        ["Adaptabilidade", "rating", null, 1.5, 1, 5],
-        ["Liderança (se aplicável)", "rating", null, 1.5, 0, 6],
-        ["Pontos fortes", "text", null, 0, 0, 7],
-        ["Áreas de melhoria", "text", null, 0, 0, 8],
-        ["Sugestões", "text", null, 0, 0, 9]
-      ];
-
-      const insertQ = db.prepare("INSERT INTO collaboration_questions (form_id, question_text, question_type, options, weight, is_required, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
-      questions.forEach((q: any[]) => {
-        // q = [question_text, question_type, options, weight, is_required, display_order]
-        insertQ.run(formId, q[0], q[1], q[2], q[3], q[4], q[5]);
-      });
-
-      console.log("✓ Seeded default 360° evaluation form");
-    }
-  
   console.log("✓ Database initialized");
 };
 
@@ -441,6 +655,8 @@ if (!checkCollabTable("collaboration_questions")) {
       weight REAL DEFAULT 1,
       is_required INTEGER DEFAULT 1,
       display_order INTEGER DEFAULT 0,
+      max_score INTEGER DEFAULT 5,
+      section_key TEXT,
       FOREIGN KEY (form_id) REFERENCES collaboration_forms(id) ON DELETE CASCADE
     )
   `);
@@ -459,6 +675,11 @@ if (!checkCollabTable("collaboration_responses")) {
       comment TEXT,
       response_date DATETIME DEFAULT CURRENT_TIMESTAMP,
       evaluated_employee_id INTEGER,
+      response_group TEXT,
+      response_source TEXT DEFAULT 'internal',
+      responder_name TEXT,
+      responder_email TEXT,
+      peer_name TEXT,
       FOREIGN KEY (form_id) REFERENCES collaboration_forms(id),
       FOREIGN KEY (evaluated_id) REFERENCES entities(id),
       FOREIGN KEY (evaluator_id) REFERENCES users(id),
@@ -476,6 +697,26 @@ if (!respCols.find((c: any) => c.name === "evaluated_employee_id")) {
   db.exec("ALTER TABLE collaboration_responses ADD COLUMN evaluated_employee_id INTEGER");
   console.log("✓ Added evaluated_employee_id column to collaboration_responses");
 }
+if (!respCols.find((c: any) => c.name === "response_group")) {
+  db.exec("ALTER TABLE collaboration_responses ADD COLUMN response_group TEXT");
+  console.log("✓ Added response_group column to collaboration_responses");
+}
+if (!respCols.find((c: any) => c.name === "response_source")) {
+  db.exec("ALTER TABLE collaboration_responses ADD COLUMN response_source TEXT DEFAULT 'internal'");
+  console.log("✓ Added response_source column to collaboration_responses");
+}
+if (!respCols.find((c: any) => c.name === "responder_name")) {
+  db.exec("ALTER TABLE collaboration_responses ADD COLUMN responder_name TEXT");
+  console.log("✓ Added responder_name column to collaboration_responses");
+}
+if (!respCols.find((c: any) => c.name === "responder_email")) {
+  db.exec("ALTER TABLE collaboration_responses ADD COLUMN responder_email TEXT");
+  console.log("✓ Added responder_email column to collaboration_responses");
+}
+if (!respCols.find((c: any) => c.name === "peer_name")) {
+  db.exec("ALTER TABLE collaboration_responses ADD COLUMN peer_name TEXT");
+  console.log("✓ Added peer_name column to collaboration_responses");
+}
 
 // Ensure collaboration_forms has entity_type column
 const formCols = db.prepare("PRAGMA table_info(collaboration_forms)").all() as any[];
@@ -486,6 +727,16 @@ if (!formCols.find((c: any) => c.name === "entity_type")) {
 if (!formCols.find((c: any) => c.name === "is_active")) {
   db.exec("ALTER TABLE collaboration_forms ADD COLUMN is_active INTEGER DEFAULT 1");
   console.log("✓ Added is_active column to collaboration_forms");
+}
+
+const questionCols = db.prepare("PRAGMA table_info(collaboration_questions)").all() as any[];
+if (!questionCols.find((c: any) => c.name === "max_score")) {
+  db.exec("ALTER TABLE collaboration_questions ADD COLUMN max_score INTEGER DEFAULT 5");
+  console.log("✓ Added max_score column to collaboration_questions");
+}
+if (!questionCols.find((c: any) => c.name === "section_key")) {
+  db.exec("ALTER TABLE collaboration_questions ADD COLUMN section_key TEXT");
+  console.log("✓ Added section_key column to collaboration_questions");
 }
 
 // Ensure employees table exists
@@ -525,6 +776,30 @@ if (!checkCollabTable("evaluation_links")) {
   `);
   console.log("✓ Created evaluation_links table");
 }
+
+if (!checkCollabTable("collaboration_links")) {
+  db.exec(`
+    CREATE TABLE collaboration_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER NOT NULL,
+      employee_id INTEGER NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      recipient_name TEXT,
+      recipient_email TEXT NOT NULL,
+      created_by INTEGER,
+      expires_at DATE,
+      is_used INTEGER DEFAULT 0,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (form_id) REFERENCES collaboration_forms(id),
+      FOREIGN KEY (employee_id) REFERENCES employees(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+  console.log("✓ Created collaboration_links table");
+}
+
+ensureDefault360Template();
 
 // Fix processes with NULL current_step
 try {
@@ -1833,9 +2108,307 @@ app.delete("/api/evaluation-links/:id", authenticateToken, (req: any, res) => {
   res.json({ message: "Link eliminado." });
 });
 
+app.get("/api/collaboration/360/template", authenticateToken, (req: any, res) => {
+  const form = db.prepare(`
+    SELECT *
+    FROM collaboration_forms
+    WHERE LOWER(form_type) = '360' AND is_active = 1
+    ORDER BY id ASC
+    LIMIT 1
+  `).get() as any;
+
+  if (!form) {
+    return res.status(404).json({ message: "Formulario 360 nao encontrado." });
+  }
+
+  const questions = db.prepare(`
+    SELECT
+      id,
+      question_text,
+      question_type,
+      weight,
+      is_required,
+      display_order,
+      COALESCE(max_score, 5) as max_score,
+      COALESCE(section_key, 'self') as section_key
+    FROM collaboration_questions
+    WHERE form_id = ?
+    ORDER BY display_order ASC
+  `).all(form.id) as any[];
+
+  res.json({
+    form,
+    sections: EVALUATION_360_SECTIONS,
+    scale: EVALUATION_360_SCALE,
+    questions
+  });
+});
+
+app.post("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
+  const { employee_id, recipient_email, expires_days = 30 } = req.body;
+  if (!employee_id) {
+    return res.status(400).json({ message: "Selecione o colaborador." });
+  }
+
+  const employee = db.prepare(`
+    SELECT id, name, email, position, department
+    FROM employees
+    WHERE id = ?
+  `).get(employee_id) as any;
+
+  if (!employee) {
+    return res.status(404).json({ message: "Colaborador nao encontrado." });
+  }
+
+  const form = db.prepare(`
+    SELECT id
+    FROM collaboration_forms
+    WHERE LOWER(form_type) = '360' AND is_active = 1
+    ORDER BY id ASC
+    LIMIT 1
+  `).get() as any;
+
+  if (!form) {
+    return res.status(404).json({ message: "Formulario 360 nao encontrado." });
+  }
+
+  const finalEmail = (recipient_email || employee.email || "").trim();
+  if (!finalEmail) {
+    return res.status(400).json({ message: "Informe o email do colaborador." });
+  }
+
+  const token = generatePublicToken("toknow360");
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + Number(expires_days || 30));
+
+  const result = db.prepare(`
+    INSERT INTO collaboration_links (form_id, employee_id, token, recipient_name, recipient_email, created_by, expires_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    form.id,
+    employee.id,
+    token,
+    employee.name,
+    finalEmail,
+    req.user.id,
+    expiresAt.toISOString().split("T")[0]
+  );
+
+  const linkUrl = `${getAppBaseUrl(req)}/avaliacao/${token}`;
+  const emailDraft = buildEvaluation360EmailDraft(employee.name, linkUrl);
+
+// FIXED: Skip logAction if no entity_id (prevents FK error)
+if (employee.id) {
+  logAction(req.user.id, employee.id, "GENERATE_360_LINK", `Generated 360 link for employee ${employee.id}: ${token}`);
+}
+
+  res.status(201).json({
+    id: result.lastInsertRowid,
+    token,
+    link_url: linkUrl,
+    expires_at: expiresAt.toISOString().split("T")[0],
+    employee,
+    email_draft: emailDraft
+  });
+});
+
+app.get("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
+  const links = db.prepare(`
+    SELECT
+      cl.*,
+      emp.name as employee_name,
+      emp.email as employee_email,
+      emp.position,
+      emp.department,
+      ROUND(AVG(CASE WHEN cr.score IS NOT NULL THEN (cr.score * 100.0 / COALESCE(cq.max_score, 5)) END), 1) as percentage,
+      COUNT(CASE WHEN cr.score IS NOT NULL THEN 1 END) as answered_questions,
+      MAX(cr.response_date) as submitted_at,
+      MAX(cr.responder_email) as responder_email,
+      MAX(cr.peer_name) as peer_name
+    FROM collaboration_links cl
+    JOIN employees emp ON cl.employee_id = emp.id
+    LEFT JOIN collaboration_responses cr ON cr.response_group = cl.token
+    LEFT JOIN collaboration_questions cq ON cq.id = cr.question_id
+    GROUP BY cl.id, emp.name, emp.email, emp.position, emp.department
+    ORDER BY cl.created_at DESC
+  `).all() as any[];
+
+  res.json(links.map((link: any) => ({
+    ...link,
+    classification: link.percentage != null ? classifyPercentage(Number(link.percentage)) : null
+  })));
+});
+
+app.get("/api/collaboration/360/submissions", authenticateToken, (req: any, res) => {
+  const { employee_id } = req.query;
+  let query = `
+    SELECT
+      cl.id,
+      cl.token,
+      cl.recipient_name,
+      cl.recipient_email,
+      cl.created_at,
+      cl.used_at,
+      emp.id as employee_id,
+      emp.name as employee_name,
+      emp.position,
+      emp.department,
+      ROUND(AVG(CASE WHEN cr.score IS NOT NULL THEN (cr.score * 100.0 / COALESCE(cq.max_score, 5)) END), 1) as percentage,
+      COUNT(CASE WHEN cr.score IS NOT NULL THEN 1 END) as answered_questions,
+      MAX(cr.response_date) as submitted_at,
+      MAX(cr.responder_email) as responder_email,
+      MAX(cr.peer_name) as peer_name
+    FROM collaboration_links cl
+    JOIN employees emp ON cl.employee_id = emp.id
+    JOIN collaboration_responses cr ON cr.response_group = cl.token
+    JOIN collaboration_questions cq ON cq.id = cr.question_id
+    WHERE cl.is_used = 1
+  `;
+  const params: any[] = [];
+
+  if (employee_id) {
+    query += " AND cl.employee_id = ?";
+    params.push(employee_id);
+  }
+
+  query += `
+    GROUP BY cl.id, emp.id, emp.name, emp.position, emp.department
+    ORDER BY MAX(cr.response_date) DESC
+  `;
+
+  const submissions = db.prepare(query).all(...params) as any[];
+  res.json(submissions.map((submission: any) => ({
+    ...submission,
+    classification: classifyPercentage(Number(submission.percentage || 0))
+  })));
+});
+
+app.get("/api/collaboration/360/submissions/:token", authenticateToken, (req: any, res) => {
+  const submission = db.prepare(`
+    SELECT
+      cl.*,
+      cf.title as form_title,
+      emp.name as employee_name,
+      emp.email as employee_email,
+      emp.position,
+      emp.department
+    FROM collaboration_links cl
+    JOIN collaboration_forms cf ON cl.form_id = cf.id
+    JOIN employees emp ON cl.employee_id = emp.id
+    WHERE cl.token = ? AND cl.is_used = 1
+  `).get(req.params.token) as any;
+
+  if (!submission) {
+    return res.status(404).json({ message: "Submissao nao encontrada." });
+  }
+
+  const responses = db.prepare(`
+    SELECT
+      cr.question_id,
+      cr.score,
+      cr.comment,
+      cr.response_date,
+      cr.responder_name,
+      cr.responder_email,
+      cr.peer_name,
+      cq.question_text,
+      COALESCE(cq.max_score, 5) as max_score,
+      COALESCE(cq.section_key, 'self') as section_key,
+      cq.display_order
+    FROM collaboration_responses cr
+    JOIN collaboration_questions cq ON cq.id = cr.question_id
+    WHERE cr.response_group = ?
+    ORDER BY cq.display_order ASC
+  `).all(req.params.token) as any[];
+
+  const percentage =
+    responses.length > 0
+      ? responses.reduce((sum: number, response: any) => sum + ((Number(response.score || 0) / Number(response.max_score || 5)) * 100), 0) / responses.length
+      : 0;
+
+  res.json({
+    submission: {
+      ...submission,
+      percentage: Number(percentage.toFixed(1)),
+      classification: classifyPercentage(percentage)
+    },
+    sections: EVALUATION_360_SECTIONS,
+    scale: EVALUATION_360_SCALE,
+    responses
+  });
+});
+
+app.delete("/api/collaboration/360/links/:id", authenticateToken, (req: any, res) => {
+  const link = db.prepare("SELECT id, is_used FROM collaboration_links WHERE id = ?").get(req.params.id) as any;
+  if (!link) {
+    return res.status(404).json({ message: "Convite nao encontrado." });
+  }
+  if (Number(link.is_used) === 1) {
+    return res.status(409).json({ message: "Nao e possivel eliminar um convite ja preenchido." });
+  }
+
+  db.prepare("DELETE FROM collaboration_links WHERE id = ?").run(req.params.id);
+  logAction(req.user.id, null, "DELETE_360_LINK", `Deleted 360 link ID: ${req.params.id}`);
+  res.json({ message: "Convite eliminado." });
+});
+
 // Public endpoint - no auth required
 app.get("/api/public/evaluation/:token", (req: any, res) => {
   const token = req.params.token;
+  const collaborationLink = db.prepare(`
+    SELECT
+      cl.*,
+      cf.title as form_title,
+      cf.description as form_description,
+      emp.name as employee_name,
+      emp.email as employee_email,
+      emp.position,
+      emp.department
+    FROM collaboration_links cl
+    JOIN collaboration_forms cf ON cl.form_id = cf.id
+    JOIN employees emp ON cl.employee_id = emp.id
+    WHERE cl.token = ?
+      AND cl.is_used = 0
+      AND (cl.expires_at IS NULL OR cl.expires_at >= date('now'))
+  `).get(token) as any;
+
+  if (collaborationLink) {
+    const questions = db.prepare(`
+      SELECT
+        id,
+        question_text,
+        question_type,
+        weight,
+        is_required,
+        display_order,
+        COALESCE(max_score, 5) as max_score,
+        COALESCE(section_key, 'self') as section_key
+      FROM collaboration_questions
+      WHERE form_id = ?
+      ORDER BY display_order ASC
+    `).all(collaborationLink.form_id) as any[];
+
+    return res.json({
+      kind: "360",
+      link: collaborationLink,
+      form: {
+        id: collaborationLink.form_id,
+        title: collaborationLink.form_title,
+        description: collaborationLink.form_description
+      },
+      employee: {
+        id: collaborationLink.employee_id,
+        name: collaborationLink.employee_name,
+        email: collaborationLink.employee_email,
+        position: collaborationLink.position,
+        department: collaborationLink.department
+      },
+      sections: EVALUATION_360_SECTIONS,
+      scale: EVALUATION_360_SCALE,
+      questions
+    });
+  }
+
   const link: any = db.prepare(`
     SELECT el.*, ev.evaluation_type, ev.name, ev.periodicity, ev.period_start, ev.period_end,
            e.name as entity_name, e.entity_type
@@ -1863,13 +2436,114 @@ app.get("/api/public/evaluation/:token", (req: any, res) => {
     `).all();
   }
 
-  res.json({ link, criteria });
+  res.json({
+    kind: "satisfaction",
+    link,
+    evaluation: {
+      evaluation_type: link.evaluation_type,
+      name: link.name,
+      periodicity: link.periodicity,
+      period_start: link.period_start,
+      period_end: link.period_end
+    },
+    entity: {
+      name: link.entity_name,
+      entity_type: link.entity_type
+    },
+    criteria
+  });
 });
 
 // Public endpoint - submit evaluation without auth
 app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
   const token = req.params.token;
-  const link: any = db.prepare("SELECT * FROM evaluation_links WHERE token = ? AND is_used = 0", token).get(token);
+  const collaborationLink = db.prepare(`
+    SELECT cl.*, emp.name as employee_name, emp.email as employee_email
+    FROM collaboration_links cl
+    JOIN employees emp ON emp.id = cl.employee_id
+    WHERE cl.token = ? AND cl.is_used = 0
+  `).get(token) as any;
+
+  if (collaborationLink) {
+    const { responses, peer_name } = req.body;
+    if (!Array.isArray(responses) || responses.length === 0) {
+      return res.status(400).json({ message: "Respostas sao obrigatorias." });
+    }
+    if (!peer_name || !String(peer_name).trim()) {
+      return res.status(400).json({ message: "Informe o nome do colega avaliado na Parte 2." });
+    }
+
+    const questions = db.prepare(`
+      SELECT id, COALESCE(max_score, 5) as max_score
+      FROM collaboration_questions
+      WHERE form_id = ?
+      ORDER BY display_order ASC
+    `).all(collaborationLink.form_id) as any[];
+
+    const responseMap = new Map(
+      responses.map((response: any) => [Number(response.question_id), response])
+    );
+
+    let normalizedScore = 0;
+    let answeredQuestions = 0;
+    const insertResponse = db.prepare(`
+      INSERT INTO collaboration_responses
+      (
+        form_id,
+        evaluated_id,
+        evaluator_id,
+        evaluated_employee_id,
+        question_id,
+        score,
+        comment,
+        response_group,
+        response_source,
+        responder_name,
+        responder_email,
+        peer_name
+      )
+      VALUES (?, NULL, ?, ?, ?, ?, NULL, ?, 'email', ?, ?, ?)
+    `);
+
+    for (const question of questions) {
+      const response = responseMap.get(Number(question.id));
+      const score = Number(response?.score);
+      if (!Number.isFinite(score) || score < 1 || score > Number(question.max_score || 5)) {
+        return res.status(400).json({ message: "Preencha todas as questoes da avaliacao 360." });
+      }
+
+      insertResponse.run(
+        collaborationLink.form_id,
+        collaborationLink.created_by || 1,
+        collaborationLink.employee_id,
+        question.id,
+        score,
+        token,
+        collaborationLink.recipient_name || collaborationLink.employee_name,
+        collaborationLink.recipient_email || collaborationLink.employee_email || null,
+        String(peer_name).trim()
+      );
+
+      normalizedScore += (score / Number(question.max_score || 5)) * 100;
+      answeredQuestions += 1;
+    }
+
+    const percentage = answeredQuestions > 0 ? normalizedScore / answeredQuestions : 0;
+    const classification = classifyPercentage(percentage);
+
+    db.prepare("UPDATE collaboration_links SET is_used = 1, used_at = CURRENT_TIMESTAMP WHERE id = ?").run(collaborationLink.id);
+
+    // logAction(null, collaborationLink.employee_id, "COLLAB_360_EMAIL_SUBMIT", `360 evaluation submitted via link ${token}`); // FIXED: Skip public logging (FK)
+
+    return res.status(201).json({
+      kind: "360",
+      message: "Avaliacao 360 submetida com sucesso!",
+      percentage: Number(percentage.toFixed(1)),
+      classification
+    });
+  }
+
+  const link: any = db.prepare("SELECT * FROM evaluation_links WHERE token = ? AND is_used = 0").get(token);
 
   if (!link) {
     return res.status(404).json({ message: "Link inválido ou já utilizado." });
@@ -1916,8 +2590,14 @@ app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
     WHERE id = ?
   `).run(average.toFixed(1), percentage.toFixed(1), classification, link.evaluation_id);
 
-  logAction(null, link.evaluation_id, "CUSTOMER_EVAL_SUBMIT", `Customer evaluation submitted via link ${token}`);
-  res.status(201).json({ message: "Avaliação submetida com sucesso!", percentage, classification });
+  // logAction(null, link.evaluation_id, "CUSTOMER_EVAL_SUBMIT", `Customer evaluation submitted via link ${token}`); // FIXED: Skip public logging (FK)
+
+  res.status(201).json({
+    kind: "satisfaction",
+    message: "Avaliacao submetida com sucesso!",
+    percentage: Number(percentage.toFixed(1)),
+    classification
+  });
 });
 
 // ============================================================
@@ -2023,7 +2703,7 @@ app.put("/api/collaboration/forms/:id", authenticateToken, (req: any, res) => {
 });
 
 // DELETE /api/collaboration/forms/:id - delete form (cascade handled by DB)
-app.delete("/api/collaboration/forms/:id", authenticateToken, requireRole("Administrator"), (req, res) => {
+app.delete("/api/collaboration/forms/:id", authenticateToken, requireRole("Administrator"), (req: any, res) => {
   const form: any = db.prepare("SELECT title FROM collaboration_forms WHERE id = ?").get(req.params.id);
   if (!form) return res.status(404).json({ message: "Formulário não encontrado." });
 
@@ -2073,7 +2753,7 @@ app.put("/api/collaboration/questions/:id", authenticateToken, (req: any, res) =
 });
 
 // DELETE /api/collaboration/questions/:id - delete question
-app.delete("/api/collaboration/questions/:id", authenticateToken, (req, res) => {
+app.delete("/api/collaboration/questions/:id", authenticateToken, (req: any, res) => {
   const question: any = db.prepare("SELECT form_id FROM collaboration_questions WHERE id = ?").get(req.params.id);
   if (!question) return res.status(404).json({ message: "Questão não encontrada." });
 
@@ -2618,13 +3298,23 @@ app.get("/api/reports/collaboration/:type", authenticateToken, (req: any, res) =
     switch (type) {
       case "360-overall": {
         const rows = db.prepare(`
-          SELECT cr.*, cf.title as form_title, e.name as evaluated_name, emp.name as employee_name
-          FROM collaboration_responses cr
-          JOIN collaboration_forms cf ON cr.form_id = cf.id
-          LEFT JOIN entities e ON cr.evaluated_id = e.id
-          LEFT JOIN employees emp ON cr.evaluated_employee_id = emp.id
+          SELECT
+            cl.token as evaluation_id,
+            cf.title as form_title,
+            emp.name as employee_name,
+            emp.department,
+            emp.position,
+            ROUND(AVG(cr.score * 100.0 / COALESCE(cq.max_score, 5)), 1) as percentage,
+            MAX(cr.response_date) as response_date,
+            MAX(cr.responder_email) as responder_email
+          FROM collaboration_links cl
+          JOIN collaboration_forms cf ON cl.form_id = cf.id
+          JOIN employees emp ON cl.employee_id = emp.id
+          JOIN collaboration_responses cr ON cr.response_group = cl.token
+          JOIN collaboration_questions cq ON cq.id = cr.question_id
           WHERE cf.form_type = '360'
-          ORDER BY cr.response_date DESC
+          GROUP BY cl.token, cf.title, emp.name, emp.department, emp.position
+          ORDER BY MAX(cr.response_date) DESC
           LIMIT 50
         `).all() as any[];
         console.log(`[DEBUG] 360-overall rows: ${rows.length}`);
@@ -2633,10 +3323,15 @@ app.get("/api/reports/collaboration/:type", authenticateToken, (req: any, res) =
       }
       case "360-by-department": {
         const rows = db.prepare(`
-          SELECT emp.department, COUNT(*) as count
-          FROM collaboration_responses cr
-          JOIN collaboration_forms cf ON cr.form_id = cf.id
-          JOIN employees emp ON cr.evaluated_employee_id = emp.id
+          SELECT
+            emp.department,
+            COUNT(DISTINCT cl.token) as count,
+            ROUND(AVG(cr.score * 100.0 / COALESCE(cq.max_score, 5)), 1) as avg_percentage
+          FROM collaboration_links cl
+          JOIN collaboration_forms cf ON cl.form_id = cf.id
+          JOIN employees emp ON cl.employee_id = emp.id
+          JOIN collaboration_responses cr ON cr.response_group = cl.token
+          JOIN collaboration_questions cq ON cq.id = cr.question_id
           WHERE cf.form_type = '360'
           GROUP BY emp.department
           ORDER BY count DESC
@@ -2647,11 +3342,15 @@ app.get("/api/reports/collaboration/:type", authenticateToken, (req: any, res) =
       }
       case "360-by-position": {
         const rows = db.prepare(`
-          SELECT emp.position, COUNT(*) as count, AVG(cr.score * 100.0 / cq.max_score) as avg_percentage
-          FROM collaboration_responses cr
-          JOIN collaboration_forms cf ON cr.form_id = cf.id
+          SELECT
+            emp.position,
+            COUNT(DISTINCT cl.token) as count,
+            ROUND(AVG(cr.score * 100.0 / COALESCE(cq.max_score, 5)), 1) as avg_percentage
+          FROM collaboration_links cl
+          JOIN collaboration_forms cf ON cl.form_id = cf.id
+          JOIN employees emp ON cl.employee_id = emp.id
+          JOIN collaboration_responses cr ON cr.response_group = cl.token
           JOIN collaboration_questions cq ON cr.question_id = cq.id
-          JOIN employees emp ON cr.evaluated_employee_id = emp.id
           WHERE cf.form_type = '360'
           GROUP BY emp.position
           ORDER BY avg_percentage DESC
@@ -2662,12 +3361,16 @@ app.get("/api/reports/collaboration/:type", authenticateToken, (req: any, res) =
       }
       case "360-trend": {
         const rows = db.prepare(`
-          SELECT strftime('%Y-%m', cr.response_date) as month, AVG(cr.score * 100.0 / cq.max_score) as avg_percentage
-          FROM collaboration_responses cr
-          JOIN collaboration_forms cf ON cr.form_id = cf.id
+          SELECT
+            strftime('%Y-%m', MAX(cr.response_date)) as month,
+            ROUND(AVG(cr.score * 100.0 / COALESCE(cq.max_score, 5)), 1) as avg_percentage,
+            COUNT(DISTINCT cl.token) as count
+          FROM collaboration_links cl
+          JOIN collaboration_forms cf ON cl.form_id = cf.id
+          JOIN collaboration_responses cr ON cr.response_group = cl.token
           JOIN collaboration_questions cq ON cr.question_id = cq.id
           WHERE cf.form_type = '360'
-          GROUP BY month
+          GROUP BY strftime('%Y-%m', cr.response_date)
           ORDER BY month DESC
           LIMIT 6
         `).all() as any[];
@@ -2679,10 +3382,10 @@ app.get("/api/reports/collaboration/:type", authenticateToken, (req: any, res) =
         const totalResult = db.prepare("SELECT COUNT(*) as cnt FROM employees WHERE status = 'Ativo'").get() as any;
         const total = totalResult?.cnt || 0;
         const evaluatedResult = db.prepare(`
-          SELECT COUNT(DISTINCT cr.evaluated_employee_id) as cnt
-          FROM collaboration_responses cr
-          JOIN collaboration_forms cf ON cr.form_id = cf.id
-          WHERE cf.form_type = '360'
+          SELECT COUNT(DISTINCT cl.employee_id) as cnt
+          FROM collaboration_links cl
+          JOIN collaboration_forms cf ON cl.form_id = cf.id
+          WHERE cf.form_type = '360' AND cl.is_used = 1
         `).get() as any;
         const evaluated = evaluatedResult?.cnt || 0;
         console.log(`[DEBUG] 360-participation: total=${total}, evaluated=${evaluated}`);
@@ -2718,19 +3421,43 @@ async function startServer() {
  }
 
 // ============================================================
-// ERROR HANDLING - Ensure JSON responses for API errors
+// ERROR HANDLING & LOGGING - Ensure JSON + Debug Logs
 // ============================================================
+app.use((req: any, res: any, next: any) => {
+  // Log all API calls for debugging
+  if (req.path.startsWith('/api/')) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - User: ${req.user?.username || 'anonymous'}`);
+  }
+  next();
+});
+
 app.use((err: any, req: any, res: any, next: any) => {
-  console.error("Unhandled error:", err);
-  if (req.path.startsWith('/api/') && !req.path.startsWith('/api/public/')) {
+  console.error(`[${new Date().toISOString()}] ERROR ${req.method} ${req.path}:`, err);
+  if (req.path.startsWith('/api/')) {
     return res.status(500).json({
       error: "Erro interno do servidor",
-      message: err.message,
+      message: err.message || "Erro desconhecido",
+      path: req.path,
+      method: req.method,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
   next(err);
 });
 
-startServer();
+// Catch 404 - Return JSON for API paths
+app.use((req: any, res: any, next: any) => {
+  if (req.path.startsWith('/api/')) {
+    console.log(`[${new Date().toISOString()}] 404 ${req.method} ${req.path}`);
+    return res.status(404).json({ 
+      error: "Endpoint não encontrado", 
+      path: req.path, 
+      method: req.method,
+      available: ["/api/evaluations", "/api/collaboration/360/*", "/api/entities", "/api/criteria"]
+    });
+  }
+  next();
+});
 
+
+startServer();

@@ -1,23 +1,16 @@
-# ToKnow Reports Fix - TODO Progress
+# Workflow Enhancement Task (Progress: 1/8) ✓ Legacy ApprovalForm.tsx deleted
 
-## ✅ Phase 1: Fix Gestão Blank Screen (EM PROGRESSO)
-- [x] Create TODO.md ✅
-- [ ] 1. Improve error handling + empty states in ReportsView.tsx
-- [ ] 2. Add debug data preview
-- [ ] 3. Test all 7 management reports with demo data
-- [ ] 4. Verify no API errors (401/500)
 
-## ⏳ Phase 2: Professional Exports (NEXT)
-- [ ] 1. Install deps: xlsx, jspdf, jspdf-autotable
-- [ ] 2. Replace XLS hack → proper Excel
-- [ ] 3. PDF with jsPDF + autotable (headers/logo/totals)
-- [ ] 4. Export buttons: CSV | Excel | PDF
-- [ ] 5. Test all formats per category
+**Approved Plan**:
+1. [ ] Create TODO.md
+2. [ ] Delete ApprovalForm.tsx (duplicate)
+3. [ ] Enhance ProcessDetail.tsx: Step panels + auto-transitions
+4. [ ] Create ScoringPanel.tsx for step 4
+5. [ ] Create DocPanel.tsx for step 3
+6. [ ] Update WorkflowStepper.tsx (clickable)
+7. [ ] ProcessWorkflow.tsx: Richer cards
+8. [ ] Test full flow + notifications
+9. [ ] attempt_completion
 
-## 🔧 Backend Optimizations (OPTIONAL)
-- [ ] Add date filters to /management/:type endpoints
-- [ ] Cache reports if slow
-
-## ✅ Completed
-```
+**Next**: Delete legacy ApprovalForm.tsx
 

@@ -17,7 +17,6 @@ import EvaluationForm from "./components/evaluations/EvaluationForm";
 import EvaluationList from "./components/evaluations/EvaluationList";
 import Evaluation360Form from "./components/evaluations/Evaluation360Form";
 import SharedEvaluationForm from "./components/evaluations/SharedEvaluationForm";
-import EvaluationLinksManager from "./components/evaluations/EvaluationLinksManager";
 import CriteriaSettings from "./components/admin/CriteriaSettings";
 import ReportsView from "./components/reports/ReportsView";
 import UserProfile from "./components/profile/UserProfile";
@@ -75,7 +74,7 @@ export default function App() {
                <Route path="avaliacoes/cliente" element={<ClientEvaluationForm />} />
                <Route path="avaliacoes/:id" element={<EvaluationForm />} />
                <Route path="avaliacoes/360" element={<Evaluation360Form />} />
-               <Route path="avaliacoes/links" element={<EvaluationLinksManager />} />
+               <Route path="avaliacoes/links" element={<Evaluation360Form />} />
                
                {/* Know You Work - Colaboradores */}
                <Route path="colaboradores" element={<EmployeeList />} />

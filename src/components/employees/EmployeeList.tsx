@@ -157,9 +157,9 @@ export default function EmployeeList() {
                   <button
                     onClick={() => navigate(`/colaboradores/${emp.id}/avaliacao-360`)}
                     className="flex-1 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors"
-                    title="Avaliação 360°"
+                    title="Enviar Avaliação 360°"
                   >
-                    Avaliar
+                    Enviar 360°
                   </button>
                   <button
                     onClick={() => navigate(`/colaboradores/${emp.id}/editar`)}

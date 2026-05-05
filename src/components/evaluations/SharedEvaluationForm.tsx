@@ -1,23 +1,35 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Star, Building2, BarChart3, CheckCircle, AlertCircle } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { AlertCircle, Building2, CheckCircle, Send, Star } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
-interface Criterion {
+type Criterion = {
   id: number;
   name: string;
   weight: number;
   max_score: number;
-}
+};
 
-interface LinkData {
-  link: {
-    id: number;
-    token: string;
-    client_email: string;
-    expires_at: string;
-    is_used: number;
-  };
+type Section = {
+  key: string;
+  title: string;
+  description: string;
+};
+
+type ScaleOption = {
+  value: number;
+  label: string;
+};
+
+type Evaluation360Question = {
+  id: number;
+  question_text: string;
+  section_key: string;
+  max_score: number;
+};
+
+type SatisfactionData = {
+  kind: "satisfaction";
   evaluation: {
     evaluation_type: string;
     name: string;
@@ -28,7 +40,26 @@ interface LinkData {
     entity_type: string;
   };
   criteria: Criterion[];
-}
+};
+
+type Evaluation360Data = {
+  kind: "360";
+  form: {
+    title: string;
+    description: string;
+  };
+  employee: {
+    name: string;
+    email?: string | null;
+    position?: string | null;
+    department?: string | null;
+  };
+  sections: Section[];
+  scale: ScaleOption[];
+  questions: Evaluation360Question[];
+};
+
+type PublicEvaluationData = SatisfactionData | Evaluation360Data;
 
 export default function SharedEvaluationForm() {
   const { token } = useParams();
@@ -38,13 +69,15 @@ export default function SharedEvaluationForm() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<LinkData | null>(null);
+  const [data, setData] = useState<PublicEvaluationData | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [result, setResult] = useState<{ percentage?: number; classification?: string; kind?: string } | null>(null);
 
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [peerName, setPeerName] = useState("");
   const [responses, setResponses] = useState<Record<number, number>>({});
   const [comments, setComments] = useState<Record<number, string>>({});
-  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -54,71 +87,86 @@ export default function SharedEvaluationForm() {
     }
 
     fetch(`/api/public/evaluation/${token}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Link inválido ou expirado");
-        return res.json();
+      .then((response) => {
+        if (!response.ok) throw new Error("Link inválido ou expirado");
+        return response.json();
       })
-      .then((json) => setData(json))
+      .then((payload) => setData(payload))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
 
-  const handleResponseChange = (criterionId: number, score: number) => {
-    setResponses(prev => ({ ...prev, [criterionId]: score }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!data) return;
 
-    const criteria = data.criteria;
-    if (Object.keys(responses).length === 0) {
+    if (data.kind === "360") {
+      if (!peerName.trim()) {
+        addToast("Informe o nome do colega avaliado.", "error");
+        return;
+      }
+      if (Object.keys(responses).length !== data.questions.length) {
+        addToast("Responda todas as perguntas da avaliação 360°.", "error");
+        return;
+      }
+    } else if (Object.keys(responses).length === 0) {
       addToast("Preencha pelo menos uma avaliação.", "error");
       return;
     }
 
     setSubmitting(true);
-
     try {
-      const responsesArray = criteria.map((c) => ({
-        criterion_name: c.name,
-        score: responses[c.id] || 0,
-        comment: comments[c.id] || ""
-      }));
+      const payload =
+        data.kind === "360"
+          ? {
+              peer_name: peerName,
+              responses: data.questions.map((question) => ({
+                question_id: question.id,
+                score: responses[question.id],
+              })),
+            }
+          : {
+              responses: data.criteria.map((criterion) => ({
+                criterion_name: criterion.name,
+                score: responses[criterion.id] || 0,
+                comment: comments[criterion.id] || "",
+              })),
+              client_name: clientName,
+              client_email: clientEmail,
+            };
 
-      const res = await fetch(`/api/public/evaluation/${token}/submit`, {
+      const response = await fetch(`/api/public/evaluation/${token}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          responses: responsesArray,
-          client_name: clientName,
-          client_email: clientEmail
-        })
+        body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        setSubmitted(true);
-        addToast("Avaliação enviada com sucesso!", "success");
-      } else {
-        const err = await res.json();
-        addToast(err.message || "Erro ao submeter.", "error");
+      const responseData = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(responseData.message || "Erro ao submeter.");
       }
-    } catch {
-      addToast("Erro de conexão.", "error");
-    }
 
-    setSubmitting(false);
+      setSubmitted(true);
+      setResult(responseData);
+      addToast("Avaliação enviada com sucesso!", "success");
+    } catch (err: any) {
+      addToast(err.message || "Erro de conexão.", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-indigo-700 font-semibold animate-pulse">Carregando avaliação...</p>
-        </div>
+  const renderLoading = (is360: boolean) => (
+    <div className={`min-h-screen flex items-center justify-center ${is360 ? "bg-[#f5efe3]" : "bg-gradient-to-br from-indigo-50 via-white to-purple-50"}`}>
+      <div className="flex flex-col items-center gap-4">
+        <div className={`w-12 h-12 border-4 rounded-full animate-spin ${is360 ? "border-amber-200 border-t-amber-700" : "border-indigo-200 border-t-indigo-600"}`}></div>
+        <p className={`font-semibold ${is360 ? "text-amber-900" : "text-indigo-700"}`}>Carregando avaliação...</p>
       </div>
-    );
+    </div>
+  );
+
+  if (loading) {
+    return renderLoading(false);
   }
 
   if (error || !data) {
@@ -128,7 +176,7 @@ export default function SharedEvaluationForm() {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={32} className="text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Link Inválido ou Expirado</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Link inválido ou expirado</h2>
           <p className="text-gray-600 mb-6">
             {error || "Não foi possível carregar a avaliação. Verifique o link ou solicite um novo."}
           </p>
@@ -141,21 +189,114 @@ export default function SharedEvaluationForm() {
   }
 
   if (submitted) {
+    const is360 = result?.kind === "360" || data.kind === "360";
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className={`min-h-screen flex items-center justify-center p-4 ${is360 ? "bg-[#f5efe3]" : "bg-gradient-to-br from-indigo-50 via-white to-purple-50"}`}>
         <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-            <CheckCircle size={48} className="text-emerald-600" />
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${is360 ? "bg-amber-100" : "bg-emerald-100"}`}>
+            <CheckCircle size={48} className={is360 ? "text-amber-700" : "text-emerald-600"} />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Obrigado!</h2>
-          <p className="text-gray-600 mb-2">Sua avaliação de satisfação foi enviada com sucesso.</p>
-          <p className="text-sm text-gray-500 mb-6">
-            A sua opinião é extremamente valiosa para melhorarmos os nossos serviços.
+          <p className="text-gray-600 mb-3">
+            {is360 ? "A avaliação 360° foi enviada com sucesso." : "Sua avaliação de satisfação foi enviada com sucesso."}
           </p>
-          <div className="flex gap-3">
-            <button onClick={() => navigate("/")} className="flex-1 btn btn-primary">
-              Voltar ao Início
-            </button>
+          {result?.percentage !== undefined && (
+            <p className="text-sm text-gray-500 mb-6">
+              Resultado registado: <strong>{Math.round(result.percentage)}%</strong> {result.classification ? `• ${result.classification}` : ""}
+            </p>
+          )}
+          <button onClick={() => navigate("/")} className="btn btn-primary w-full">
+            Voltar ao Início
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.kind === "360") {
+    const groupedQuestions = data.sections.map((section) => ({
+      ...section,
+      questions: data.questions.filter((question) => question.section_key === section.key),
+    }));
+
+    return (
+      <div className="min-h-screen bg-[#f5efe3] py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-[#fdfaf4] border border-[#e6d7c2] rounded-3xl shadow-sm overflow-hidden">
+            <div className="px-6 py-7 border-b border-[#eadfcd] text-center bg-[#fbf7ef]">
+              <div className="w-16 h-16 rounded-2xl bg-[#efe1ca] text-[#7a5935] flex items-center justify-center mx-auto mb-4">
+                <Building2 size={30} />
+              </div>
+              <h1 className="text-2xl font-bold text-[#5e4428]">{data.form.title}</h1>
+              <p className="text-sm text-[#8a6b49] mt-2">{data.form.description}</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#a17e58] mt-4">
+                Colaborador avaliado: {data.employee.name}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="p-4 rounded-2xl bg-white border border-[#eadfcd]">
+                <p className="text-sm font-semibold text-[#5e4428]">{data.employee.name}</p>
+                <p className="text-xs text-[#8a6b49] mt-1">
+                  {data.employee.position || "Sem cargo"} {data.employee.department ? `• ${data.employee.department}` : ""}
+                </p>
+                {data.employee.email && <p className="text-xs text-[#8a6b49] mt-1">{data.employee.email}</p>}
+              </div>
+
+              {groupedQuestions.map((section) => (
+                <section key={section.key} className="p-5 rounded-2xl bg-[#fbf7ef] border border-[#eadfcd] space-y-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-[#5e4428]">{section.title}</h2>
+                    <p className="text-sm text-[#8a6b49]">{section.description}</p>
+                  </div>
+
+                  {section.key === "peer" && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-[#6e4f2f]">Nome do Colega a Avaliar *</label>
+                      <input
+                        type="text"
+                        value={peerName}
+                        onChange={(event) => setPeerName(event.target.value)}
+                        placeholder="Digite o nome do colega..."
+                        className="w-full px-4 py-2.5 bg-white border border-[#d9c4a8] rounded-xl focus:ring-2 focus:ring-[#b68454] outline-none transition-all"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-5">
+                    {section.questions.map((question, index) => (
+                      <div key={question.id} className="p-4 bg-white border border-[#eadfcd] rounded-xl">
+                        <p className="text-base font-semibold text-[#5e4428]">
+                          {index + 1}. {question.question_text}
+                        </p>
+                        <div className="mt-3 space-y-2">
+                          {data.scale.map((option) => (
+                            <label key={option.value} className="flex items-center gap-3 text-sm text-[#6e4f2f]">
+                              <input
+                                type="radio"
+                                name={`question-${question.id}`}
+                                checked={responses[question.id] === option.value}
+                                onChange={() => setResponses((prev) => ({ ...prev, [question.id]: option.value }))}
+                                className="accent-[#b68454]"
+                              />
+                              {option.label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-[#d3bb9d] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#b99972] active:scale-[0.99] transition-all disabled:opacity-50"
+              >
+                <Send size={20} /> {submitting ? "Enviando..." : "Enviar Avaliação 360°"}
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -165,28 +306,23 @@ export default function SharedEvaluationForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="bg-white rounded-t-3xl shadow-sm border-b border-gray-100 p-6 text-center">
           <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Building2 size={32} className="text-indigo-600" />
           </div>
           <h1 className="text-xl font-bold text-gray-900 mb-1">Avaliação de Satisfação</h1>
           <p className="text-sm text-gray-600">{data.evaluation.name || "Pesquisa de Satisfação"}</p>
-          <p className="text-xs text-indigo-600 font-medium mt-1">
-            Avaliando: {data.entity.name}
-          </p>
+          <p className="text-xs text-indigo-600 font-medium mt-1">Avaliando: {data.entity.name}</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-b-3xl shadow-lg border border-t-0 border-gray-100 p-6 space-y-6">
-          {/* Client Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Seu Nome *</label>
               <input
                 type="text"
                 value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
+                onChange={(event) => setClientName(event.target.value)}
                 placeholder="Nome completo"
                 required
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -197,7 +333,7 @@ export default function SharedEvaluationForm() {
               <input
                 type="email"
                 value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
+                onChange={(event) => setClientEmail(event.target.value)}
                 placeholder="seu@email.com"
                 required
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -205,14 +341,13 @@ export default function SharedEvaluationForm() {
             </div>
           </div>
 
-          {/* Criteria */}
           <div className="space-y-4">
             <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
               <Star size={18} className="text-amber-500" />
               Critérios de Avaliação
             </h3>
 
-            {data.criteria.map((criterion: Criterion) => (
+            {data.criteria.map((criterion) => (
               <div key={criterion.id} className="p-4 bg-gray-50 border border-gray-100 rounded-xl">
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -229,7 +364,9 @@ export default function SharedEvaluationForm() {
                   min="0"
                   max={criterion.max_score}
                   value={responses[criterion.id] || 0}
-                  onChange={(e) => handleResponseChange(criterion.id, Number(e.target.value))}
+                  onChange={(event) =>
+                    setResponses((prev) => ({ ...prev, [criterion.id]: Number(event.target.value) }))
+                  }
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                 />
 
@@ -237,14 +374,15 @@ export default function SharedEvaluationForm() {
                   type="text"
                   placeholder="Comentário (opcional)"
                   value={comments[criterion.id] || ""}
-                  onChange={(e) => setComments(prev => ({ ...prev, [criterion.id]: e.target.value }))}
+                  onChange={(event) =>
+                    setComments((prev) => ({ ...prev, [criterion.id]: event.target.value }))
+                  }
                   className="mt-3 w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 />
               </div>
             ))}
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={submitting || Object.keys(responses).length === 0}
