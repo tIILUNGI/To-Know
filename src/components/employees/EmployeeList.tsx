@@ -9,6 +9,7 @@ export default function EmployeeList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -48,6 +49,51 @@ export default function EmployeeList() {
       addToast("Erro de conexão.", "error");
     }
   };
+  
+  const toggleSelection = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+  
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map(e => e.id));
+    }
+  };
+
+  const handleMassEvaluation = async () => {
+    if (selectedIds.length === 0) {
+      addToast("Selecione pelo menos um colaborador.", "info");
+      return;
+    }
+    
+    if (!confirm(`Gerar avaliação 360° para ${selectedIds.length} colaboradores?`)) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch("/api/collaboration/360/links", {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ employee_ids: selectedIds })
+      });
+      
+      if (res.ok) {
+        addToast("Avaliações geradas com sucesso!", "success");
+        navigate("/avaliacoes/360/links");
+      } else {
+        const err = await res.json();
+        addToast(err.message || "Erro ao gerar avaliações.", "error");
+      }
+    } catch {
+      addToast("Erro de conexão.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = employees.filter((e) => {
     const matchesSearch =
@@ -69,9 +115,19 @@ export default function EmployeeList() {
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900">Know You Work</h2>
         </div>
-        <Link to="/colaboradores/novo" className="btn btn-primary text-sm">
-          <UserPlus size={16} strokeWidth={2} /> Novo Colaborador
-        </Link>
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <button 
+              onClick={handleMassEvaluation}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+            >
+              Avaliação em Massa ({selectedIds.length})
+            </button>
+          )}
+          <Link to="/colaboradores/novo" className="btn btn-primary text-sm">
+            <UserPlus size={16} strokeWidth={2} /> Novo Colaborador
+          </Link>
+        </div>
       </div>
 
       <div className="card overflow-hidden">
@@ -105,6 +161,16 @@ export default function EmployeeList() {
             <option value="Ativo">Ativo</option>
             <option value="Inactivo">Inactivo</option>
           </select>
+          
+          <div className="flex items-center gap-2 px-2 border-l border-gray-100">
+            <input 
+              type="checkbox" 
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={selectedIds.length > 0 && selectedIds.length === filtered.length}
+              onChange={toggleSelectAll}
+            />
+            <span className="text-xs text-gray-500">Selecionar Todos</span>
+          </div>
         </div>
 
         {loading ? (
@@ -125,8 +191,16 @@ export default function EmployeeList() {
                 className="p-4 border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center text-blue-700 font-bold text-lg">
-                    {emp.name?.charAt(0)?.toUpperCase() || "?"}
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="checkbox"
+                      className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      checked={selectedIds.includes(emp.id)}
+                      onChange={() => toggleSelection(emp.id)}
+                    />
+                    <div className="w-12 h-12 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center text-blue-700 font-bold text-lg">
+                      {emp.name?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
                   </div>
                   <span className={`badge text-xs ${emp.status === "Ativo" ? "badge-success" : "badge-neutral"}`}>
                     {emp.status}
@@ -138,6 +212,10 @@ export default function EmployeeList() {
                 <p className="text-xs text-gray-500 flex items-center gap-1 mb-2">
                   <Building2 size={10} />
                   {emp.department || "Sem departamento"}
+                </p>
+                <p className="text-xs text-gray-500 flex items-center gap-1 mb-2">
+                  <Plus size={10} className="text-blue-500" />
+                  Gestor: <span className="font-semibold text-gray-700">{emp.manager_name || "Não atribuído"}</span>
                 </p>
 
                 {emp.email && (

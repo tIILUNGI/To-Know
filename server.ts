@@ -41,6 +41,11 @@ const EVALUATION_360_SECTIONS = [
     key: "manager" as const,
     title: "Parte 3: Avaliação do Gestor",
     description: "Por favor, avalie a liderança e suporte do seu gestor."
+  },
+  {
+    key: "manager_eval" as const,
+    title: "Parte 4: Avaliação do Colaborador (Gestor)",
+    description: "Avaliação final realizada pelo gestor responsável sobre o desempenho do colaborador."
   }
 ];
 
@@ -157,6 +162,34 @@ const DEFAULT_360_QUESTIONS: Evaluation360QuestionSeed[] = [
     display_order: 15,
     weight: 1,
     max_score: 5
+  },
+  {
+    section_key: "manager_eval",
+    question_text: "O colaborador demonstra competência técnica e entrega resultados consistentes.",
+    display_order: 16,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager_eval",
+    question_text: "O colaborador é proativo e demonstra iniciativa em suas tarefas.",
+    display_order: 17,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager_eval",
+    question_text: "O colaborador colabora efetivamente com a equipe e stakeholders.",
+    display_order: 18,
+    weight: 1,
+    max_score: 5
+  },
+  {
+    section_key: "manager_eval",
+    question_text: "O colaborador cumpre prazos e demonstra profissionalismo.",
+    display_order: 19,
+    weight: 1,
+    max_score: 5
   }
 ];
 
@@ -239,36 +272,25 @@ function ensureDefault360Template() {
     ORDER BY display_order ASC
   `).all(formId) as any[];
 
-  const templateMismatch =
-    questions.length !== DEFAULT_360_QUESTIONS.length ||
-    questions.some((question: any, index: number) => {
-      const seed = DEFAULT_360_QUESTIONS[index];
-      return !seed ||
-        question.question_text !== seed.question_text ||
-        question.section_key !== seed.section_key ||
-        Number(question.display_order) !== seed.display_order ||
-        Number(question.max_score || 5) !== seed.max_score;
-    });
+  const insertQuestion = db.prepare(`
+    INSERT INTO collaboration_questions
+    (form_id, question_text, question_type, options, weight, is_required, display_order, max_score, section_key)
+    VALUES (?, ?, 'rating', NULL, ?, 1, ?, ?, ?)
+  `);
 
-  if (templateMismatch) {
-    db.prepare("DELETE FROM collaboration_questions WHERE form_id = ?").run(formId);
-    const insertQuestion = db.prepare(`
-      INSERT INTO collaboration_questions
-      (form_id, question_text, question_type, options, weight, is_required, display_order, max_score, section_key)
-      VALUES (?, ?, 'rating', NULL, ?, 1, ?, ?, ?)
-    `);
-
-    DEFAULT_360_QUESTIONS.forEach((question) => {
+  DEFAULT_360_QUESTIONS.forEach((seed) => {
+    const exists = questions.some(q => q.question_text === seed.question_text && q.section_key === seed.section_key);
+    if (!exists) {
       insertQuestion.run(
         formId,
-        question.question_text,
-        question.weight,
-        question.display_order,
-        question.max_score,
-        question.section_key
+        seed.question_text,
+        seed.weight,
+        seed.display_order,
+        seed.max_score,
+        seed.section_key
       );
-    });
-  }
+    }
+  });
 
   return formId;
 }
@@ -400,9 +422,12 @@ const initTables = () => {
     )`,
     `CREATE TABLE IF NOT EXISTS evaluations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      process_id INTEGER,
-      entity_id INTEGER NOT NULL,
-      type TEXT NOT NULL,
+      entity_id INTEGER REFERENCES entities(id),
+      process_id INTEGER REFERENCES processes(id),
+      evaluator_id INTEGER REFERENCES users(id),
+      evaluation_number TEXT,
+      name TEXT,
+      type TEXT,
       evaluation_type TEXT,
       periodicity TEXT,
       evaluator_id INTEGER,
@@ -751,12 +776,20 @@ if (!checkCollabTable("employees")) {
       department TEXT,
       hire_date DATE,
       status TEXT DEFAULT 'Ativo',
+      manager_id INTEGER REFERENCES users(id),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
   console.log("✓ Created employees table");
+} else {
+  // Check if manager_id exists in employees
+  const info = db.prepare("PRAGMA table_info(employees)").all() as any[];
+  if (!info.some(col => col.name === 'manager_id')) {
+    db.exec("ALTER TABLE employees ADD COLUMN manager_id INTEGER REFERENCES users(id)");
+    console.log("✓ Added manager_id column to employees");
+  }
 }
 
 // Ensure evaluation_links table exists for customer satisfaction sharing
@@ -791,12 +824,77 @@ if (!checkCollabTable("collaboration_links")) {
       is_used INTEGER DEFAULT 0,
       used_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      manager_id INTEGER REFERENCES users(id),
+      status TEXT DEFAULT 'active',
+      percentage REAL DEFAULT 0,
+      classification TEXT,
+      manager_score REAL,
+      manager_comment TEXT,
+      concluded_at DATETIME,
       FOREIGN KEY (form_id) REFERENCES collaboration_forms(id),
       FOREIGN KEY (employee_id) REFERENCES employees(id),
-      FOREIGN KEY (created_by) REFERENCES users(id)
+      FOREIGN KEY (created_by) REFERENCES users(id),
+      FOREIGN KEY (manager_id) REFERENCES users(id)
     )
   `);
   console.log("✓ Created collaboration_links table");
+} else {
+  const info = db.prepare("PRAGMA table_info(collaboration_links)").all() as any[];
+  const columnsToAdd = [
+    { name: 'manager_id', type: 'INTEGER REFERENCES users(id)' },
+    { name: 'status', type: "TEXT DEFAULT 'active'" },
+    { name: 'percentage', type: 'REAL DEFAULT 0' },
+    { name: 'classification', type: 'TEXT' },
+    { name: 'manager_score', type: 'REAL' },
+    { name: 'manager_comment', type: 'TEXT' },
+    { name: 'concluded_at', type: 'DATETIME' }
+  ];
+  
+  columnsToAdd.forEach(col => {
+    if (!info.some(c => c.name === col.name)) {
+      db.exec(`ALTER TABLE collaboration_links ADD COLUMN ${col.name} ${col.type}`);
+      console.log(`✓ Added ${col.name} column to collaboration_links`);
+    }
+  });
+}
+
+// ============================================================
+// NEW MIGRATIONS FOR MANAGER SUPPORT
+// ============================================================
+const checkEmpCol = db.prepare("PRAGMA table_info(employees)");
+const empCols = checkEmpCol.all() as any[];
+if (!empCols.find((c: any) => c.name === "manager_id")) {
+  try {
+    db.exec("ALTER TABLE employees ADD COLUMN manager_id INTEGER");
+    console.log("✓ Added manager_id column to employees");
+  } catch (e) { console.error("Migration error (manager_id):", e); }
+}
+
+const checkLinkCol = db.prepare("PRAGMA table_info(collaboration_links)");
+const linkCols = checkLinkCol.all() as any[];
+if (!linkCols.find((c: any) => c.name === "status")) {
+  try {
+    db.exec("ALTER TABLE collaboration_links ADD COLUMN status TEXT DEFAULT 'active'");
+    console.log("✓ Added status column to collaboration_links");
+  } catch (e) { console.error("Migration error (status):", e); }
+}
+if (!linkCols.find((c: any) => c.name === "manager_score")) {
+  try {
+    db.exec("ALTER TABLE collaboration_links ADD COLUMN manager_score REAL");
+    console.log("✓ Added manager_score column to collaboration_links");
+  } catch (e) { console.error("Migration error (manager_score):", e); }
+}
+if (!linkCols.find((c: any) => c.name === "manager_comment")) {
+  try {
+    db.exec("ALTER TABLE collaboration_links ADD COLUMN manager_comment TEXT");
+    console.log("✓ Added manager_comment column to collaboration_links");
+  } catch (e) { console.error("Migration error (manager_comment):", e); }
+}
+if (!linkCols.find((c: any) => c.name === "concluded_at")) {
+  try {
+    db.exec("ALTER TABLE collaboration_links ADD COLUMN concluded_at DATETIME");
+    console.log("✓ Added concluded_at column to collaboration_links");
+  } catch (e) { console.error("Migration error (concluded_at):", e); }
 }
 
 ensureDefault360Template();
@@ -1153,6 +1251,17 @@ app.get("/api/users", authenticateToken, requireRole("Administrator"), (req, res
   res.json(users);
 });
 
+app.get("/api/get-all-managers", authenticateToken, (req, res) => {
+  console.log("[API] Hit /api/get-all-managers");
+  const users = db.prepare(`
+    SELECT id, name, role FROM users 
+    WHERE role IN ('Administrator', 'Compliance Manager', 'Manager', 'Procurement', 'Finance', 'Human Resources') 
+       OR id IN (SELECT DISTINCT manager_id FROM employees WHERE manager_id IS NOT NULL) 
+    ORDER BY name
+  `).all();
+  res.json(users);
+});
+
 app.post("/api/users", authenticateToken, requireRole("Administrator"), async (req: any, res: any) => {
   const error = validateRequired(req.body, ["username", "password", "name", "role"]);
   if (error) return res.status(400).json({ message: error });
@@ -1200,22 +1309,31 @@ app.delete("/api/users/:id", authenticateToken, requireRole("Administrator"), (r
   res.json({ message: "Utilizador eliminado." });
 });
 
+
 // ============================================================
 // EMPLOYEES (Know You Work)
 // ============================================================
 app.get("/api/employees", authenticateToken, (req: any, res) => {
   try {
-    const { department, status } = req.query;
+    const { department, status, manager_id } = req.query;
     let query = `
-      SELECT e.*, u.username, u.email as user_email
+      SELECT e.*, u.username, u.email as user_email, m.name as manager_name
       FROM employees e
       LEFT JOIN users u ON e.user_id = u.id
+      LEFT JOIN users m ON e.manager_id = m.id
     `;
     const params: any[] = [];
     const conditions: string[] = [];
 
     if (department) { conditions.push("e.department = ?"); params.push(department); }
     if (status) { conditions.push("e.status = ?"); params.push(status); }
+    if (manager_id) { conditions.push("e.manager_id = ?"); params.push(manager_id); }
+
+    // RBA: Managers only see their own employees unless Admin
+    if (req.user.role !== 'Administrator' && req.user.role !== 'Compliance Manager') {
+      conditions.push("e.manager_id = ?");
+      params.push(req.user.id);
+    }
 
     if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
     query += " ORDER BY e.name ASC";
@@ -1231,9 +1349,10 @@ app.get("/api/employees", authenticateToken, (req: any, res) => {
 app.get("/api/employees/:id", authenticateToken, (req: any, res) => {
   try {
     const employee = db.prepare(`
-      SELECT e.*, u.username, u.email as user_email
+      SELECT e.*, u.username, u.email as user_email, m.name as manager_name
       FROM employees e
       LEFT JOIN users u ON e.user_id = u.id
+      LEFT JOIN users m ON e.manager_id = m.id
       WHERE e.id = ?
     `).get(req.params.id);
     if (!employee) return res.status(404).json({ message: "Funcionário não encontrado." });
@@ -1250,10 +1369,10 @@ app.post("/api/employees", authenticateToken, requireRole("Administrator", "Comp
     const error = validateRequired(req.body, ["name"]);
     if (error) return res.status(400).json({ message: error });
 
-    const { name, email, position, department, hire_date, user_id, status } = req.body;
+    const { name, email, position, department, hire_date, user_id, status, manager_id } = req.body;
     const result = db.prepare(`
-      INSERT INTO employees (name, email, position, department, hire_date, user_id, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO employees (name, email, position, department, hire_date, user_id, status, manager_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       name || null,
       email || null,
@@ -1261,20 +1380,21 @@ app.post("/api/employees", authenticateToken, requireRole("Administrator", "Comp
       department || null,
       hire_date || null,
       user_id ? Number(user_id) : null,
-      status || "Ativo"
+      status || "Ativo",
+      manager_id ? Number(manager_id) : null
     );
 
-    logAction(req.user.id, result.lastInsertRowid, "CREATE_EMPLOYEE", `Created employee: ${name}`);
+    logAction(req.user.id, result.lastInsertRowid, "CREATE_EMPLOYEE", `Created employee: ${name} with manager: ${manager_id}`);
     res.status(201).json({ id: result.lastInsertRowid });
   } catch (err: any) {
-    console.error("Create employee error:", err.message, err.stack, "Body:", JSON.stringify(req.body).substring(0, 200));
+    console.error("Create employee error:", err.message);
     res.status(500).json({ error: "Erro ao criar colaborador.", message: err.message });
   }
 });
 
 app.put("/api/employees/:id", authenticateToken, requireRole("Administrator", "Compliance Manager"), (req: any, res) => {
   try {
-    const { name, email, position, department, hire_date, user_id, status } = req.body;
+    const { name, email, position, department, hire_date, user_id, status, manager_id } = req.body;
 
     db.prepare(`
       UPDATE employees SET
@@ -1285,6 +1405,7 @@ app.put("/api/employees/:id", authenticateToken, requireRole("Administrator", "C
         hire_date = COALESCE(?, hire_date),
         user_id = COALESCE(?, user_id),
         status = COALESCE(?, status),
+        manager_id = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
@@ -1295,6 +1416,7 @@ app.put("/api/employees/:id", authenticateToken, requireRole("Administrator", "C
       hire_date,
       user_id ? Number(user_id) : null,
       status,
+      manager_id ? Number(manager_id) : null,
       req.params.id
     );
 
@@ -2145,19 +2267,9 @@ app.get("/api/collaboration/360/template", authenticateToken, (req: any, res) =>
 });
 
 app.post("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
-  const { employee_id, recipient_email, expires_days = 30 } = req.body;
-  if (!employee_id) {
-    return res.status(400).json({ message: "Selecione o colaborador." });
-  }
-
-  const employee = db.prepare(`
-    SELECT id, name, email, position, department
-    FROM employees
-    WHERE id = ?
-  `).get(employee_id) as any;
-
-  if (!employee) {
-    return res.status(404).json({ message: "Colaborador nao encontrado." });
+  const { employee_ids, expires_days = 30 } = req.body;
+  if (!employee_ids || !Array.isArray(employee_ids) || employee_ids.length === 0) {
+    return res.status(400).json({ message: "Selecione pelo menos um colaborador." });
   }
 
   const form = db.prepare(`
@@ -2172,54 +2284,67 @@ app.post("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
     return res.status(404).json({ message: "Formulario 360 nao encontrado." });
   }
 
-  const finalEmail = (recipient_email || employee.email || "").trim();
-  if (!finalEmail) {
-    return res.status(400).json({ message: "Informe o email do colaborador." });
-  }
-
-  const token = generatePublicToken("toknow360");
+  const createdLinks = [];
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + Number(expires_days || 30));
+  const expiresStr = expiresAt.toISOString().split("T")[0];
 
-  const result = db.prepare(`
-    INSERT INTO collaboration_links (form_id, employee_id, token, recipient_name, recipient_email, created_by, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    form.id,
-    employee.id,
-    token,
-    employee.name,
-    finalEmail,
-    req.user.id,
-    expiresAt.toISOString().split("T")[0]
-  );
+  const insertLink = db.prepare(`
+    INSERT INTO collaboration_links (form_id, employee_id, token, recipient_name, recipient_email, created_by, expires_at, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+  `);
 
-  const linkUrl = `${getAppBaseUrl(req)}/avaliacao/${token}`;
-  const emailDraft = buildEvaluation360EmailDraft(employee.name, linkUrl);
+  for (const employee_id of employee_ids) {
+    const employee = db.prepare(`
+      SELECT id, name, email, manager_id
+      FROM employees
+      WHERE id = ?
+    `).get(employee_id) as any;
 
-// FIXED: Skip logAction if no entity_id (prevents FK error)
-if (employee.id) {
-  logAction(req.user.id, employee.id, "GENERATE_360_LINK", `Generated 360 link for employee ${employee.id}: ${token}`);
-}
+    if (!employee) continue;
+
+    const finalEmail = (employee.email || "").trim();
+    if (!finalEmail) continue;
+
+    const token = generatePublicToken("toknow360");
+    const result = insertLink.run(
+      form.id,
+      employee.id,
+      token,
+      employee.name,
+      finalEmail,
+      req.user.id,
+      expiresStr
+    );
+
+    const linkUrl = `${getAppBaseUrl(req)}/avaliacao/${token}`;
+    createdLinks.push({
+      id: result.lastInsertRowid,
+      employee_id: employee.id,
+      employee_name: employee.name,
+      token,
+      link_url: linkUrl
+    });
+
+    logAction(req.user.id, employee.id, "GENERATE_360_LINK", `Generated 360 link for employee ${employee.id}: ${token}`);
+  }
 
   res.status(201).json({
-    id: result.lastInsertRowid,
-    token,
-    link_url: linkUrl,
-    expires_at: expiresAt.toISOString().split("T")[0],
-    employee,
-    email_draft: emailDraft
+    message: `${createdLinks.length} convites gerados com sucesso.`,
+    links: createdLinks
   });
 });
 
 app.get("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
-  const links = db.prepare(`
+  let query = `
     SELECT
       cl.*,
       emp.name as employee_name,
       emp.email as employee_email,
       emp.position,
       emp.department,
+      emp.manager_id,
+      m.name as manager_name,
       ROUND(AVG(CASE WHEN cr.score IS NOT NULL THEN (cr.score * 100.0 / COALESCE(cq.max_score, 5)) END), 1) as percentage,
       COUNT(CASE WHEN cr.score IS NOT NULL THEN 1 END) as answered_questions,
       MAX(cr.response_date) as submitted_at,
@@ -2227,11 +2352,29 @@ app.get("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
       MAX(cr.peer_name) as peer_name
     FROM collaboration_links cl
     JOIN employees emp ON cl.employee_id = emp.id
+    LEFT JOIN users m ON emp.manager_id = m.id
     LEFT JOIN collaboration_responses cr ON cr.response_group = cl.token
     LEFT JOIN collaboration_questions cq ON cq.id = cr.question_id
-    GROUP BY cl.id, emp.name, emp.email, emp.position, emp.department
+  `;
+  const params: any[] = [];
+  const conditions: string[] = [];
+
+  // RBA: Managers only see their own evaluations unless Admin
+  if (req.user.role !== 'Administrator' && req.user.role !== 'Compliance Manager') {
+    conditions.push("emp.manager_id = ?");
+    params.push(req.user.id);
+  }
+  
+
+
+  if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
+  
+  query += `
+    GROUP BY cl.id, emp.name, emp.email, emp.position, emp.department, emp.manager_id, m.name
     ORDER BY cl.created_at DESC
-  `).all() as any[];
+  `;
+
+  const links = db.prepare(query).all(...params) as any[];
 
   res.json(links.map((link: any) => ({
     ...link,
@@ -2384,7 +2527,7 @@ app.get("/api/public/evaluation/:token", (req: any, res) => {
         COALESCE(max_score, 5) as max_score,
         COALESCE(section_key, 'self') as section_key
       FROM collaboration_questions
-      WHERE form_id = ?
+      WHERE form_id = ? AND section_key != 'manager_eval'
       ORDER BY display_order ASC
     `).all(collaborationLink.form_id) as any[];
 
@@ -2403,7 +2546,7 @@ app.get("/api/public/evaluation/:token", (req: any, res) => {
         position: collaborationLink.position,
         department: collaborationLink.department
       },
-      sections: EVALUATION_360_SECTIONS,
+      sections: EVALUATION_360_SECTIONS.filter(s => s.key !== 'manager_eval'),
       scale: EVALUATION_360_SCALE,
       questions
     });
@@ -2531,9 +2674,14 @@ app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
     const percentage = answeredQuestions > 0 ? normalizedScore / answeredQuestions : 0;
     const classification = classifyPercentage(percentage);
 
-    db.prepare("UPDATE collaboration_links SET is_used = 1, used_at = CURRENT_TIMESTAMP WHERE id = ?").run(collaborationLink.id);
+    db.prepare("UPDATE collaboration_links SET is_used = 1, used_at = CURRENT_TIMESTAMP, status = 'answered' WHERE id = ?").run(collaborationLink.id);
 
-    // logAction(null, collaborationLink.employee_id, "COLLAB_360_EMAIL_SUBMIT", `360 evaluation submitted via link ${token}`); // FIXED: Skip public logging (FK)
+    // Notify manager
+    const empData = db.prepare("SELECT manager_id, name FROM employees WHERE id = ?").get(collaborationLink.employee_id) as any;
+    if (empData?.manager_id) {
+      db.prepare("INSERT INTO notifications (user_id, message, type) VALUES (?, ?, 'Evaluation')")
+        .run(empData.manager_id, `Avaliação 360° respondida por ${empData.name}. Pendente para sua avaliação.`);
+    }
 
     return res.status(201).json({
       kind: "360",
@@ -2598,6 +2746,57 @@ app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
     percentage: Number(percentage.toFixed(1)),
     classification
   });
+});
+
+// Manager Conclude Evaluation
+app.post("/api/collaboration/360/conclude/:id", authenticateToken, (req: any, res) => {
+  const { score, comment, responses } = req.body;
+  const linkId = req.params.id;
+
+  const link = db.prepare(`
+    SELECT cl.*, emp.manager_id, emp.name as employee_name
+    FROM collaboration_links cl
+    JOIN employees emp ON cl.employee_id = emp.id
+    WHERE cl.id = ?
+  `).get(linkId) as any;
+
+  if (!link) return res.status(404).json({ message: "Avaliação não encontrada." });
+
+  // RBA: Only manager can conclude
+  if (req.user.role !== 'Administrator' && req.user.role !== 'Compliance Manager' && req.user.id !== link.manager_id) {
+    return res.status(403).json({ message: "Apenas o gestor responsável pode concluir esta avaliação." });
+  }
+
+  // Save responses if provided
+  if (Array.isArray(responses) && responses.length > 0) {
+    const insertResponse = db.prepare(`
+      INSERT INTO collaboration_responses
+      (form_id, evaluated_employee_id, question_id, score, comment, response_group, response_source, responder_name, responder_email)
+      VALUES (?, ?, ?, ?, ?, ?, 'internal', ?, ?)
+    `);
+
+    for (const r of responses) {
+      insertResponse.run(
+        link.form_id,
+        link.employee_id,
+        r.question_id,
+        r.score,
+        r.comment || null,
+        link.token,
+        req.user.name,
+        req.user.email || null
+      );
+    }
+  }
+
+  db.prepare(`
+    UPDATE collaboration_links 
+    SET status = 'concluded', manager_score = ?, manager_comment = ?, concluded_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(score || null, comment || null, linkId);
+
+  logAction(req.user.id, link.employee_id, "CONCLUDE_360_EVAL", `Manager concluded evaluation for ${link.employee_name}`);
+  res.json({ message: "Avaliação concluída com sucesso." });
 });
 
 // ============================================================
@@ -2962,31 +3161,27 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
   if (processStatus) processFilter += ` AND p.status = '${processStatus}'`;
   if (area) processFilter += ` AND p.area = '${area}'`;
 
-// Migration: Add evaluation_number and name to evaluations if not exists
-  try {
-    db.exec("ALTER TABLE evaluations ADD COLUMN evaluation_number TEXT");
-    db.exec("ALTER TABLE evaluations ADD COLUMN name TEXT");
-  } catch (e) { /* columns may already exist */ }
 
   const stats = {
     totals: {
-      suppliers: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier'${dateFilter}`).get(),
-      clients: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Client'${dateFilter}`).get(),
-       processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status IN ('Em análise', 'Pendente', 'Em aprovação', 'Submetido')${dateFilter}${entityFilter.includes('Supplier') ? entityFilter : ''}${entityFilter.includes('Client') ? entityFilter : ''}`).get(),
-      approved: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Aprovado'${dateFilter}${entityFilter}`).get(),
-      rejected: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Reprovado'${dateFilter}${entityFilter}`).get(),
-      eval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Avaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get(),
-      reeval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Reavaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get(),
-      critical_suppliers: db.prepare("SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND final_risk_rating = 'Alto'").get(),
-      low_perf_clients: db.prepare("SELECT COUNT(*) as count FROM evaluations ev JOIN entities e ON ev.entity_id = e.id WHERE e.entity_type = 'Client' AND ev.percentage < 60").get(),
+      suppliers: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier'${dateFilter}${entityFilter}`).get() || { count: 0 },
+      clients: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Client'${dateFilter}${entityFilter}`).get() || { count: 0 },
+      processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status IN ('Em análise', 'Pendente', 'Em aprovação', 'Submetido')${dateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
+      approved: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Aprovado'${dateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
+      rejected: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Reprovado'${dateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
+      eval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Avaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get() || { count: 0 },
+      reeval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Reavaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get() || { count: 0 },
+      critical_suppliers: db.prepare("SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND final_risk_rating = 'Alto'").get() || { count: 0 },
+      low_perf_clients: db.prepare("SELECT COUNT(*) as count FROM evaluations ev JOIN entities e ON ev.entity_id = e.id WHERE e.entity_type = 'Client' AND ev.percentage < 60").get() || { count: 0 },
     },
     indices: {
-      avg_client_satisfaction: db.prepare("SELECT AVG(percentage) as avg FROM evaluations WHERE type = 'Satisfaction'").get(),
-      avg_supplier_performance: db.prepare("SELECT AVG(percentage) as avg FROM evaluations WHERE type = 'Performance'").get(),
+      avg_client_satisfaction: db.prepare("SELECT AVG(percentage) as avg FROM evaluations WHERE type = 'Satisfaction'").get() || { avg: 0 },
+      avg_supplier_performance: db.prepare("SELECT AVG(percentage) as avg FROM evaluations WHERE type = 'Performance'").get() || { avg: 0 },
     },
     filters: {
       sectors: db.prepare("SELECT DISTINCT sector FROM entities WHERE sector IS NOT NULL AND sector != ''").all(),
       areas: db.prepare("SELECT DISTINCT area FROM processes WHERE area IS NOT NULL AND area != ''").all(),
+      openers: db.prepare("SELECT DISTINCT u.name as opener_name FROM processes p JOIN users u ON p.created_by = u.id").all(),
     },
     processes_by_status: db.prepare(`
       SELECT p.status, COUNT(*) as count 

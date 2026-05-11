@@ -12,8 +12,13 @@ import {
   Send,
   Trash2,
   UserRound,
+  Download,
+  FileBarChart,
+  ArrowRight,
+  Printer,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import Evaluation360Dashboard from "./Evaluation360Dashboard";
 
 type Section = {
   key: string;
@@ -54,6 +59,12 @@ type LinkRecord = {
   department?: string | null;
   percentage?: number | null;
   classification?: string | null;
+  status?: string | null;
+  manager_id?: number | null;
+  manager_name?: string | null;
+  manager_score?: number | null;
+  manager_comment?: string | null;
+  concluded_at?: string | null;
 };
 
 type SubmissionDetail = {
@@ -93,6 +104,14 @@ export default function Evaluation360Form() {
   const [expandedToken, setExpandedToken] = useState<string | null>(null);
   const [generatedInvite, setGeneratedInvite] = useState<any | null>(null);
   const [copiedValue, setCopiedValue] = useState<string | null>(null);
+  const [concludingLink, setConcludingLink] = useState<LinkRecord | null>(null);
+  const [conclusionData, setConclusionData] = useState<{score: number, comment: string, responses: Record<number, number>}>({ 
+    score: 5, 
+    comment: "", 
+    responses: {} 
+  });
+  const [isConcluding, setIsConcluding] = useState(false);
+  const [showDashboard, setShowDashboard] = useState<string | null>(null); // Token of the submission to show
   const [formData, setFormData] = useState({
     employee_id: routeEmployeeId || "",
     recipient_email: "",
@@ -287,6 +306,58 @@ export default function Evaluation360Form() {
     return new Date(date) < new Date();
   };
 
+  const handleConclude = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!concludingLink) return;
+
+    setIsConcluding(true);
+    try {
+      const res = await fetch(`/api/collaboration/360/conclude/${concludingLink.id}`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          score: conclusionData.score,
+          comment: conclusionData.comment,
+          responses: Object.entries(conclusionData.responses).map(([qid, score]) => ({
+            question_id: Number(qid),
+            score
+          }))
+        })
+      });
+
+      if (res.ok) {
+        addToast("Avaliação concluída com sucesso!", "success");
+        setConcludingLink(null);
+        setConclusionData({ score: 5, comment: "", responses: {} });
+        await fetchData();
+      } else {
+        const err = await res.json();
+        addToast(err.message || "Erro ao concluir avaliação.", "error");
+      }
+    } catch {
+      addToast("Erro de conexão.", "error");
+    } finally {
+      setIsConcluding(false);
+    }
+  };
+
+  if (showDashboard) {
+    const detail = detailByToken[showDashboard];
+    if (detail) {
+      return (
+        <div className="animate-in fade-in zoom-in duration-500">
+           <button 
+             onClick={() => setShowDashboard(null)}
+             className="mb-4 flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors font-medium"
+           >
+             <ArrowLeft size={18} /> Voltar à Lista
+           </button>
+           <Evaluation360Dashboard detail={detail} />
+        </div>
+      );
+    }
+  }
+
   if (loading) {
     return (
       <div className="h-64 flex items-center justify-center">
@@ -310,9 +381,6 @@ export default function Evaluation360Form() {
           </button>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Avaliação 360° por Email</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Gere o link, envie ao colaborador e acompanhe todas as respostas guardadas no To Know.
-            </p>
           </div>
         </div>
       </div>
@@ -324,10 +392,6 @@ export default function Evaluation360Form() {
           </div>
           <div className="space-y-1">
             <h3 className="text-lg font-bold text-gray-900">Fluxo único da avaliação 360°</h3>
-            <p className="text-sm text-gray-600">
-              Selecione o colaborador, confirme o email, gere o link e envie o formulário completo. Quando o colaborador
-              preencher, todas as respostas ficam armazenadas por colaborador para consulta posterior.
-            </p>
           </div>
         </div>
       </div>
@@ -482,97 +546,189 @@ export default function Evaluation360Form() {
         </div>
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="p-5 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900">Convites Gerados</h3>
-          <p className="text-sm text-gray-500 mt-1">Controle os links enviados aos colaboradores.</p>
+      <div className="space-y-6">
+        <div className="card p-6 bg-[#fdfaf4] border-[#eadfcd]">
+          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2 mb-4">
+            <ClipboardList size={20} className="text-[#a17e58]" />
+            Avaliações Pendentes
+          </h3>
+          <p className="text-sm text-[#8a6b49] mb-6">Avaliações aguardando sua revisão e avaliação</p>
+          
+          <div className="space-y-4">
+            {links.filter(l => l.status === 'answered').length === 0 ? (
+              <div className="py-8 text-center text-[#8a6b49]/50 bg-white/50 rounded-2xl border border-dashed border-[#eadfcd]">
+                Nenhuma avaliação pendente no momento.
+              </div>
+            ) : (
+              links.filter(l => l.status === 'answered').map(link => (
+                <div key={link.id} className="p-5 rounded-2xl bg-[#fbf7ef] border border-[#eadfcd] flex justify-between items-center group hover:shadow-md transition-all">
+                  <div>
+                    <h4 className="text-base font-bold text-[#5e4428]">{link.employee_name}</h4>
+                    <p className="text-sm text-[#8a6b49]">{link.employee_email || link.recipient_email}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">
+                        3 seções concluídas
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setConcludingLink(link)}
+                    className="bg-[#a17e58] text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-[#8a6b49] transition-all flex items-center gap-2"
+                  >
+                    Avaliar <ArrowRight size={16} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        {links.length === 0 ? (
-          <div className="p-10 text-center text-gray-400">Nenhum convite criado ainda.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-50 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                  <th className="px-4 py-3">Colaborador</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3 hidden md:table-cell">Validade</th>
-                  <th className="px-4 py-3">Estado</th>
-                  <th className="px-4 py-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {links.map((link) => {
-                  const fullUrl = `${window.location.origin}/avaliacao/${link.token}`;
-                  const expired = isExpired(link.expires_at);
-                  const used = Number(link.is_used) === 1;
-
-                  return (
-                    <tr key={link.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <p className="text-sm font-semibold text-gray-900">{link.employee_name}</p>
-                        <p className="text-xs text-gray-500">
-                          {link.position || "Sem cargo"} {link.department ? `• ${link.department}` : ""}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{link.recipient_email}</td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                          <CalendarDays size={12} />
-                          {link.expires_at || "Sem data"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {used ? (
-                          <span className="badge badge-success text-xs">Preenchido</span>
-                        ) : expired ? (
-                          <span className="badge badge-danger text-xs">Expirado</span>
-                        ) : (
-                          <span className="badge badge-neutral text-xs">Ativo</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => copyToClipboard(fullUrl)}
-                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title="Copiar link"
-                          >
-                            {copiedValue === fullUrl ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
-                          </button>
-                          <button
-                            onClick={() => window.open(fullUrl, "_blank", "noopener,noreferrer")}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Abrir formulário"
-                          >
-                            <ExternalLink size={15} />
-                          </button>
-                          <button
-                            onClick={() => openMailDraft(link.employee_name, link.recipient_email, link.token)}
-                            className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                            title="Abrir email"
-                          >
-                            <Mail size={15} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteInvite(link.id)}
-                            disabled={used}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30"
-                            title="Eliminar convite"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="card p-6 bg-[#fdfaf4] border-[#eadfcd]">
+          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2 mb-4">
+            <Check size={20} className="text-[#a17e58]" />
+            Avaliações Concluídas
+          </h3>
+          <p className="text-sm text-[#8a6b49] mb-6">Avaliações finalizadas disponíveis para visualização</p>
+          
+          <div className="space-y-4">
+            {links.filter(l => l.status === 'concluded').length === 0 ? (
+              <div className="py-8 text-center text-[#8a6b49]/50 bg-white/50 rounded-2xl border border-dashed border-[#eadfcd]">
+                Nenhuma avaliação concluída ainda.
+              </div>
+            ) : (
+              links.filter(l => l.status === 'concluded').map(link => (
+                <div key={link.id} className="p-4 rounded-2xl bg-emerald-50/30 border border-emerald-100 flex justify-between items-center group hover:shadow-sm transition-all">
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-800">{link.employee_name}</h4>
+                    <p className="text-xs text-gray-500">{link.employee_email || link.recipient_email}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        await handleToggleSubmission(link.token);
+                        setShowDashboard(link.token);
+                      }}
+                      className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all flex items-center gap-2"
+                    >
+                      Ver Dashboard <FileBarChart size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteInvite(link.id)}
+                      className="p-2 text-red-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
       </div>
+
+      {concludingLink && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-[#fdfaf4] rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in duration-300 border border-[#eadfcd]">
+            <div className="p-7 border-b border-[#eadfcd] flex justify-between items-center bg-[#fbf7ef]">
+              <h3 className="text-xl font-black text-[#5e4428]">Avaliar Colaborador</h3>
+              <button onClick={() => setConcludingLink(null)} className="text-amber-700 hover:bg-amber-100 p-1 rounded-full">
+                <ArrowLeft size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleConclude} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <p className="text-sm text-gray-600">
+                Finalize a avaliação de <strong>{concludingLink.employee_name}</strong> respondendo aos critérios abaixo.
+              </p>
+
+              <div className="space-y-6 py-4 border-y border-gray-100">
+                <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
+                  <h4 className="text-sm font-bold text-amber-900">Parte 4: Avaliação do Funcionário pelo Gestor</h4>
+                  <p className="text-[11px] text-amber-700 mt-1 uppercase tracking-wider font-medium">Por favor, avalie o desempenho e contribuições do seu subordinado direto.</p>
+                </div>
+
+                {template?.questions.filter(q => q.section_key === 'manager_eval').map((q, idx) => (
+                  <div key={q.id} className="space-y-3">
+                    <p className="text-sm font-bold text-[#5e4428]">{idx + 1}. {q.question_text}</p>
+                    <div className="space-y-2 ml-2">
+                      {template.scale.map(opt => (
+                        <label 
+                          key={opt.value} 
+                          className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                            conclusionData.responses[q.id] === opt.value
+                              ? "bg-white border-[#a17e58] shadow-sm shadow-amber-900/5 ring-1 ring-[#a17e58]"
+                              : "bg-gray-50 border-transparent hover:border-gray-200"
+                          }`}
+                        >
+                          <div className="relative flex items-center justify-center">
+                            <input
+                              type="radio"
+                              name={`conclude-q-${q.id}`}
+                              checked={conclusionData.responses[q.id] === opt.value}
+                              onChange={() => setConclusionData(prev => ({
+                                ...prev,
+                                responses: { ...prev.responses, [q.id]: opt.value }
+                              }))}
+                              className="appearance-none w-5 h-5 border-2 border-gray-300 rounded-full checked:border-[#a17e58] transition-all cursor-pointer"
+                            />
+                            {conclusionData.responses[q.id] === opt.value && (
+                              <div className="absolute w-2.5 h-2.5 bg-[#a17e58] rounded-full" />
+                            )}
+                          </div>
+                          <span className={`text-sm ${conclusionData.responses[q.id] === opt.value ? "font-bold text-[#5e4428]" : "text-gray-600"}`}>
+                            {opt.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Nota Global (1-10)</label>
+                  <input 
+                    type="number" 
+                    min="1" max="10" 
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                    value={conclusionData.score}
+                    onChange={e => setConclusionData(prev => ({ ...prev, score: Number(e.target.value) }))}
+                  />
+                </div>
+                <div className="space-y-2 flex flex-col justify-end pb-1">
+                   <p className="text-[10px] text-gray-400">Esta nota será usada no cálculo médio final do colaborador.</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase">Feedback Final do Gestor</label>
+                <textarea 
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl h-24 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                  placeholder="Observações sobre o desempenho..."
+                  value={conclusionData.comment}
+                  onChange={e => setConclusionData(prev => ({ ...prev, comment: e.target.value }))}
+                />
+              </div>
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-white pb-2">
+                <button 
+                  type="submit" 
+                  disabled={isConcluding}
+                  className="flex-[2] bg-[#a17e58] text-white py-4 rounded-2xl font-bold hover:bg-[#8a6b49] transition-all disabled:opacity-50 shadow-lg shadow-amber-900/10"
+                >
+                  {isConcluding ? "A Enviar..." : "Enviar Avaliação Final"}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setConcludingLink(null)}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-5">
@@ -640,13 +796,32 @@ export default function Evaluation360Form() {
                             {detail.responses.find((response) => response.peer_name)?.peer_name || "—"}
                           </p>
                         </div>
-                        <div className="p-3 rounded-xl bg-white border border-gray-100">
-                          <p className="text-xs text-gray-400 uppercase tracking-wider">Score Final</p>
-                          <p className="text-sm font-semibold text-gray-800">
-                            {Math.round(detail.submission.percentage)}% • {detail.submission.classification}
-                          </p>
+                          <div className="p-3 rounded-xl bg-white border border-gray-100">
+                            <p className="text-xs text-gray-400 uppercase tracking-wider">Score Final</p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {Math.round(detail.submission.percentage)}% • {detail.submission.classification}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+
+                        {submission.status === 'concluded' && (
+                          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                            <h4 className="text-sm font-bold text-amber-900 flex items-center gap-2">
+                              <Check size={16} /> Avaliação Final do Gestor
+                            </h4>
+                            <div className="mt-2 grid grid-cols-1 md:grid-cols-[100px,1fr] gap-4">
+                              <div className="text-center p-2 bg-white rounded-xl border border-amber-100">
+                                <p className="text-[10px] text-gray-400 uppercase">Nota</p>
+                                <p className="text-xl font-black text-amber-700">{submission.manager_score}/10</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-400 uppercase">Feedback</p>
+                                <p className="text-sm text-gray-700 italic">"{submission.manager_comment || "Sem comentário adicional."}"</p>
+                                <p className="text-[10px] text-gray-400 mt-2">Concluído em: {submission.concluded_at ? new Date(submission.concluded_at).toLocaleString() : '—'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                       {detail.sections.map((section) => {
                         const responses = detail.responses.filter((response) => response.section_key === section.key);

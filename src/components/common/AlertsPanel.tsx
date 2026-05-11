@@ -24,6 +24,7 @@ const typeLabels: Record<string, string> = {
   CriticalEntity: "Entidade Crítica",
   ScheduledEvaluation: "Avaliação Programada",
   Alert: "Alerta",
+  Evaluation: "Avaliação 360°",
 };
 
 export default function AlertsPanel() {

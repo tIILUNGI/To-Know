@@ -20,19 +20,29 @@ export default function EmployeeForm() {
     department: "",
     hire_date: "",
     user_id: "",
-    status: "Ativo"
+    status: "Ativo",
+    manager_id: ""
   });
 
   const [users, setUsers] = useState<any[]>([]);
+  const [managers, setManagers] = useState<any[]>([]);
 
   useEffect(() => {
     // Fetch users for linking
     fetch("/api/users", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
-      .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch(() => {});
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => Array.isArray(data) ? setUsers(data) : setUsers([]))
+      .catch(() => setUsers([]));
+
+    // Fetch managers
+    fetch("/api/get-all-managers", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => Array.isArray(data) ? setManagers(data) : setManagers([]))
+      .catch(() => setManagers([]));
 
     if (isEditing) {
       fetch(`/api/employees/${id}`, {
@@ -50,7 +60,8 @@ export default function EmployeeForm() {
             department: data.department || "",
             hire_date: data.hire_date || "",
             user_id: data.user_id ? String(data.user_id) : "",
-            status: data.status || "Ativo"
+            status: data.status || "Ativo",
+            manager_id: data.manager_id ? String(data.manager_id) : ""
           });
           setFetchLoading(false);
         })
@@ -95,7 +106,8 @@ export default function EmployeeForm() {
         department: formData.department || null,
         hire_date: formData.hire_date || null,
         user_id: formData.user_id ? Number(formData.user_id) : null,
-        status: formData.status
+        status: formData.status,
+        manager_id: formData.manager_id ? Number(formData.manager_id) : null
       };
 
       const url = isEditing ? `/api/employees/${id}` : "/api/employees";
@@ -229,7 +241,7 @@ export default function EmployeeForm() {
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             >
               <option value="">Nenhum (colaborador externo)</option>
-              {users.map((u) => (
+              {Array.isArray(users) && users.map((u) => (
                 <option key={u.id} value={u.id}>{u.name} ({u.username})</option>
               ))}
             </select>
@@ -247,6 +259,22 @@ export default function EmployeeForm() {
               <option value="Ativo">Ativo</option>
               <option value="Inactivo">Inactivo</option>
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Gestor Responsável / Avaliador *</label>
+            <select
+              name="manager_id"
+              value={formData.manager_id}
+              onChange={handleChange}
+              className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.manager_id ? 'border-red-500' : 'border-gray-200'}`}
+            >
+              <option value="">Selecione um gestor</option>
+              {Array.isArray(managers) && managers.map((m) => (
+                <option key={m.id} value={m.id}>{m.name} ({m.role})</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500">O gestor que receberá e concluirá as avaliações deste colaborador</p>
           </div>
         </div>
 

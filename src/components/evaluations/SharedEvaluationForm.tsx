@@ -292,9 +292,9 @@ export default function SharedEvaluationForm() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-[#d3bb9d] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#b99972] active:scale-[0.99] transition-all disabled:opacity-50"
+                className="w-full bg-[#a17e58] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#8a6b49] active:scale-[0.99] transition-all disabled:opacity-50 shadow-lg shadow-amber-900/10"
               >
-                <Send size={20} /> {submitting ? "Enviando..." : "Enviar Avaliação 360°"}
+                <Send size={20} /> {submitting ? "Enviando..." : "Enviar ao Gestor"}
               </button>
             </form>
           </div>
