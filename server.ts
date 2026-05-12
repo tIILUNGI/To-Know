@@ -2267,8 +2267,19 @@ app.get("/api/collaboration/360/template", authenticateToken, (req: any, res) =>
 });
 
 app.post("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
-  const { employee_ids, expires_days = 30 } = req.body;
-  if (!employee_ids || !Array.isArray(employee_ids) || employee_ids.length === 0) {
+  // Support both single format { employee_id, recipient_email, expires_days }
+  // and multi format { employee_ids: [...], expires_days }
+  let { employee_id, employee_ids, recipient_email, expires_days = 30 } = req.body;
+
+  // Normalize to array
+  if (!employee_ids || !Array.isArray(employee_ids)) {
+    if (employee_id !== undefined && employee_id !== null && employee_id !== "") {
+      employee_ids = [employee_id];
+    } else {
+      return res.status(400).json({ message: "Selecione pelo menos um colaborador." });
+    }
+  }
+  if (employee_ids.length === 0) {
     return res.status(400).json({ message: "Selecione pelo menos um colaborador." });
   }
 
@@ -2294,16 +2305,20 @@ app.post("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
   `);
 
-  for (const employee_id of employee_ids) {
+  for (const emp_id of employee_ids) {
     const employee = db.prepare(`
       SELECT id, name, email, manager_id
       FROM employees
       WHERE id = ?
-    `).get(employee_id) as any;
+    `).get(emp_id) as any;
 
     if (!employee) continue;
 
-    const finalEmail = (employee.email || "").trim();
+    // If a custom recipient_email is provided (single mode), use it; otherwise use employee email
+    const finalEmail = (
+      (employee_ids.length === 1 && recipient_email ? recipient_email : employee.email) || ""
+    ).trim();
+
     if (!finalEmail) continue;
 
     const token = generatePublicToken("toknow360");
@@ -2322,11 +2337,27 @@ app.post("/api/collaboration/360/links", authenticateToken, (req: any, res) => {
       id: result.lastInsertRowid,
       employee_id: employee.id,
       employee_name: employee.name,
+      employee: { name: employee.name, email: finalEmail },
+      recipient_email: finalEmail,
       token,
-      link_url: linkUrl
+      link_url: linkUrl,
+      email_draft: buildEvaluation360EmailDraft(employee.name, linkUrl)
     });
 
     logAction(req.user.id, employee.id, "GENERATE_360_LINK", `Generated 360 link for employee ${employee.id}: ${token}`);
+  }
+
+  if (createdLinks.length === 0) {
+    return res.status(400).json({ message: "Nenhum colaborador válido encontrado. Verifique se o colaborador tem email registado." });
+  }
+
+  // Single mode: return the first link directly (compatible with frontend)
+  if (employee_ids.length === 1) {
+    const link = createdLinks[0];
+    return res.status(201).json({
+      ...link,
+      message: "Convite 360 criado com sucesso."
+    });
   }
 
   res.status(201).json({
@@ -2617,9 +2648,9 @@ app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
     }
 
     const questions = db.prepare(`
-      SELECT id, COALESCE(max_score, 5) as max_score
+      SELECT id, COALESCE(max_score, 5) as max_score, COALESCE(section_key, 'self') as section_key
       FROM collaboration_questions
-      WHERE form_id = ?
+      WHERE form_id = ? AND (section_key IS NULL OR section_key != 'manager_eval')
       ORDER BY display_order ASC
     `).all(collaborationLink.form_id) as any[];
 
@@ -2651,8 +2682,9 @@ app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
     for (const question of questions) {
       const response = responseMap.get(Number(question.id));
       const score = Number(response?.score);
-      if (!Number.isFinite(score) || score < 1 || score > Number(question.max_score || 5)) {
-        return res.status(400).json({ message: "Preencha todas as questoes da avaliacao 360." });
+      if (!response || !Number.isFinite(score) || score < 1 || score > Number(question.max_score || 5)) {
+        console.log(`Failed question ${question.id}: response=${JSON.stringify(response)}, score=${score}, max=${question.max_score}`);
+        return res.status(400).json({ message: `Preencha todas as questoes. Falhou na pergunta ${question.id}.` });
       }
 
       insertResponse.run(
@@ -2750,53 +2782,59 @@ app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
 
 // Manager Conclude Evaluation
 app.post("/api/collaboration/360/conclude/:id", authenticateToken, (req: any, res) => {
-  const { score, comment, responses } = req.body;
-  const linkId = req.params.id;
+  try {
+    const { score, comment, responses } = req.body;
+    const linkId = req.params.id;
 
-  const link = db.prepare(`
-    SELECT cl.*, emp.manager_id, emp.name as employee_name
-    FROM collaboration_links cl
-    JOIN employees emp ON cl.employee_id = emp.id
-    WHERE cl.id = ?
-  `).get(linkId) as any;
+    const link = db.prepare(`
+      SELECT cl.*, emp.manager_id, emp.name as employee_name
+      FROM collaboration_links cl
+      JOIN employees emp ON cl.employee_id = emp.id
+      WHERE cl.id = ?
+    `).get(linkId) as any;
 
-  if (!link) return res.status(404).json({ message: "Avaliação não encontrada." });
+    if (!link) return res.status(404).json({ message: "Avaliação não encontrada." });
 
-  // RBA: Only manager can conclude
-  if (req.user.role !== 'Administrator' && req.user.role !== 'Compliance Manager' && req.user.id !== link.manager_id) {
-    return res.status(403).json({ message: "Apenas o gestor responsável pode concluir esta avaliação." });
-  }
-
-  // Save responses if provided
-  if (Array.isArray(responses) && responses.length > 0) {
-    const insertResponse = db.prepare(`
-      INSERT INTO collaboration_responses
-      (form_id, evaluated_employee_id, question_id, score, comment, response_group, response_source, responder_name, responder_email)
-      VALUES (?, ?, ?, ?, ?, ?, 'internal', ?, ?)
-    `);
-
-    for (const r of responses) {
-      insertResponse.run(
-        link.form_id,
-        link.employee_id,
-        r.question_id,
-        r.score,
-        r.comment || null,
-        link.token,
-        req.user.name,
-        req.user.email || null
-      );
+    // RBA: Only manager can conclude
+    if (req.user.role !== 'Administrator' && req.user.role !== 'Compliance Manager' && req.user.id !== link.manager_id) {
+      return res.status(403).json({ message: "Apenas o gestor responsável pode concluir esta avaliação." });
     }
+
+    // Save responses if provided
+    if (Array.isArray(responses) && responses.length > 0) {
+      const insertResponse = db.prepare(`
+        INSERT INTO collaboration_responses
+        (form_id, evaluator_id, evaluated_employee_id, question_id, score, comment, response_group, response_source, responder_name, responder_email)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'internal', ?, ?)
+      `);
+
+      for (const r of responses) {
+        insertResponse.run(
+          link.form_id,
+          req.user.id,
+          link.employee_id,
+          r.question_id,
+          r.score,
+          r.comment || null,
+          link.token,
+          req.user.name,
+          req.user.email || null
+        );
+      }
+    }
+
+    db.prepare(`
+      UPDATE collaboration_links 
+      SET status = 'concluded', manager_score = ?, manager_comment = ?, concluded_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(score || null, comment || null, linkId);
+
+    logAction(req.user.id, link.employee_id, "CONCLUDE_360_EVAL", `Manager concluded evaluation for ${link.employee_name}`);
+    res.json({ message: "Avaliação concluída com sucesso." });
+  } catch (err: any) {
+    console.error("Error concluding 360 eval:", err);
+    res.status(500).json({ message: "Erro interno: " + err.message });
   }
-
-  db.prepare(`
-    UPDATE collaboration_links 
-    SET status = 'concluded', manager_score = ?, manager_comment = ?, concluded_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(score || null, comment || null, linkId);
-
-  logAction(req.user.id, link.employee_id, "CONCLUDE_360_EVAL", `Manager concluded evaluation for ${link.employee_name}`);
-  res.json({ message: "Avaliação concluída com sucesso." });
 });
 
 // ============================================================
@@ -3181,7 +3219,7 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
     filters: {
       sectors: db.prepare("SELECT DISTINCT sector FROM entities WHERE sector IS NOT NULL AND sector != ''").all(),
       areas: db.prepare("SELECT DISTINCT area FROM processes WHERE area IS NOT NULL AND area != ''").all(),
-      openers: db.prepare("SELECT DISTINCT u.name as opener_name FROM processes p JOIN users u ON p.created_by = u.id").all(),
+      openers: db.prepare("SELECT DISTINCT u.name as opener_name FROM processes p JOIN users u ON p.opener_id = u.id").all(),
     },
     processes_by_status: db.prepare(`
       SELECT p.status, COUNT(*) as count 

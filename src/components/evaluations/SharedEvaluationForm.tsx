@@ -105,8 +105,11 @@ export default function SharedEvaluationForm() {
         addToast("Informe o nome do colega avaliado.", "error");
         return;
       }
-      if (Object.keys(responses).length !== data.questions.length) {
-        addToast("Responda todas as perguntas da avaliação 360°.", "error");
+      const employeeQuestions = data.questions.filter((q) => q.section_key !== "manager_eval");
+      const missingQuestions = employeeQuestions.filter((q) => responses[q.id] === undefined);
+      if (missingQuestions.length > 0) {
+        console.log("Perguntas faltando:", missingQuestions.map(q => q.id));
+        addToast(`Responda todas as perguntas. Faltam ${missingQuestions.length} respostas.`, "error");
         return;
       }
     } else if (Object.keys(responses).length === 0) {
@@ -122,7 +125,7 @@ export default function SharedEvaluationForm() {
               peer_name: peerName,
               responses: data.questions.map((question) => ({
                 question_id: question.id,
-                score: responses[question.id],
+                score: responses[question.id] ?? 0,
               })),
             }
           : {
@@ -134,6 +137,10 @@ export default function SharedEvaluationForm() {
               client_name: clientName,
               client_email: clientEmail,
             };
+
+      console.log("Payload enviado:", JSON.stringify(payload, null, 2));
+      console.log("Perguntas esperadas:", data.questions.length);
+      console.log("Respostas preenchidas:", Object.keys(responses).length);
 
       const response = await fetch(`/api/public/evaluation/${token}/submit`, {
         method: "POST",
