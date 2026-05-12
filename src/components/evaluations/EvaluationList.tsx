@@ -18,8 +18,8 @@ export default function EvaluationList() {
     setLoading(true);
     let url = "/api/evaluations";
     const params = [];
-    if (filterType) params.push(`type=${filterType}`);
-    if (filterEvaluationType) params.push(`evaluation_type=${filterEvaluationType}`);
+    if (filterType) params.push(`evaluation_type=${filterType}`);
+    if (filterEvaluationType) params.push(`periodicity=${filterEvaluationType}`);
     if (params.length > 0) url += "?" + params.join("&");
     fetch(url, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -63,8 +63,8 @@ export default function EvaluationList() {
       searchTerm === "" ||
       e.entity_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.period?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === "" || e.type === filterType;
-    const matchesEvalType = filterEvaluationType === "" || e.evaluation_type === filterEvaluationType;
+    const matchesType = filterType === "" || e.evaluation_type === filterType;
+    const matchesEvalType = filterEvaluationType === "" || e.periodicity === filterEvaluationType;
     return matchesSearch && matchesType && matchesEvalType;
   });
 
@@ -146,7 +146,7 @@ export default function EvaluationList() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <select
+<select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="input text-xs min-w-[100px]"
@@ -160,8 +160,8 @@ export default function EvaluationList() {
             onChange={(e) => setFilterEvaluationType(e.target.value)}
             className="input text-xs min-w-[100px]"
           >
-            <option value="">Todas</option>
-            <option value="Nova">Nova</option>
+            <option value="">Periodicidade</option>
+            <option value="Anual">Anual</option>
             <option value="Reavaliação">Reavaliação</option>
           </select>
         </div>
@@ -175,13 +175,13 @@ export default function EvaluationList() {
           <div className="bg-emerald-50 p-2 sm:p-3 rounded-lg border border-emerald-100">
             <div className="text-[10px] font-medium text-emerald-600 uppercase">Performance</div>
             <div className="text-lg sm:text-xl font-bold text-emerald-700">
-              {evaluations.filter((e) => e.type === "Performance").length}
+              {evaluations.filter((e) => e.evaluation_type === "Performance").length}
             </div>
           </div>
           <div className="bg-indigo-50 p-2 sm:p-3 rounded-lg border border-indigo-100">
             <div className="text-[10px] font-medium text-indigo-600 uppercase">Satisfação</div>
             <div className="text-lg sm:text-xl font-bold text-indigo-700">
-              {evaluations.filter((e) => e.type === "Satisfaction").length}
+              {evaluations.filter((e) => e.evaluation_type === "Satisfaction").length}
             </div>
           </div>
           <div className="bg-amber-50 p-2 sm:p-3 rounded-lg border border-amber-100">
