@@ -1535,25 +1535,46 @@ app.get("/api/entities/:id/history", authenticateToken, (req, res) => {
   });
 });
 
-app.post("/api/entities", authenticateToken, (req: any, res) => {
-  const error = validateRequired(req.body, ["name", "entity_type"]);
-  if (error) return res.status(400).json({ message: error });
+ app.post("/api/entities", authenticateToken, (req: any, res) => {
+   const error = validateRequired(req.body, ["name", "entity_type"]);
+   if (error) return res.status(400).json({ message: error });
 
-  const entityData = req.body;
-  // Only allow safe columns
-  const columns = Object.keys(entityData).filter(key =>
-    ENTITY_SAFE_COLUMNS.has(key)
-  );
+   const entityData = req.body;
+
+   // Normalize empty code to null (allow multiple NULLs, avoid duplicate empty string)
+   if (entityData.code && entityData.code.trim() === "") {
+     entityData.code = null;
+   }
+
+   // Check for duplicate code if provided
+   if (entityData.code) {
+     const existing = db.prepare("SELECT id FROM entities WHERE code = ?").get(entityData.code);
+     if (existing) {
+       return res.status(409).json({ message: `Já existe uma entidade com o código ${entityData.code}` });
+     }
+   }
+
+   // Only allow safe columns
+   const columns = Object.keys(entityData).filter(key =>
+     ENTITY_SAFE_COLUMNS.has(key)
+   );
 
   const placeholders = columns.map(() => "?").join(", ");
   const sql = `INSERT INTO entities (${columns.join(", ")}) VALUES (${placeholders})`;
   const values = columns.map(key => entityData[key]);
 
-  const result = db.prepare(sql).run(...values);
-  const entityId = result.lastInsertRowid;
-
-  logAction(req.user.id, Number(entityId), "CREATE", `Created entity: ${entityData.name}`);
-  res.status(201).json({ id: entityId });
+   try {
+     const result = db.prepare(sql).run(...values);
+     const entityId = result.lastInsertRowid;
+     logAction(req.user.id, Number(entityId), "CREATE", `Created entity: ${entityData.name}`);
+     res.status(201).json({ id: entityId });
+   } catch (e: any) {
+     if (e.code === 'SQLITE_CONSTRAINT_UNIQUE' && e.message && e.message.includes('code')) {
+       return res.status(409).json({ message: `Já existe uma entidade com o código ${entityData.code}` });
+     }
+     console.error("Error inserting entity:", e);
+     res.status(500).json({ message: "Erro ao criar entidade", error: e.message });
+   }
 });
 
 app.put("/api/entities/:id", authenticateToken, (req: any, res) => {
@@ -2059,11 +2080,28 @@ app.delete("/api/processes/:id", authenticateToken, (req: any, res: any) => {
   const proc: any = db.prepare("SELECT process_number FROM processes WHERE id = ?").get(req.params.id);
   if (!proc) return res.status(404).json({ message: "Processo não encontrado." });
 
-  db.prepare("DELETE FROM process_criteria WHERE process_id = ?").run(req.params.id);
-  db.prepare("DELETE FROM processes WHERE id = ?").run(req.params.id);
+  const id = Number(req.params.id);
 
-  logAction(req.user.id, null, "DELETE_PROCESS", `Deleted process: ${proc.process_number}`);
-  res.json({ message: "Processo eliminado." });
+  try {
+    // Use transaction to ensure atomic cleanup
+    const deleteWorkflow = db.prepare("DELETE FROM workflow_history WHERE process_id = ?");
+    const deleteEvaluations = db.prepare("DELETE FROM evaluations WHERE process_id = ?");
+    const deleteProcessCriteria = db.prepare("DELETE FROM process_criteria WHERE process_id = ?");
+    const deleteProcess = db.prepare("DELETE FROM processes WHERE id = ?");
+
+    db.transaction(() => {
+      deleteWorkflow.run(id);
+      deleteEvaluations.run(id);
+      deleteProcessCriteria.run(id);
+      deleteProcess.run(id);
+    })();
+
+    logAction(req.user.id, null, "DELETE_PROCESS", `Deleted process: ${proc.process_number}`);
+    res.json({ message: "Processo eliminado." });
+  } catch (e: any) {
+    console.error("Error deleting process:", e);
+    res.status(500).json({ message: "Erro ao eliminar processo", error: e.message });
+  }
 });
 
 // ============================================================
@@ -3179,13 +3217,22 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
   const area = req.query.area as string;
   const impact = req.query.impact as string;
 
-  let dateFilter = "";
+  let entityDateFilter = "";
   if (period === "current_month") {
-    dateFilter = " AND created_at >= date('now', 'start of month')";
+    entityDateFilter = " AND e.created_at >= date('now', 'start of month')";
   } else if (period === "last_quarter") {
-    dateFilter = " AND created_at >= date('now', '-3 months')";
+    entityDateFilter = " AND e.created_at >= date('now', '-3 months')";
   } else if (period === "last_year") {
-    dateFilter = " AND created_at >= date('now', '-12 months')";
+    entityDateFilter = " AND e.created_at >= date('now', '-12 months')";
+  }
+
+  let processDateFilter = "";
+  if (period === "current_month") {
+    processDateFilter = " AND p.created_at >= date('now', 'start of month')";
+  } else if (period === "last_quarter") {
+    processDateFilter = " AND p.created_at >= date('now', '-3 months')";
+  } else if (period === "last_year") {
+    processDateFilter = " AND p.created_at >= date('now', '-12 months')";
   }
 
   let entityFilter = "";
@@ -3202,13 +3249,13 @@ app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
 
   const stats = {
     totals: {
-      suppliers: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier'${dateFilter}${entityFilter}`).get() || { count: 0 },
-      clients: db.prepare(`SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Client'${dateFilter}${entityFilter}`).get() || { count: 0 },
-      processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status IN ('Em análise', 'Pendente', 'Em aprovação', 'Submetido')${dateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
-      approved: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Aprovado'${dateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
-      rejected: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Reprovado'${dateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
-      eval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Avaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get() || { count: 0 },
-      reeval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Reavaliação' AND p.status != 'Encerrado'${dateFilter}${entityFilter}`).get() || { count: 0 },
+      suppliers: db.prepare(`SELECT COUNT(*) as count FROM entities e WHERE e.entity_type = 'Supplier'${entityDateFilter}${entityFilter}`).get() || { count: 0 },
+      clients: db.prepare(`SELECT COUNT(*) as count FROM entities e WHERE e.entity_type = 'Client'${entityDateFilter}${entityFilter}`).get() || { count: 0 },
+      processes_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status IN ('Em análise', 'Pendente', 'Em aprovação', 'Submetido')${processDateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
+      approved: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Aprovado'${processDateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
+      rejected: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.status = 'Reprovado'${processDateFilter}${entityFilter}${processFilter}`).get() || { count: 0 },
+      eval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Avaliação' AND p.status != 'Encerrado'${processDateFilter}${entityFilter}`).get() || { count: 0 },
+      reeval_pending: db.prepare(`SELECT COUNT(*) as count FROM processes p JOIN entities e ON p.entity_id = e.id WHERE p.type = 'Reavaliação' AND p.status != 'Encerrado'${processDateFilter}${entityFilter}`).get() || { count: 0 },
       critical_suppliers: db.prepare("SELECT COUNT(*) as count FROM entities WHERE entity_type = 'Supplier' AND final_risk_rating = 'Alto'").get() || { count: 0 },
       low_perf_clients: db.prepare("SELECT COUNT(*) as count FROM evaluations ev JOIN entities e ON ev.entity_id = e.id WHERE e.entity_type = 'Client' AND ev.percentage < 60").get() || { count: 0 },
     },

@@ -107,29 +107,42 @@ export default function EntityForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      addToast("Preencha todos os campos obrigatórios.", "error");
-      return;
-    }
-    
-    const method = id && id !== "new" ? "PUT" : "POST";
-    const url = id && id !== "new" ? `/api/entities/${id}` : "/api/entities";
-    
-    const res = await fetch(url, {
-      method,
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    });
-    
-    if (res.ok) {
-      navigate(-1);
-    }
-  };
+   const handleSubmit = async (e) => {
+     e.preventDefault();
+     if (!validateForm()) {
+       addToast("Preencha todos os campos obrigatórios.", "error");
+       return;
+     }
+
+     setLoading(true);
+     const method = id && id !== "new" ? "PUT" : "POST";
+     const url = id && id !== "new" ? `/api/entities/${id}` : "/api/entities";
+
+     try {
+       const res = await fetch(url, {
+         method,
+         headers: {
+           'Authorization': `Bearer ${localStorage.getItem('token')}`,
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify(formData)
+       });
+
+       const data = await res.json();
+
+       if (!res.ok) {
+         throw new Error(data.message || "Erro ao salvar entidade");
+       }
+
+       addToast(id && id !== "new" ? "Entidade atualizada com sucesso!" : "Entidade criada com sucesso!", "success");
+       navigate(-1);
+     } catch (err: any) {
+       console.error("Erro ao salvar:", err);
+       addToast(err.message || "Erro ao salvar entidade", "error");
+     } finally {
+       setLoading(false);
+     }
+   };
 
   if (loading) return <div className="h-full flex items-center justify-center font-bold text-blue-600">Carregando formulário...</div>;
 
@@ -154,9 +167,15 @@ export default function EntityForm() {
         <button
           type="submit"
           form="entity-form"
-          className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-200"
+          disabled={loading}
+          className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
         >
-          <Save size={20} /> Salvar Cadastro
+          {loading ? (
+            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          ) : (
+            <Save size={20} />
+          )}
+          {loading ? "A salvar..." : "Salvar Cadastro"}
         </button>
       </div>
 
