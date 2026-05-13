@@ -137,7 +137,7 @@ export default function ReportsView() {
       th { background-color: #4a5568; color: white; }
       tr:nth-child(even) { background-color: #f9f9f9; }
     </style></head><body>`;
-    html += `<h1>ToKnow - Relatório de ${category}</h1>`;
+     html += `<h1>TOKNOW - Relatório de ${category}</h1>`;
     html += `<p>Data: ${new Date().toLocaleDateString('pt-PT')}</p>`;
     html += '<table><thead><tr>';
     headers.forEach(h => { html += `<th>${h}</th>`; });

@@ -13,8 +13,8 @@ const Logo = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg" | "xl
   };
   return (
     <img 
-      src="/Tocomply360.png" 
-      alt="TO KNOW" 
+      src="/TOKNOW.png" 
+      alt="TOKNOW" 
       className={`${sizeClasses[size]} object-contain site-logo ${className}`}
     />
   );
@@ -87,7 +87,7 @@ export default function Login() {
           <div className="bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mb-6 sm:mb-8 border border-white/20 p-4">
             <Logo size="xl" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">TO KNOW</h1>
+           <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">TOKNOW</h1>
           <p className="text-blue-100 text-base sm:text-lg text-center max-w-md mb-6 sm:mb-8 px-4">
             Plataforma corporativa de Compliance e Gestão de Risco
           </p>
@@ -113,7 +113,7 @@ export default function Login() {
               <div className="bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 w-14 h-14 p-2">
                 <Logo size="md" className="!w-10 !h-10" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">TO KNOW</h2>
+               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">TOKNOW</h2>
             </div>
 
             <div className="mb-6 sm:mb-8">
@@ -272,7 +272,7 @@ export default function Login() {
           </div>
           
           <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
-            © 2026 TO KNOW - Compliance Platform
+             © 2026 TOKNOW
           </p>
         </div>
       </div>

@@ -211,7 +211,7 @@ const buildEvaluation360EmailDraft = (employeeName: string, linkUrl: string) => 
   const body = [
     `Olá ${employeeName},`,
     "",
-    "Foi iniciada uma nova avaliação 360° no To Know.",
+     "Foi iniciada uma nova avaliação 360° no TOKNOW.",
     "Use o link abaixo para preencher o formulário completo:",
     linkUrl,
     "",

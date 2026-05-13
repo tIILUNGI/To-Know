@@ -188,7 +188,7 @@ export default function Evaluation360Form() {
       [
         `Olá ${employeeName},`,
         "",
-        "Foi iniciada uma nova avaliação 360° no To Know.",
+         "Foi iniciada uma nova avaliação 360° no TOKNOW.",
         "Use o link abaixo para preencher o formulário:",
         linkUrl,
         "",

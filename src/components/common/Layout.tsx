@@ -16,8 +16,8 @@ const Logo = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
   };
   return (
     <img 
-      src="/Tocomply360.png" 
-      alt="TO KNOW" 
+      src="/TOKNOW.png" 
+        alt="TOKNOW"
       className={`${sizeClasses[size]} object-contain site-logo`}
     />
   );
@@ -144,7 +144,7 @@ export default function Layout() {
             </button>
             <Link to="/" className="flex items-center gap-2">
               <Logo size="sm" />
-              <span className="text-base font-bold text-gray-900 dark:text-white hidden sm:block">TO KNOW</span>
+               <span className="text-base font-bold text-gray-900 dark:text-white hidden sm:block">TOKNOW</span>
             </Link>
           </div>
 
@@ -273,7 +273,7 @@ export default function Layout() {
           <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2">
               <Logo size="sm" />
-              <span className="font-bold text-gray-900 dark:text-white">TO KNOW</span>
+               <span className="font-bold text-gray-900 dark:text-white">TOKNOW</span>
             </div>
             <button onClick={closeMobileMenu} className="p-1.5 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
               <X size={18} />
