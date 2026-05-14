@@ -2111,23 +2111,23 @@ app.post("/api/evaluations", authenticateToken, (req: any, res) => {
   const error = validateRequired(req.body, ["entity_id", "type", "responses"]);
   if (error) return res.status(400).json({ message: error });
 
-  const { entity_id, type, evaluation_type, evaluation_type_detail, periodicity, period, product_service, unit, responses, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, name, evaluation_number } = req.body;
+  const { entity_id, type, evaluation_type, evaluation_type_detail, periodicity, period_start, period_end, product_service, unit, responses, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, name, evaluation_number } = req.body;
 
-  // Gerar evaluation_number se não for fornecido
-  const evalNum = evaluation_number || "AVL-" + Date.now();
-  const evalName = name || `${evaluation_type_detail === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${new Date().toLocaleDateString('pt-PT')}`;
+   // Gerar evaluation_number se não for fornecido
+   const evalNum = evaluation_number || "AVL-" + Date.now();
+   const evalName = name || `${evaluation_type_detail === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${new Date().toLocaleDateString('pt-PT')}`;
 
-  const result = db.prepare(`
-    INSERT INTO evaluations (entity_id, type, evaluation_type, periodicity, period, product_service, unit, evaluator_id, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, evaluation_date, evaluation_number, name) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?)
-  `).run(entity_id, type, evaluation_type || "Nova", periodicity || "Anual", period, product_service, unit, req.user.id, action_plan || null, action_plan_deadline || null, action_plan_responsible || null, previous_evaluation_id || null, evalNum, evalName);
+   const result = db.prepare(`
+     INSERT INTO evaluations (entity_id, type, evaluation_type, periodicity, period_start, period_end, product_service, unit, evaluator_id, action_plan, action_plan_deadline, action_plan_responsible, previous_evaluation_id, evaluation_date, evaluation_number, name) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?)
+   `).run(entity_id, type, evaluation_type || "Nova", periodicity || "Anual", period_start, period_end, product_service, unit, req.user.id, action_plan || null, action_plan_deadline || null, action_plan_responsible || null, previous_evaluation_id || null, evalNum, evalName);
 
   const evaluationId = result.lastInsertRowid;
 
-  const insertResponse = db.prepare(`
-    INSERT INTO evaluation_responses (evaluation_id, group_name, criterion_name, score, observation, evidence) 
-    VALUES (?, ?, ?, ?, ?)
-  `);
+   const insertResponse = db.prepare(`
+     INSERT INTO evaluation_responses (evaluation_id, group_name, criterion_name, score, observation, evidence) 
+     VALUES (?, ?, ?, ?, ?, ?)
+   `);
 
   let totalScore = 0;
   let count = 0;
@@ -2788,15 +2788,15 @@ app.post("/api/public/evaluation/:token/submit", (req: any, res) => {
   else if (percentage >= 60) classification = "Satisfatório";
   else if (percentage >= 40) classification = "Insatisfatório";
 
-  // Store responses as an evaluation (similar to regular evaluations but linked)
-  const evalResult = db.prepare(`
-    INSERT INTO evaluation_responses (evaluation_id, group_name, criterion_name, score, observation)
-    VALUES (?, ?, ?, ?, ?)
-  `);
+   // Store responses as an evaluation (similar to regular evaluations but linked)
+   const evalResult = db.prepare(`
+     INSERT INTO evaluation_responses (evaluation_id, group_name, criterion_name, score, observation, evidence) 
+     VALUES (?, ?, ?, ?, ?, ?)
+   `);
 
-  for (const r of responses) {
-    evalResult.run(link.evaluation_id, "Satisfação do Cliente", r.criterion_name || r.question, r.score, r.comment || null);
-  }
+   for (const r of responses) {
+     evalResult.run(link.evaluation_id, "Satisfação do Cliente", r.criterion_name || r.question, r.score, r.comment || null, null);
+   }
 
   // Mark link as used
   db.prepare("UPDATE evaluation_links SET is_used = 1, used_at = CURRENT_TIMESTAMP WHERE id = ?").run(link.id);

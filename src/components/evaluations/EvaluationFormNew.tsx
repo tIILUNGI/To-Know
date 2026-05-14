@@ -212,24 +212,25 @@ export default function EvaluationFormNew() {
     const evalType = formData.evaluation_type_detail === 'Satisfaction' ? 'Satisfaction' : 'Performance';
     const evalName = formData.name || `${evalType === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${supplier.name}`;
 
-    try {
-      const res = await fetch("/api/evaluations", {
-        method: "POST",
-        headers: { 
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ 
-          entity_id: supplier.id,
-          type: 'Supplier',
-          evaluation_type: evalType,
-          evaluation_type_detail: evalType,
-          name: evalName,
-          periodicity: formData.periodicity,
-          period: formData.period_start && formData.period_end ? `${formData.period_start} a ${formData.period_end}` : formData.evaluation_date,
-          responses: responses
-        })
-      });
+     try {
+       const res = await fetch("/api/evaluations", {
+         method: "POST",
+         headers: { 
+           Authorization: `Bearer ${localStorage.getItem("token")}`,
+           "Content-Type": "application/json"
+         },
+         body: JSON.stringify({ 
+           entity_id: supplier.id,
+           type: 'Supplier',
+           evaluation_type: evalType,
+           evaluation_type_detail: evalType,
+           name: evalName,
+           periodicity: formData.periodicity,
+           period_start: formData.period_start || null,
+           period_end: formData.period_end || null,
+           responses: responses
+         })
+       });
 
       if (res.ok) {
         addToast("Avaliação salva com sucesso!", "success");

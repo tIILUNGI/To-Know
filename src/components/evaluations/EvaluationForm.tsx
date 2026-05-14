@@ -88,32 +88,45 @@ export default function EvaluationForm() {
     setResponses(prev => ({ ...prev, [id]: score }));
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    const formattedResponses = questions.map(q => ({
-      criterion_name: q.id,
-      score: responses[q.id] || 0,
-      observation: "",
-      evidence: "",
-    }));
+   const handleSubmit = async (e: FormEvent) => {
+     e.preventDefault();
+     const formattedResponses = questions.map(q => ({
+       criterion_name: q.id,
+       score: responses[q.id] || 0,
+       observation: "",
+       evidence: "",
+     }));
 
-    try {
-      const res = await fetch("/api/evaluations", {
-        method: "POST",
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ...formData, responses: formattedResponses })
-      });
+     // Convert period (year string) to period_start and period_end dates
+     const periodYear = formData.period || new Date().getFullYear().toString();
+     const periodStart = `${periodYear}-01-01`;
+     const periodEnd = `${periodYear}-12-31`;
 
-      if (res.ok) {
-        navigate(-1);
-      }
-    } catch {
-      console.error("Error submitting evaluation");
-    }
-  };
+     // Build payload without the 'period' field
+     const { period, ...rest } = formData;
+
+     try {
+       const res = await fetch("/api/evaluations", {
+         method: "POST",
+         headers: {
+           'Authorization': `Bearer ${localStorage.getItem('token')}`,
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({ 
+           ...rest, 
+           period_start: periodStart,
+           period_end: periodEnd,
+           responses: formattedResponses 
+         })
+       });
+
+       if (res.ok) {
+         navigate(-1);
+       }
+     } catch {
+       console.error("Error submitting evaluation");
+     }
+   };
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-10 max-w-5xl mx-auto">

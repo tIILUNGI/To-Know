@@ -168,25 +168,24 @@ export default function ClientEvaluationForm() {
     const evalName = formData.name || `${submissionEvalType === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${selectedClient.name}`;
 
     try {
-      const res = await fetch("/api/evaluations", {
-        method: "POST",
-        headers: { 
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ 
-          entity_id: selectedClient.id,
-          type: 'Client',
-          evaluation_type: submissionEvalType === 'Satisfaction' ? 'Satisfaction' : 'Performance',
-          evaluation_type_detail: submissionEvalType,
-          name: evalName,
-          periodicity: "Pontual",
-          period: formData.period_start && formData.period_end 
-            ? `${formData.period_start} a ${formData.period_end}`
-            : formData.evaluation_date,
-          responses: responses
-        })
-      });
+     const res = await fetch("/api/evaluations", {
+       method: "POST",
+       headers: { 
+         Authorization: `Bearer ${localStorage.getItem("token")}`,
+         "Content-Type": "application/json"
+       },
+       body: JSON.stringify({ 
+         entity_id: selectedClient.id,
+         type: 'Client',
+         evaluation_type: submissionEvalType === 'Satisfaction' ? 'Satisfaction' : 'Performance',
+         evaluation_type_detail: submissionEvalType,
+         name: evalName,
+         periodicity: "Pontual",
+         period_start: formData.period_start || null,
+         period_end: formData.period_end || null,
+         responses: responses
+       })
+     });
 
       if (res.ok) {
         addToast("Avaliação salva com sucesso!", "success");

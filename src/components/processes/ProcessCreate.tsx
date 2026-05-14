@@ -41,9 +41,10 @@ export default function ProcessCreate() {
    const [showEntitySelect, setShowEntitySelect] = useState(false);
    const [showCriteriaSelect, setShowCriteriaSelect] = useState(false);
 
-   // Get defaults from query params
-   const entityType = searchParams.get('entity') === 'Client' ? 'Cliente' : 'Fornecedor';
-   const defaultType = searchParams.get('type') === 'approval' ? 'Aprovação' : 'Avaliação';
+    // Get defaults from query params
+    const entityTypeParam = searchParams.get('entity') === 'Client' ? 'Client' : 'Supplier';
+    const entityTypeDisplay = searchParams.get('entity') === 'Client' ? 'Cliente' : 'Fornecedor';
+    const defaultType = searchParams.get('type') === 'approval' ? 'Aprovação' : 'Avaliação';
 
    const [formData, setFormData] = useState({
      process_number: "",
@@ -70,12 +71,12 @@ useEffect(() => {
         })
         .catch(() => addToast("Erro ao carregar tipos de processo.", "error"));
         
-      fetch("/api/entities", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      })
-        .then(res => res.json())
-        .then(data => setEntities(data))
-        .catch(() => {});
+       fetch(`/api/entities?type=${entityTypeParam}`, {
+         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+       })
+         .then(res => res.json())
+         .then(data => setEntities(data))
+         .catch(() => {});
         
       fetch("/api/criteria", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -215,12 +216,12 @@ useEffect(() => {
             <h3 className="text-lg font-bold text-gray-900">Cabeçalho do Processo</h3>
           </div>
 
-          {/* Selecionar Entidade (Fornecedor/Cliente) */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Package size={18} className="text-indigo-600" />
-              <label className="text-sm font-bold text-gray-700">Entidade (Fornecedor/Cliente) *</label>
-            </div>
+           {/* Selecionar Entidade */}
+           <div className="space-y-4">
+             <div className="flex items-center gap-2">
+               <Package size={18} className="text-indigo-600" />
+               <label className="text-sm font-bold text-gray-700">Selecionar {entityTypeDisplay} *</label>
+             </div>
             {errors.entity && <p className="text-xs text-red-600">{errors.entity}</p>}
             
             {selectedEntity ? (
@@ -239,8 +240,8 @@ useEffect(() => {
                 onClick={() => setShowEntitySelect(!showEntitySelect)}
                 className="px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center gap-2 w-full justify-center"
               >
-                <Package size={18} />
-                {showEntitySelect ? 'Fechar' : 'Selecionar Entidade'}
+                 <Package size={18} />
+                 {showEntitySelect ? 'Fechar' : `Selecionar ${entityTypeDisplay}`}
               </button>
             )}
 

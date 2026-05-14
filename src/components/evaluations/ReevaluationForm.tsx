@@ -114,24 +114,25 @@ export default function ReevaluationForm() {
 
     const evalName = formData.name || `Reavaliação - ${selectedSupplier.name}`;
 
-    try {
-      const res = await fetch("/api/evaluations", {
-        method: "POST",
-        headers: { 
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ 
-          entity_id: selectedSupplier.id,
-          type: 'Supplier',
-          evaluation_type: 'Reavaliação',
-          evaluation_type_detail: 'Reavaliação',
-          name: evalName,
-          periodicity: "Pontual",
-          period: formData.evaluation_date,
-          responses: responses
-        })
-      });
+     try {
+       const res = await fetch("/api/evaluations", {
+         method: "POST",
+         headers: { 
+           Authorization: `Bearer ${localStorage.getItem("token")}`,
+           "Content-Type": "application/json"
+         },
+         body: JSON.stringify({ 
+           entity_id: selectedSupplier.id,
+           type: 'Supplier',
+           evaluation_type: 'Reavaliação',
+           evaluation_type_detail: 'Reavaliação',
+           name: evalName,
+           periodicity: "Pontual",
+           period_start: formData.reevaluation_date || null,
+           period_end: formData.reevaluation_date || null,
+           responses: responses
+         })
+       });
 
        if (res.ok) {
           addToast("Reavaliação salva com sucesso!", "success");
