@@ -52,6 +52,18 @@ export default function ClientApprovalForm() {
 
     const [criteria, setCriteria] = useState<any[]>([]);
 
+  const [resultData, setResultData] = useState<any>({
+    total_score: "0",
+    final_percentage: "0",
+    risk_classification: "",
+    decision: ""
+  });
+
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
    const processTypeOptions = [
      { value: 'Aprovação', label: 'Aprovação' },
      { value: 'Avaliação', label: 'Avaliação' },
@@ -438,7 +450,7 @@ export default function ClientApprovalForm() {
                 ))}
               </tbody>
             </table>
-          </div>>
+          </div>
 
           <button
             type="button"

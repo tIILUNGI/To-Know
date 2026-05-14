@@ -98,7 +98,7 @@ export default function ClientSatisfactionResponse() {
     try {
       const responseData = Object.entries(responses).map(([questionId, response]) => ({
         question_id: Number(questionId),
-        ...response
+        ...(response as Record<string, any>)
       }));
 
       const response = await fetch(`/api/public/client-satisfaction/${token}/submit`, {

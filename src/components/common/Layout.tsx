@@ -155,7 +155,6 @@ export default function Layout() {
                 to={item.to}
                 icon={item.icon}
                 label={item.label}
-                description={item.description}
                 active={isActive(item.to)}
               />
             ))}
