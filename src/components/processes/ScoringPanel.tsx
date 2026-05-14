@@ -108,7 +108,6 @@ export default function ScoringPanel({ processId, criteria, onScoresChange, onAu
           <thead>
             <tr className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Critério</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Descrição</th>
               <th className="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-20">Peso</th>
               <th className="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-24">Pontuação</th>
               <th className="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-32">Evidência</th>
@@ -190,14 +189,7 @@ export default function ScoringPanel({ processId, criteria, onScoresChange, onAu
             <div>
               <p className="font-bold text-red-800 text-sm">Score crítico detectado</p>
               <p className="text-red-700 text-xs mt-1">
-                Score < 60% - Revisar critérios antes de avançar
-
-
-
-
-              
-              
-
+                Score &lt; 60% - Revisar critérios antes de avançar
               </p>
             </div>
           </div>
