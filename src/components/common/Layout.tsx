@@ -45,7 +45,14 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<{[key: string]: boolean}>({});
+
+  const toggleMenuExpansion = (menuKey: string) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuKey]: !prev[menuKey]
+    }));
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
@@ -120,7 +127,16 @@ export default function Layout() {
     { to: "/entities/suppliers", icon: Users, label: "Fornecedores" },
     { to: "/entities/clients", icon: Users, label: "Clientes" },
     { to: "/processos", icon: FileText, label: "Processos" },
-    { to: "/avaliacoes", icon: ClipboardList, label: "Avaliações" },
+    {
+      key: "avaliacoes",
+      icon: ClipboardList,
+      label: "Avaliações",
+      submenu: [
+        { to: "/avaliacoes", label: "Todas as Avaliações" },
+        { to: "/avaliacoes/cliente/satisfacao/lista", label: "Satisfação Cliente" },
+        { to: "/avaliacoes/360", label: "Avaliação 360" },
+      ]
+    },
     { to: "/colaboradores", icon: UserPlus, label: "Colaboradores" },
     { to: "/relatorios", icon: BarChart3, label: "Relatórios" },
   ];
@@ -150,13 +166,48 @@ export default function Layout() {
 
           <nav className="hidden lg:flex items-center gap-0.5">
             {navItems.map((item) => (
-              <NavItem
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={isActive(item.to)}
-              />
+              item.submenu ? (
+                <div key={item.key} className="relative">
+                  <button
+                    onClick={() => toggleMenuExpansion(item.key)}
+                    className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all relative group ${
+                      expandedMenus[item.key] || item.submenu.some(sub => isActive(sub.to))
+                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    {(expandedMenus[item.key] || item.submenu.some(sub => isActive(sub.to))) && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
+                    )}
+                    <item.icon size={15} />
+                    <span className="hidden xl:inline">{item.label}</span>
+                  </button>
+
+                  {expandedMenus[item.key] && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 py-1">
+                      {item.submenu.map((subItem) => (
+                        <Link
+                          key={subItem.to}
+                          to={subItem.to}
+                          className={`block px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                            isActive(subItem.to) ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          {subItem.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <NavItem
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={isActive(item.to)}
+                />
+              )
             ))}
           </nav>
 
@@ -243,22 +294,58 @@ export default function Layout() {
         <div className="lg:hidden border-t border-gray-100 dark:border-gray-700 px-2 py-2 overflow-x-auto">
           <div className="flex gap-1">
             {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={closeMobileMenu}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap relative ${
-                  isActive(item.to)
-                    ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                {isActive(item.to) && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
-                )}
-                <item.icon size={14} />
-                {item.label}
-              </Link>
+              item.submenu ? (
+                <div key={item.key} className="relative">
+                  <button
+                    onClick={() => toggleMenuExpansion(item.key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap relative ${
+                      expandedMenus[item.key] || item.submenu.some(sub => isActive(sub.to))
+                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {(expandedMenus[item.key] || item.submenu.some(sub => isActive(sub.to))) && (
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
+                    )}
+                    <item.icon size={14} />
+                    {item.label}
+                  </button>
+
+                  {expandedMenus[item.key] && (
+                    <div className="absolute bottom-full left-0 mb-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 py-1">
+                      {item.submenu.map((subItem) => (
+                        <Link
+                          key={subItem.to}
+                          to={subItem.to}
+                          onClick={closeMobileMenu}
+                          className={`block px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                            isActive(subItem.to) ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          {subItem.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={closeMobileMenu}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap relative ${
+                    isActive(item.to)
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  {isActive(item.to) && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
+                  )}
+                  <item.icon size={14} />
+                  {item.label}
+                </Link>
+              )
             ))}
           </div>
         </div>
@@ -280,19 +367,58 @@ export default function Layout() {
           </div>
            <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
              {navItems.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={closeMobileMenu}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.to)
-                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </Link>
+               item.submenu ? (
+                 <div key={item.key}>
+                   <button
+                     onClick={() => toggleMenuExpansion(item.key)}
+                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left ${
+                       expandedMenus[item.key] || item.submenu.some(sub => isActive(sub.to))
+                         ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                     }`}
+                   >
+                     <item.icon size={18} />
+                     <span>{item.label}</span>
+                     <ChevronRight
+                       size={16}
+                       className={`ml-auto transition-transform ${expandedMenus[item.key] ? 'rotate-90' : ''}`}
+                     />
+                   </button>
+
+                   {expandedMenus[item.key] && (
+                     <div className="ml-6 mt-1 space-y-1">
+                       {item.submenu.map((subItem) => (
+                         <Link
+                           key={subItem.to}
+                           to={subItem.to}
+                           onClick={closeMobileMenu}
+                           className={`flex items-center px-3 py-2 rounded-lg text-sm transition-colors ${
+                             isActive(subItem.to)
+                               ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                               : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                           }`}
+                         >
+                           {subItem.label}
+                         </Link>
+                       ))}
+                     </div>
+                   )}
+                 </div>
+               ) : (
+                 <Link
+                   key={item.to}
+                   to={item.to}
+                   onClick={closeMobileMenu}
+                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                     isActive(item.to)
+                       ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                   }`}
+                 >
+                   <item.icon size={18} />
+                   <span>{item.label}</span>
+                 </Link>
+               )
              ))}
             <div className="pt-2 border-t border-gray-100 dark:border-gray-700 mt-2">
               <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 w-full">
