@@ -438,7 +438,8 @@ export default function ClientApprovalForm() {
                 ))}
               </tbody>
             </table>
-          </div>>
+          </div>
+
 
           <button
             type="button"

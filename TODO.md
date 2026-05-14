@@ -1,16 +1,7 @@
-# Workflow Enhancement Task (Progress: 1/8) ✓ Legacy ApprovalForm.tsx deleted
+# TODO
 
-
-**Approved Plan**:
-1. [ ] Create TODO.md
-2. [ ] Delete ApprovalForm.tsx (duplicate)
-3. [ ] Enhance ProcessDetail.tsx: Step panels + auto-transitions
-4. [ ] Create ScoringPanel.tsx for step 4
-5. [ ] Create DocPanel.tsx for step 3
-6. [ ] Update WorkflowStepper.tsx (clickable)
-7. [ ] ProcessWorkflow.tsx: Richer cards
-8. [ ] Test full flow + notifications
-9. [ ] attempt_completion
-
-**Next**: Delete legacy ApprovalForm.tsx
+- [ ] Corrigir tipos no `server.ts` para 360°: incluir `manager_eval` em `Evaluation360SectionKey`.
+- [ ] Adicionar declarações TypeScript locais para módulos sem types (`better-sqlite3`, `multer`) para eliminar erros de “Could not find a declaration file”.
+- [ ] Re-runs de TypeScript / build para confirmar que os erros remanescentes (ex. implicit any) estão resolvidos.
+- [ ] Verificar se algum comportamento do endpoint de 360° foi afetado pela correção de tipos.
 

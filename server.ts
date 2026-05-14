@@ -16,7 +16,7 @@ const PORT = 3000;
 const db = new Database("toknow.db");
 const SECRET_KEY = process.env.JWT_SECRET || "toknow-secret-key";
 
-type Evaluation360SectionKey = "self" | "peer" | "manager";
+type Evaluation360SectionKey = "self" | "peer" | "manager" | "manager_eval";
 
 type Evaluation360QuestionSeed = {
   section_key: Evaluation360SectionKey;
@@ -3769,7 +3769,7 @@ app.post("/api/client-satisfaction/forms", authenticateToken, (req: any, res) =>
     expiresAt.setDate(expiresAt.getDate() + (expires_days || 30));
 
     for (const clientId of client_ids) {
-      const client = db.prepare("SELECT name, email FROM entities WHERE id = ? AND type = 'Client'").get(clientId) as any;
+const client = db.prepare("SELECT name, email_main as email FROM entities WHERE id = ? AND entity_type = 'Client'").get(clientId) as any;
       if (!client) continue;
 
       const token = generatePublicToken('csf');
@@ -3794,8 +3794,8 @@ app.post("/api/client-satisfaction/forms", authenticateToken, (req: any, res) =>
     });
 
   } catch (err: any) {
-    console.error("[ERROR] Create client satisfaction form:", err.message);
-    res.status(500).json({ message: "Erro interno do servidor." });
+console.error("[ERROR] Create client satisfaction form:", err);
+    res.status(500).json({ message: "Erro interno do servidor.", error: err?.message, stack: err?.stack });
   }
 });
 

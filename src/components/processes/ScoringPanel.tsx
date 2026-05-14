@@ -191,6 +191,13 @@ export default function ScoringPanel({ processId, criteria, onScoresChange, onAu
               <p className="font-bold text-red-800 text-sm">Score crítico detectado</p>
               <p className="text-red-700 text-xs mt-1">
                 Score < 60% - Revisar critérios antes de avançar
+
+
+
+
+              
+              
+
               </p>
             </div>
           </div>

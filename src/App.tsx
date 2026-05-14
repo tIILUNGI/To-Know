@@ -31,6 +31,8 @@ import AlertsPage from "./components/common/AlertsPage";
 import DemoDataCreator from "./components/admin/DemoDataCreator";
 import EmployeeList from "./components/employees/EmployeeList";
 import EmployeeForm from "./components/employees/EmployeeForm";
+import CollaborationFormsAdmin from "./components/admin/CollaborationFormsAdmin";
+
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -89,9 +91,10 @@ export default function App() {
 
               
               {/* Relatórios */}
-              <Route path="relatorios" element={<ReportsView />} />
+            <Route path="relatorios" element={<ReportsView />} />
               
                {/* Configurações */}
+               <Route path="admin/formularios" element={<CollaborationFormsAdmin />} />
                <Route path="configuracoes" element={<SettingsSelection />} />
                <Route path="admin" element={<CriteriaSettings />} />
                <Route path="configuracoes/utilizadores" element={<UserList />} />
