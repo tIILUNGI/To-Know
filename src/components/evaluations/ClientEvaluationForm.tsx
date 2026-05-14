@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, FileText, User, Package, Scale, TrendingUp, Star } from "lucide-react";
+import { ArrowLeft, Save, FileText, User, Package, Scale, TrendingUp, Star, Mail } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
@@ -52,13 +52,9 @@ export default function ClientEvaluationForm() {
   });
 
   const [criteria, setCriteria] = useState<any[]>([]);
-
-  const [resultData, setResultData] = useState({
-    total_score: 0,
-    percentage: 0,
-    classification: "",
-    decision: ""
-  });
+  const [clientEmail, setClientEmail] = useState("");
+  const [linkExpiresDays, setLinkExpiresDays] = useState(30);
+  const [generatedLink, setGeneratedLink] = useState<any>(null);
 
 
 
@@ -75,9 +71,11 @@ export default function ClientEvaluationForm() {
      })
        .then(res => res.json())
        .then(data => {
-         // Filter criteria for client evaluations
+         // Filter criteria for client satisfaction or performance evaluations
          const filtered = data.filter((c: any) => 
-           !c.entity_type || c.entity_type === 'Client' || c.entity_type === 'Ambos'
+           (c.entity_type === 'Client' || c.entity_type === 'Ambos') &&
+           ((evalType === 'Satisfaction' && c.evaluation_type === 'Satisfaction') ||
+            (evalType === 'Performance' && c.evaluation_type === 'Performance'))
          );
          setAllCriteria(filtered);
        })
@@ -117,6 +115,28 @@ export default function ClientEvaluationForm() {
     setCriteria(selected);
   }, [selectedCriteriaIds, allCriteria]);
 
+  const [resultData, setResultData] = useState({
+    total_score: "0.0",
+    percentage: "0.0",
+    classification: "",
+    decision: ""
+  });
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      addToast("Link copiado para a área de transferência!", "success");
+    } catch {
+      addToast("Não foi possível copiar o link.", "error");
+    }
+  };
+
+  const openEmailClient = (linkUrl: string) => {
+    const subject = encodeURIComponent("Avaliação de Satisfação do Cliente");
+    const body = encodeURIComponent(`Olá,%0D%0APor favor, acesse a avaliação através do link abaixo:%0D%0A${linkUrl}%0D%0A%0D%0AObrigado.`);
+    window.location.href = `mailto:${clientEmail || ""}?subject=${subject}&body=${body}`;
+  };
+
    const calculateResults = () => {
      let totalWeight = 0;
      let weightedScore = 0;
@@ -155,6 +175,10 @@ export default function ClientEvaluationForm() {
       addToast("Selecione um cliente.", "error");
       return;
     }
+    if (criteria.length === 0) {
+      addToast("Selecione pelo menos um critério para a pesquisa.", "error");
+      return;
+    }
     setLoading(true);
 
     const responses = criteria.map(c => ({
@@ -168,36 +192,61 @@ export default function ClientEvaluationForm() {
     const evalName = formData.name || `${submissionEvalType === 'Satisfaction' ? 'Satisfação' : 'Performance'} - ${selectedClient.name}`;
 
     try {
-     const res = await fetch("/api/evaluations", {
-       method: "POST",
-       headers: { 
-         Authorization: `Bearer ${localStorage.getItem("token")}`,
-         "Content-Type": "application/json"
-       },
-       body: JSON.stringify({ 
-         entity_id: selectedClient.id,
-         type: 'Client',
-         evaluation_type: submissionEvalType === 'Satisfaction' ? 'Satisfaction' : 'Performance',
-         evaluation_type_detail: submissionEvalType,
-         name: evalName,
-         periodicity: "Pontual",
-         period_start: formData.period_start || null,
-         period_end: formData.period_end || null,
-         responses: responses
-       })
-     });
+      const res = await fetch("/api/evaluations", {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ 
+          entity_id: selectedClient.id,
+          type: 'Client',
+          evaluation_type: submissionEvalType === 'Satisfaction' ? 'Satisfaction' : 'Performance',
+          evaluation_type_detail: submissionEvalType,
+          name: evalName,
+          periodicity: "Pontual",
+          period_start: formData.period_start || null,
+          period_end: formData.period_end || null,
+          responses: responses
+        })
+      });
 
-      if (res.ok) {
-        addToast("Avaliação salva com sucesso!", "success");
-        navigate("/avaliacoes");
-      } else {
+      if (!res.ok) {
         const err = await res.json();
-        addToast(err.message || "Erro ao salvar avaliação.", "error");
+        throw new Error(err.message || "Erro ao criar avaliação.");
       }
-    } catch {
-      addToast("Erro de conexão.", "error");
+
+      const evaluation = await res.json();
+      
+      if (evalType === 'Satisfaction') {
+        const linkRes = await fetch(`/api/evaluations/${evaluation.id}/generate-link`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            client_email: clientEmail || selectedClient.email || "",
+            expires_days: linkExpiresDays
+          })
+        });
+
+        if (!linkRes.ok) {
+          const err = await linkRes.json();
+          throw new Error(err.message || "Avaliação criada, mas não foi possível gerar o link.");
+        }
+
+        const payload = await linkRes.json();
+        setGeneratedLink(payload);
+        addToast("Link de pesquisa gerado com sucesso!", "success");
+      } else {
+        addToast("Avaliação de performance criada com sucesso!", "success");
+      }
+    } catch (err: any) {
+      addToast(err.message || "Erro de conexão.", "error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -328,6 +377,41 @@ export default function ClientEvaluationForm() {
            )}
          </div>
 
+         {evalType === 'Satisfaction' && (
+           <div className="space-y-6">
+             <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+               <Mail size={22} className="text-violet-600" />
+               <h3 className="text-lg font-bold text-gray-900">Link de Avaliação</h3>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <FormField
+                 label="Email do Cliente"
+                 name="client_email"
+                 value={clientEmail}
+                 onChange={(e) => setClientEmail(e.target.value)}
+                 type="email"
+                 placeholder="cliente@empresa.com"
+               />
+
+               <div className="space-y-2">
+                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Validade do Link</label>
+                 <select
+                   value={linkExpiresDays}
+                   onChange={(e) => setLinkExpiresDays(Number(e.target.value))}
+                   className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none transition-all"
+                 >
+                   <option value={7}>7 dias</option>
+                   <option value={15}>15 dias</option>
+                   <option value={30}>30 dias</option>
+                   <option value={60}>60 dias</option>
+                   <option value={90}>90 dias</option>
+                 </select>
+               </div>
+             </div>
+           </div>
+         )}
+
          {/* Selecionar Critérios de Avaliação */}
          <div className="space-y-6">
            <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
@@ -454,6 +538,44 @@ export default function ClientEvaluationForm() {
             }`}>{resultData.decision || "—"}</p>
           </div>
         </div>
+
+        {generatedLink && (
+          <div className="space-y-4 p-6 bg-emerald-50 border border-emerald-100 rounded-3xl">
+            <div className="flex items-center gap-3">
+              <Mail size={20} className="text-emerald-600" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Link Gerado</h3>
+                <p className="text-sm text-gray-500">Use este link para enviar a pesquisa ao cliente.</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <input
+                type="text"
+                readOnly
+                value={generatedLink.link_url}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm text-gray-700"
+              />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(generatedLink.link_url)}
+                  className="w-full sm:w-auto bg-emerald-600 text-white px-5 py-3 rounded-2xl font-semibold hover:bg-emerald-700 transition-all"
+                >
+                  Copiar Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openEmailClient(generatedLink.link_url)}
+                  className="w-full sm:w-auto bg-white text-emerald-700 border border-emerald-200 px-5 py-3 rounded-2xl font-semibold hover:bg-emerald-100 transition-all"
+                >
+                  Enviar por Email
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">Validade até: {generatedLink.expires_at}</p>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

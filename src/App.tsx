@@ -17,6 +17,8 @@ import EvaluationForm from "./components/evaluations/EvaluationForm";
 import EvaluationList from "./components/evaluations/EvaluationList";
 import Evaluation360Form from "./components/evaluations/Evaluation360Form";
 import SharedEvaluationForm from "./components/evaluations/SharedEvaluationForm";
+import ClientSatisfactionForm from "./components/evaluations/ClientSatisfactionForm";
+import ClientSatisfactionResponse from "./components/evaluations/ClientSatisfactionResponse";
 import CriteriaSettings from "./components/admin/CriteriaSettings";
 import ReportsView from "./components/reports/ReportsView";
 import UserProfile from "./components/profile/UserProfile";
@@ -54,6 +56,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             {/* Public evaluation link - no authentication required */}
             <Route path="/avaliacao/:token" element={<SharedEvaluationForm />} />
+            <Route path="/satisfacao/:token" element={<ClientSatisfactionResponse />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="entities/suppliers" element={<EntityList type="Supplier" />} />
@@ -72,6 +75,7 @@ export default function App() {
                <Route path="avaliacoes/nova" element={<EvaluationFormNew />} />
                <Route path="avaliacoes/reevaluation" element={<ReevaluationForm />} />
                <Route path="avaliacoes/cliente" element={<ClientEvaluationForm />} />
+               <Route path="avaliacoes/cliente/satisfacao" element={<ClientSatisfactionForm />} />
                <Route path="avaliacoes/:id" element={<EvaluationForm />} />
                <Route path="avaliacoes/360" element={<Evaluation360Form />} />
                <Route path="avaliacoes/links" element={<Evaluation360Form />} />

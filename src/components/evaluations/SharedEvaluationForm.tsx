@@ -205,16 +205,18 @@ export default function SharedEvaluationForm() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Obrigado!</h2>
           <p className="text-gray-600 mb-3">
-            {is360 ? "A avaliação 360° foi enviada com sucesso." : "Sua avaliação de satisfação foi enviada com sucesso."}
+            {is360 ? "A resposta foi enviada ao gestor. Obrigado pela sua colaboração." : "Sua avaliação de satisfação foi enviada com sucesso."}
           </p>
           {result?.percentage !== undefined && (
             <p className="text-sm text-gray-500 mb-6">
               Resultado registado: <strong>{Math.round(result.percentage)}%</strong> {result.classification ? `• ${result.classification}` : ""}
             </p>
           )}
-          <button onClick={() => navigate("/")} className="btn btn-primary w-full">
-            Voltar ao Início
-          </button>
+          {!is360 && (
+            <button onClick={() => navigate("/")} className="btn btn-primary w-full">
+              Voltar ao Início
+            </button>
+          )}
         </div>
       </div>
     );

@@ -499,6 +499,48 @@ const initTables = () => {
       performed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (process_id) REFERENCES processes(id),
       FOREIGN KEY (performed_by) REFERENCES users(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS client_satisfaction_forms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      created_by INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_days INTEGER DEFAULT 30,
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS client_satisfaction_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER NOT NULL,
+      question_text TEXT NOT NULL,
+      question_type TEXT NOT NULL DEFAULT 'rating',
+      display_order INTEGER NOT NULL,
+      is_required INTEGER DEFAULT 0,
+      max_score INTEGER DEFAULT 5,
+      FOREIGN KEY (form_id) REFERENCES client_satisfaction_forms(id) ON DELETE CASCADE
+    )`,
+    `CREATE TABLE IF NOT EXISTS client_satisfaction_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER NOT NULL,
+      client_id INTEGER NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      client_email TEXT,
+      expires_at DATE,
+      is_used INTEGER DEFAULT 0,
+      submitted_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (form_id) REFERENCES client_satisfaction_forms(id) ON DELETE CASCADE,
+      FOREIGN KEY (client_id) REFERENCES entities(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS client_satisfaction_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      link_id INTEGER NOT NULL,
+      question_id INTEGER NOT NULL,
+      response_text TEXT,
+      response_rating INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (link_id) REFERENCES client_satisfaction_links(id) ON DELETE CASCADE,
+      FOREIGN KEY (question_id) REFERENCES client_satisfaction_questions(id)
     )`
   ];
   
@@ -3681,6 +3723,317 @@ app.get("/api/reports/collaboration/:type", authenticateToken, (req: any, res) =
     res.status(500).json({ error: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined });
   }
 });
+
+// ============================================================
+// CLIENT SATISFACTION FORMS ENDPOINTS
+// ============================================================
+
+// Create custom satisfaction form and generate links
+app.post("/api/client-satisfaction/forms", authenticateToken, (req: any, res) => {
+  try {
+    const { title, description, questions, client_ids, expires_days } = req.body;
+    const userId = req.user.id;
+
+    if (!title || !questions || !Array.isArray(questions) || questions.length === 0 || !client_ids || !Array.isArray(client_ids) || client_ids.length === 0) {
+      return res.status(400).json({ message: "Título, perguntas e clientes são obrigatórios." });
+    }
+
+    // Create form
+    const formResult = db.prepare(`
+      INSERT INTO client_satisfaction_forms (title, description, created_by, expires_days)
+      VALUES (?, ?, ?, ?)
+    `).run(title, description || "", userId, expires_days || 30);
+
+    const formId = formResult.lastInsertRowid;
+
+    // Insert questions
+    const insertQuestion = db.prepare(`
+      INSERT INTO client_satisfaction_questions (form_id, question_text, question_type, display_order, is_required, max_score)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    questions.forEach((q: any, index: number) => {
+      insertQuestion.run(
+        formId,
+        q.text,
+        q.type || 'rating',
+        index + 1,
+        q.required ? 1 : 0,
+        q.type === 'rating' ? 5 : null
+      );
+    });
+
+    // Generate links for each client
+    const links = [];
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + (expires_days || 30));
+
+    for (const clientId of client_ids) {
+      const client = db.prepare("SELECT name, email FROM entities WHERE id = ? AND type = 'Client'").get(clientId) as any;
+      if (!client) continue;
+
+      const token = generatePublicToken('csf');
+      const linkResult = db.prepare(`
+        INSERT INTO client_satisfaction_links (form_id, client_id, token, client_email, expires_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(formId, clientId, token, client.email, expiresAt.toISOString().split('T')[0]);
+
+      links.push({
+        id: linkResult.lastInsertRowid,
+        client_name: client.name,
+        client_email: client.email,
+        link_url: `${getAppBaseUrl(req)}/satisfacao/${token}`,
+        expires_at: expiresAt.toLocaleDateString('pt-BR')
+      });
+    }
+
+    res.status(201).json({
+      form_id: formId,
+      links: links,
+      message: "Formulário criado com sucesso!"
+    });
+
+  } catch (err: any) {
+    console.error("[ERROR] Create client satisfaction form:", err.message);
+    res.status(500).json({ message: "Erro interno do servidor." });
+  }
+});
+
+// Get form data for public link
+app.get("/api/public/client-satisfaction/:token", (req: any, res) => {
+  try {
+    const { token } = req.params;
+
+    const linkData = db.prepare(`
+      SELECT
+        csl.*,
+        csf.title,
+        csf.description,
+        e.name as client_name,
+        e.email as client_email
+      FROM client_satisfaction_links csl
+      JOIN client_satisfaction_forms csf ON csl.form_id = csf.id
+      JOIN entities e ON csl.client_id = e.id
+      WHERE csl.token = ? AND csl.is_used = 0
+    `).get(token) as any;
+
+    if (!linkData) {
+      return res.status(404).json({ message: "Link inválido ou expirado." });
+    }
+
+    // Check if expired
+    const expiresAt = new Date(linkData.expires_at);
+    if (new Date() > expiresAt) {
+      return res.status(410).json({ message: "Este link expirou." });
+    }
+
+    // Get questions
+    const questions = db.prepare(`
+      SELECT id, question_text, question_type, is_required, max_score
+      FROM client_satisfaction_questions
+      WHERE form_id = ?
+      ORDER BY display_order
+    `).all(linkData.form_id) as any[];
+
+    res.json({
+      form: {
+        id: linkData.form_id,
+        title: linkData.title,
+        description: linkData.description,
+        client_name: linkData.client_name
+      },
+      questions: questions.map(q => ({
+        id: q.id,
+        text: q.question_text,
+        type: q.question_type,
+        required: q.is_required === 1,
+        max_score: q.max_score
+      }))
+    });
+
+  } catch (err: any) {
+    console.error("[ERROR] Get client satisfaction form:", err.message);
+    res.status(500).json({ message: "Erro interno do servidor." });
+  }
+});
+
+// Submit client satisfaction responses
+app.post("/api/public/client-satisfaction/:token/submit", (req: any, res) => {
+  try {
+    const { token } = req.params;
+    const { responses } = req.body;
+
+    if (!responses || !Array.isArray(responses)) {
+      return res.status(400).json({ message: "Respostas são obrigatórias." });
+    }
+
+    const linkData = db.prepare(`
+      SELECT csl.*, csf.title
+      FROM client_satisfaction_links csl
+      JOIN client_satisfaction_forms csf ON csl.form_id = csf.id
+      WHERE csl.token = ? AND csl.is_used = 0
+    `).get(token) as any;
+
+    if (!linkData) {
+      return res.status(404).json({ message: "Link inválido ou já utilizado." });
+    }
+
+    // Check if expired
+    const expiresAt = new Date(linkData.expires_at);
+    if (new Date() > expiresAt) {
+      return res.status(410).json({ message: "Este link expirou." });
+    }
+
+    // Get questions to validate
+    const questions = db.prepare(`
+      SELECT id, question_type, is_required, max_score
+      FROM client_satisfaction_questions
+      WHERE form_id = ?
+    `).all(linkData.form_id) as any[];
+
+    const questionMap = new Map(questions.map(q => [q.id, q]));
+
+    // Validate and insert responses
+    const insertResponse = db.prepare(`
+      INSERT INTO client_satisfaction_responses (link_id, question_id, response_text, response_rating)
+      VALUES (?, ?, ?, ?)
+    `);
+
+    for (const response of responses) {
+      const question = questionMap.get(response.question_id);
+      if (!question) {
+        return res.status(400).json({ message: `Pergunta inválida: ${response.question_id}` });
+      }
+
+      if (question.is_required && (!response.response_text && !response.response_rating)) {
+        return res.status(400).json({ message: "Todas as perguntas obrigatórias devem ser respondidas." });
+      }
+
+      let responseText = null;
+      let responseRating = null;
+
+      if (question.question_type === 'rating') {
+        responseRating = Number(response.response_rating);
+        if (responseRating && (responseRating < 1 || responseRating > question.max_score)) {
+          return res.status(400).json({ message: `Avaliação inválida para pergunta ${response.question_id}` });
+        }
+      } else if (question.question_type === 'text') {
+        responseText = response.response_text;
+      } else if (question.question_type === 'yesno') {
+        responseText = response.response_text;
+      }
+
+      insertResponse.run(
+        linkData.id,
+        response.question_id,
+        responseText,
+        responseRating
+      );
+    }
+
+    // Mark link as used
+    db.prepare(`
+      UPDATE client_satisfaction_links
+      SET is_used = 1, submitted_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(linkData.id);
+
+    res.status(201).json({
+      message: "Obrigado por sua participação! Suas respostas foram enviadas com sucesso."
+    });
+
+  } catch (err: any) {
+    console.error("[ERROR] Submit client satisfaction:", err.message);
+    res.status(500).json({ message: "Erro interno do servidor." });
+  }
+});
+
+// Get satisfaction forms created by user
+app.get("/api/client-satisfaction/forms", authenticateToken, (req: any, res) => {
+  try {
+    const userId = req.user.id;
+
+    const forms = db.prepare(`
+      SELECT
+        csf.*,
+        COUNT(DISTINCT csl.id) as total_links,
+        COUNT(DISTINCT CASE WHEN csl.is_used = 1 THEN csl.id END) as completed_links
+      FROM client_satisfaction_forms csf
+      LEFT JOIN client_satisfaction_links csl ON csf.id = csl.form_id
+      WHERE csf.created_by = ?
+      GROUP BY csf.id
+      ORDER BY csf.created_at DESC
+    `).all(userId) as any[];
+
+    res.json(forms);
+
+  } catch (err: any) {
+    console.error("[ERROR] Get client satisfaction forms:", err.message);
+    res.status(500).json({ message: "Erro interno do servidor." });
+  }
+});
+
+// Get form responses
+app.get("/api/client-satisfaction/forms/:id/responses", authenticateToken, (req: any, res) => {
+  try {
+    const formId = Number(req.params.id);
+    const userId = req.user.id;
+
+    // Check if user owns the form
+    const form = db.prepare(`
+      SELECT id FROM client_satisfaction_forms WHERE id = ? AND created_by = ?
+    `).get(formId, userId) as any;
+
+    if (!form) {
+      return res.status(404).json({ message: "Formulário não encontrado." });
+    }
+
+    // Get responses with client info
+    const responses = db.prepare(`
+      SELECT
+        csl.client_id,
+        e.name as client_name,
+        e.email as client_email,
+        csq.question_text,
+        csq.question_type,
+        csr.response_text,
+        csr.response_rating,
+        csl.submitted_at
+      FROM client_satisfaction_links csl
+      JOIN entities e ON csl.client_id = e.id
+      JOIN client_satisfaction_responses csr ON csl.id = csr.link_id
+      JOIN client_satisfaction_questions csq ON csr.question_id = csq.id
+      WHERE csl.form_id = ? AND csl.is_used = 1
+      ORDER BY csl.client_id, csq.display_order
+    `).all(formId) as any[];
+
+    // Group by client
+    const clientResponses = new Map();
+    responses.forEach(r => {
+      if (!clientResponses.has(r.client_id)) {
+        clientResponses.set(r.client_id, {
+          client_id: r.client_id,
+          client_name: r.client_name,
+          client_email: r.client_email,
+          submitted_at: r.submitted_at,
+          responses: []
+        });
+      }
+      clientResponses.get(r.client_id).responses.push({
+        question: r.question_text,
+        type: r.question_type,
+        response: r.question_type === 'rating' ? r.response_rating : r.response_text
+      });
+    });
+
+    res.json(Array.from(clientResponses.values()));
+
+  } catch (err: any) {
+    console.error("[ERROR] Get client satisfaction responses:", err.message);
+    res.status(500).json({ message: "Erro interno do servidor." });
+  }
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

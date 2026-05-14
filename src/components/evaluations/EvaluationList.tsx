@@ -131,6 +131,12 @@ export default function EvaluationList() {
               >
                 <Heart size={16} strokeWidth={2} /> Satisfação Cliente
               </Link>
+              <Link
+                to="/avaliacoes/cliente/satisfacao"
+                className="btn btn-primary text-sm"
+              >
+                <Mail size={16} strokeWidth={2} /> Pesquisa Customizada
+              </Link>
             </div>
         </div>
 
