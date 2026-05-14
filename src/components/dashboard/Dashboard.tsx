@@ -97,16 +97,28 @@ export default function Dashboard() {
     );
   }
 
+  if (!stats) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-sm text-gray-500 dark:text-slate-400">Erro ao carregar dados do dashboard.</div>
+      </div>
+    );
+  }
+
   const COLORS = ["#2563eb", "#ef4444", "#f59e0b"];
+  const monthlyEvolution = Array.isArray(stats.monthly_evolution) ? stats.monthly_evolution : [];
+  const approvedCount = stats?.totals?.approved?.count ?? 0;
+  const rejectedCount = stats?.totals?.rejected?.count ?? 0;
+  const pendingCount = stats?.totals?.processes_pending?.count ?? 0;
 
   const pieData = [
-    { name: "Aprovados", value: stats.totals.approved.count || 0 },
-    { name: "Rejeitados", value: stats.totals.rejected.count || 0 },
-    { name: "Em Análise", value: stats.totals.processes_pending.count || 0 },
+    { name: "Aprovados", value: approvedCount },
+    { name: "Rejeitados", value: rejectedCount },
+    { name: "Em Análise", value: pendingCount },
   ];
 
-  const approvalRate = stats.totals.approved.count + stats.totals.rejected.count > 0
-    ? Math.round((stats.totals.approved.count / (stats.totals.approved.count + stats.totals.rejected.count)) * 100)
+  const approvalRate = approvedCount + rejectedCount > 0
+    ? Math.round((approvedCount / (approvedCount + rejectedCount)) * 100)
     : 0;
 
   const handleFilterChange = (key: string, value: string) => {
@@ -480,7 +492,7 @@ export default function Dashboard() {
            <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Fluxo de Processos</h3>
            <div className="h-40 sm:h-52">
              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-               <BarChart data={[...stats.monthly_evolution].reverse()}>
+               <BarChart data={[...monthlyEvolution].reverse()}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
