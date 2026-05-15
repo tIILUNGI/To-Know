@@ -141,7 +141,7 @@ export default function Layout() {
     { to: "/relatorios", icon: BarChart3, label: "Relatórios" },
   ];
 
-  if (user?.role === "Administrator") {
+  if (user?.role === "Administrator" || user?.role === "ADMIN") {
     navItems.push({ to: "/configuracoes", icon: Settings, label: "Configurações" });
   }
 

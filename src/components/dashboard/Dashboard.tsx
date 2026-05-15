@@ -288,7 +288,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider">Fornecedores</p>
-              <p className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-300 mt-1">{stats.totals.suppliers.count}</p>
+              <p className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-300 mt-1">{stats?.totals?.suppliers?.count ?? 0}</p>
               <p className="text-[10px] text-blue-400 dark:text-blue-500 mt-1">Cadastrados</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-blue-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-200">
@@ -301,7 +301,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">Clientes</p>
-              <p className="text-2xl sm:text-3xl font-black text-indigo-700 dark:text-indigo-300 mt-1">{stats.totals.clients.count}</p>
+              <p className="text-2xl sm:text-3xl font-black text-indigo-700 dark:text-indigo-300 mt-1">{stats?.totals?.clients?.count ?? 0}</p>
               <p className="text-[10px] text-indigo-400 dark:text-indigo-500 mt-1">Cadastrados</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-indigo-600 rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-200">
@@ -314,7 +314,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Em Aprovação</p>
-              <p className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300 mt-1">{stats.totals.processes_pending.count}</p>
+              <p className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300 mt-1">{stats?.totals?.processes_pending?.count ?? 0}</p>
               <p className="text-[10px] text-amber-500 dark:text-amber-500 mt-1">Processos</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-amber-500 rounded-xl sm:rounded-2xl shadow-lg shadow-amber-200">
@@ -346,7 +346,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Processos Aprovados</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.approved.count}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.totals?.approved?.count ?? 0}</p>
             </div>
           </div>
         </div>
@@ -358,7 +358,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Processos Rejeitados</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.rejected.count}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.totals?.rejected?.count ?? 0}</p>
             </div>
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Avaliações Pendentes</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.eval_pending.count}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.totals?.eval_pending?.count ?? 0}</p>
             </div>
           </div>
         </div>
@@ -382,7 +382,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Reavaliações</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.reeval_pending.count}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.totals?.reeval_pending?.count ?? 0}</p>
             </div>
           </div>
         </div>
@@ -397,7 +397,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Fornecedores Críticos</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.critical_suppliers.count}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.totals?.critical_suppliers?.count ?? 0}</p>
             </div>
           </div>
         </div>
@@ -409,7 +409,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Clientes Baixa Perf.</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totals.low_perf_clients.count}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats?.totals?.low_perf_clients?.count ?? 0}</p>
             </div>
           </div>
         </div>
@@ -421,7 +421,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Índice Satisfação</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{Math.round(stats.indices.avg_client_satisfaction.avg || 0)}%</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{Math.round(stats?.indices?.avg_client_satisfaction?.avg ?? 0)}%</p>
             </div>
           </div>
         </div>
@@ -433,7 +433,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase">Índice Performance</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{Math.round(stats.indices.avg_supplier_performance.avg || 0)}%</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{Math.round(stats?.indices?.avg_supplier_performance?.avg ?? 0)}%</p>
             </div>
           </div>
         </div>
@@ -452,12 +452,12 @@ export default function Dashboard() {
                 <circle cx="50%" cy="50%" r="40%" fill="none" stroke="#e2e8f0" strokeWidth="6" />
                 <circle
                   cx="50%" cy="50%" r="40%" fill="none" stroke="#2563eb" strokeWidth="6"
-                  strokeDasharray="251" strokeDashoffset={251 * (1 - (stats.indices.avg_client_satisfaction.avg || 0) / 100)}
+                  strokeDasharray="251" strokeDashoffset={251 * (1 - (stats?.indices?.avg_client_satisfaction?.avg ?? 0) / 100)}
                   strokeLinecap="round"
                 />
               </svg>
               <span className="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-black text-blue-600 dark:text-blue-400">
-                {Math.round(stats.indices.avg_client_satisfaction.avg || 0)}%
+                {Math.round(stats?.indices?.avg_client_satisfaction?.avg ?? 0)}%
               </span>
             </div>
           </div>
@@ -474,12 +474,12 @@ export default function Dashboard() {
                 <circle cx="50%" cy="50%" r="40%" fill="none" stroke="#e2e8f0" strokeWidth="6" />
                 <circle
                   cx="50%" cy="50%" r="40%" fill="none" stroke="#10b981" strokeWidth="6"
-                  strokeDasharray="251" strokeDashoffset={251 * (1 - (stats.indices.avg_supplier_performance.avg || 0) / 100)}
+                  strokeDasharray="251" strokeDashoffset={251 * (1 - (stats?.indices?.avg_supplier_performance?.avg ?? 0) / 100)}
                   strokeLinecap="round"
                 />
               </svg>
               <span className="absolute inset-0 flex items-center justify-center text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">
-                {Math.round(stats.indices.avg_supplier_performance.avg || 0)}%
+                {Math.round(stats?.indices?.avg_supplier_performance?.avg ?? 0)}%
               </span>
             </div>
           </div>
@@ -490,41 +490,49 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
          <div className="lg:col-span-2 bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
            <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Fluxo de Processos</h3>
-           <div className="h-40 sm:h-52">
-             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-               <BarChart data={[...monthlyEvolution].reverse()}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
-                <Tooltip
-                  contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgb(0 0 0 / 0.1)" }}
-                  labelStyle={{ fontSize: 11 }}
-                />
-                <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
+           <div className="h-40 sm:h-52 w-full">
+             {monthlyEvolution.length > 0 ? (
+               <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
+                 <BarChart data={[...monthlyEvolution].reverse()}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgb(0 0 0 / 0.1)" }}
+                    labelStyle={{ fontSize: 11 }}
+                  />
+                  <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+             ) : (
+               <div className="h-full flex items-center justify-center text-gray-400 text-xs">Sem dados de evolução</div>
+             )}
           </div>
         </div>
 
          <div className="bg-white dark:bg-[#1f2937] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
            <h3 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mb-4">Status de Processos</h3>
-           <div className="h-28 sm:h-36">
-             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-               <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%" cy="50%"
-                  innerRadius={30} outerRadius={50}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+           <div className="h-28 sm:h-36 w-full">
+             {pieData.some(d => d.value > 0) ? (
+               <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
+                 <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%" cy="50%"
+                    innerRadius={30} outerRadius={50}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+             ) : (
+               <div className="h-full flex items-center justify-center text-gray-400 text-xs">Sem dados de status</div>
+             )}
           </div>
           <div className="space-y-2 mt-3">
             {pieData.map((entry, index) => (

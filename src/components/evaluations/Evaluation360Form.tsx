@@ -417,6 +417,7 @@ export default function Evaluation360Form() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               >
                 <option value="">Selecione...</option>
+                {employees.length === 0 && <option value="" disabled>Nenhum colaborador encontrado</option>}
                 {employees.map((employee: any) => (
                   <option key={employee.id} value={employee.id}>
                     {employee.name} {employee.position ? `- ${employee.position}` : ""}

@@ -148,6 +148,7 @@ useEffect(() => {
         },
         body: JSON.stringify({
           entity_id: selectedEntity?.id,
+          entity_type: entityTypeParam,
           type: formData.process_type,
           priority: formData.priority,
           area: formData.requesting_area,
