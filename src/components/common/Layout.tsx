@@ -58,7 +58,8 @@ export default function Layout() {
     { to: "/alertas", icon: TriangleAlert, label: "Alertas" },
   ];
 
-  if (user?.role === "Administrator" || user?.role === "ADMIN") {
+  const userRole = (user?.role || "").toUpperCase();
+  if (userRole === "ADMINISTRATOR" || userRole === "ADMIN") {
     navItems.push({ to: "/configuracoes", icon: Settings, label: "Configurações" });
   }
 

@@ -60,16 +60,34 @@ export default function ProcessCreate() {
      priority: "Normal"
    });
 
-useEffect(() => {
+    const defaultTypes = [
+      { value: "Aprovação", label: "Aprovação" },
+      { value: "Avaliação", label: "Avaliação" },
+      { value: "Auditoria", label: "Auditoria" },
+      { value: "Homologação", label: "Homologação" }
+    ];
+
+    useEffect(() => {
       fetch("/api/process-types", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
-        .then(res => res.json())
-        .then(data => {
-          const options = data.map((t: any) => ({ value: t.name, label: t.name }));
-          setProcessTypes(options);
+        .then(res => {
+          if (!res.ok) throw new Error(`Status: ${res.status}`);
+          return res.json();
         })
-        .catch(() => addToast("Erro ao carregar tipos de processo.", "error"));
+        .then(data => {
+          console.log("Tipos de processo carregados:", data);
+          if (data && data.length > 0) {
+            const options = data.map((t: any) => ({ value: t.name, label: t.name }));
+            setProcessTypes(options);
+          } else {
+            setProcessTypes(defaultTypes);
+          }
+        })
+        .catch((err) => {
+          console.error("Erro ao carregar tipos:", err);
+          setProcessTypes(defaultTypes);
+        });
         
        fetch(`/api/entities?type=${entityTypeParam}`, {
          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

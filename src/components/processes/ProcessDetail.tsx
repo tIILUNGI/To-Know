@@ -35,7 +35,7 @@ export default function ProcessDetail() {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then((res) => {
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error("Erro na API");
         return res.json();
       })
       .then((data) => {
@@ -97,7 +97,9 @@ export default function ProcessDetail() {
       });
       if (res.ok) {
         addToast("Workflow avançado com sucesso!", "success");
-        fetch(`/api/processes/${id}`).then(r => r.json()).then(setProcess);
+        fetch(`/api/processes/${id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }).then(r => r.ok ? r.json() : null).then(data => data && setProcess(data));
         setShowTransition(false);
         setTargetStep(null);
         setTransitionNotes("");
@@ -155,9 +157,11 @@ export default function ProcessDetail() {
         addToast(`Processo ${approvalData.decision === "Approved" ? "aprovado" : "rejeitado"} com sucesso!`, "success");
         setShowApproval(false);
         setApprovalData({ decision: "", validity_date: "", conditions: "", comments: "" });
-        fetch(`/api/processes/${id}`).then(r => r.json()).then(setProcess);
+        fetch(`/api/processes/${id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }).then(r => r.ok ? r.json() : null).then(data => data && setProcess(data));
       } else {
-        const err = await transitionRes.json();
+        const err = await transitionRes.json().catch(() => ({ message: "Erro ao atualizar etapa" }));
         addToast(err.message || "Erro ao atualizar etapa.", "error");
       }
     } catch (err: any) {
@@ -450,27 +454,52 @@ export default function ProcessDetail() {
 
       {/* Summary */}
       <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
-        <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-4">Resumo</h4>
-        <div className="flex flex-col items-center py-4 bg-gray-50 rounded-lg border border-gray-100">
-          <div className="text-3xl sm:text-4xl font-bold text-blue-600">{Math.round(process.result_percentage || 0)}%</div>
-          <div className="text-[10px] text-gray-400 mt-1">Conformidade Final</div>
+        <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-4">Resumo do Estado</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col items-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600">
+              {(() => {
+                if (!process.criteria || process.criteria.length === 0) return 0;
+                let totalWeight = 0;
+                let earnedWeight = 0;
+                process.criteria.forEach((c: any) => {
+                  const score = Number(scores.find(s => s.criteria_id === c.criteria_id)?.score) || 0;
+                  const weight = Number(c.weight) || 0;
+                  const maxScore = Number(c.max_score) || 1;
+                  totalWeight += (weight * maxScore);
+                  earnedWeight += (weight * score);
+                });
+                const res = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0;
+                return isNaN(res) ? 0 : res;
+              })()}%
+            </div>
+            <div className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Conformidade (Real-time)</div>
+          </div>
+          
+          <div className="flex flex-col items-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="text-3xl sm:text-4xl font-bold text-indigo-600">
+              {Math.round(((process.current_step || 1) / 8) * 100)}%
+            </div>
+            <div className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Progresso do Workflow</div>
+          </div>
         </div>
-        <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-2">
-          <div className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
-            <span className="text-xs text-gray-500">Classificação</span>
-            <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
-              process.classification === "Aprovado" ? "bg-emerald-50 text-emerald-700" :
-              process.classification === "Reprovado" ? "bg-red-50 text-red-700" :
-              process.classification === "Condicionado" ? "bg-amber-50 text-amber-700" :
-              "bg-gray-50 text-gray-700"
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="flex justify-between items-center p-3 rounded-xl bg-gray-50 border border-gray-100">
+            <span className="text-xs font-bold text-gray-500 uppercase">Classificação</span>
+            <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase ${
+              process.classification === "Aprovado" ? "bg-emerald-100 text-emerald-700" :
+              process.classification === "Reprovado" ? "bg-red-100 text-red-700" :
+              process.classification === "Condicionado" ? "bg-amber-100 text-amber-700" :
+              "bg-gray-100 text-gray-700"
             }`}>
               {process.classification || "Pendente"}
             </span>
           </div>
-          <div className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
-            <span className="text-xs text-gray-500">Etapa</span>
-            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-              Step {process.current_step || 1}
+          <div className="flex justify-between items-center p-3 rounded-xl bg-gray-50 border border-gray-100">
+            <span className="text-xs font-bold text-gray-500 uppercase">Etapa Atual</span>
+            <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded uppercase">
+              Passo {process.current_step || 1} de 8
             </span>
           </div>
         </div>

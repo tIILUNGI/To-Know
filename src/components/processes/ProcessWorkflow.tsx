@@ -269,22 +269,36 @@ export default function ProcessWorkflow() {
                   <span className="text-[0.95rem] text-slate-500">Por {process.opener_name}</span>
                 </div>
 
-                {process.result_percentage !== null ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-[0.95rem] font-medium text-slate-600">
-                      <span>Score final</span>
-                      <span>{Math.round(process.result_percentage)}%</span>
+                {/* Workflow Progress */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[0.85rem] font-medium text-slate-500">
+                    <span>Progresso do Fluxo</span>
+                    <span>{Math.round(((Number(process.current_step) || 1) / 8) * 100)}%</span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                      style={{ width: `${((Number(process.current_step) || 1) / 8) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {process.result_percentage != null && !isNaN(Number(process.result_percentage)) ? (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[0.85rem] font-medium text-slate-500">
+                      <span>Conformidade (Score)</span>
+                      <span>{Math.round(Number(process.result_percentage))}%</span>
                     </div>
-                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className={`h-full rounded-full ${
-                          process.result_percentage >= 75
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          Number(process.result_percentage) >= 75
                             ? "bg-emerald-500"
-                            : process.result_percentage >= 60
+                            : Number(process.result_percentage) >= 60
                               ? "bg-amber-500"
                               : "bg-red-500"
                         }`}
-                        style={{ width: `${process.result_percentage}%` }}
+                        style={{ width: `${Number(process.result_percentage)}%` }}
                       />
                     </div>
                   </div>

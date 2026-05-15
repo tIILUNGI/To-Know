@@ -25,6 +25,27 @@ const FormField = ({ label, name, value, onChange, type = "text", options = null
   </div>
 );
 
+const normalizeCriterion = (criterion: any) => {
+  const normalizedWeight = criterion.weight ?? criterion.peso ?? criterion.presentationOrder ?? criterion.displayOrder ?? 10;
+  const normalizedMaxScore = criterion.max_score ?? criterion.maxScore ?? criterion.max_score ?? criterion.min_score ?? 5;
+
+  return {
+    ...criterion,
+    id: Number(criterion.id ?? criterion.criteria_id ?? 0),
+    name: criterion.name ?? criterion.code ?? "Critério",
+    weight: Number(normalizedWeight) || 0,
+    max_score: Number(normalizedMaxScore) || 5,
+    evaluation_type: (criterion.evaluation_type ?? criterion.evaluationType ?? "").toString(),
+    entity_type: (criterion.entity_type ?? criterion.entityType ?? "").toString(),
+  };
+};
+
+const matchesEvaluationType = (evaluationType: string, targetType: string) => {
+  const normalized = (evaluationType || "").toLowerCase();
+  const target = targetType.toLowerCase();
+  return normalized === target || normalized.includes(target);
+};
+
 export default function ClientEvaluationForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -72,17 +93,21 @@ export default function ClientEvaluationForm() {
        .then(res => res.json())
        .then(data => {
          // Filter criteria for client satisfaction or performance evaluations
-         const filtered = data.filter((c: any) => 
-           (c.entity_type === 'Client' || c.entity_type === 'Ambos') &&
-           ((evalType === 'Satisfaction' && c.evaluation_type === 'Satisfaction') ||
-            (evalType === 'Performance' && c.evaluation_type === 'Performance'))
-         );
-         setAllCriteria(filtered);
-       })
-       .catch(() => {});
+            const filtered = data
+              .map((c: any) => normalizeCriterion(c))
+              .filter((c: any) => {
+                const entityType = (c.entity_type || "").toUpperCase();
+                const evaluationType = (c.evaluation_type || "").toUpperCase();
+                const currentEvalType = evalType.toUpperCase(); // 'PERFORMANCE' or 'SATISFACTION'
+                return (entityType === 'CLIENT' || entityType === 'CUSTOMER' || entityType === 'AMBOS') &&
+                       matchesEvaluationType(evaluationType, currentEvalType);
+              });
+          setAllCriteria(filtered);
+        })
+        .catch(() => {});
    }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -92,24 +117,25 @@ export default function ClientEvaluationForm() {
   };
 
   const toggleCriteria = (criterion: any) => {
+    if (!criterion) return;
+    const criterionId = Number(criterion.id);
     setSelectedCriteriaIds(prev => {
-      const exists = prev.find(id => id === criterion.id);
-      if (exists) {
-        return prev.filter(id => id !== criterion.id);
+      if (prev.includes(criterionId)) {
+        return prev.filter(id => id !== criterionId);
       }
-      return [...prev, criterion.id];
+      return [...prev, criterionId];
     });
   };
 
   // Atualiza criteria baseado nos critérios selecionados
   useEffect(() => {
     const selected = allCriteria
-      .filter(c => selectedCriteriaIds.includes(c.id))
+      .filter(c => selectedCriteriaIds.includes(Number(c.id)))
       .map(c => ({
-        id: c.id,
+        id: Number(c.id),
         name: c.name,
-        weight: c.weight || 10,
-        max_score: c.max_score || 5,
+        weight: Number(c.weight ?? c.presentationOrder ?? 10),
+        max_score: Number(c.max_score ?? c.maxScore ?? 5),
         score: 0
       }));
     setCriteria(selected);
@@ -444,7 +470,7 @@ export default function ClientEvaluationForm() {
 
            {showCriteriaSelect && (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
-               {allCriteria.filter(c => !selectedCriteriaIds.includes(c.id)).map(criterion => (
+               {allCriteria.filter(c => !selectedCriteriaIds.includes(Number(c.id))).map(criterion => (
                  <button
                    type="button"
                    key={criterion.id}
@@ -452,7 +478,7 @@ export default function ClientEvaluationForm() {
                    className="p-3 text-left bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-300 rounded-xl transition-colors"
                  >
                    <p className="text-sm font-medium text-gray-900">{criterion.name}</p>
-                   <p className="text-xs text-gray-500">Peso: {criterion.weight}% • Máx: {criterion.max_score} pts</p>
+                   <p className="text-xs text-gray-500">Peso: {criterion.weight ?? 0}% • Máx: {criterion.max_score ?? criterion.maxScore ?? 5} pts</p>
                  </button>
                ))}
              </div>
