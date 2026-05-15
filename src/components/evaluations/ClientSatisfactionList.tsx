@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Eye, Users, Calendar, FileText, BarChart3 } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
+import { useToast } from "../../context/ToastContext";
 
 interface ClientSatisfactionForm {
   id: number;
@@ -34,7 +34,7 @@ export default function ClientSatisfactionList() {
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewingResponses, setViewingResponses] = useState(false);
-  const { showToast } = useToast();
+  const { addToast } = useToast();
 
   useEffect(() => {
     loadForms();
@@ -52,11 +52,11 @@ export default function ClientSatisfactionList() {
         const data = await response.json();
         setForms(data);
       } else {
-        showToast('Erro ao carregar formulários', 'error');
+        addToast('Erro ao carregar formulários', 'error');
       }
     } catch (error) {
       console.error('Error loading forms:', error);
-      showToast('Erro ao carregar formulários', 'error');
+      addToast('Erro ao carregar formulários', 'error');
     } finally {
       setLoading(false);
     }
@@ -75,11 +75,11 @@ export default function ClientSatisfactionList() {
         setResponses(data);
         setViewingResponses(true);
       } else {
-        showToast('Erro ao carregar respostas', 'error');
+        addToast('Erro ao carregar respostas', 'error');
       }
     } catch (error) {
       console.error('Error loading responses:', error);
-      showToast('Erro ao carregar respostas', 'error');
+      addToast('Erro ao carregar respostas', 'error');
     }
   };
 

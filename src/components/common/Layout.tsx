@@ -40,6 +40,19 @@ const NavItem = ({ to, icon: Icon, label, active }: any) => (
   </Link>
 );
 
+type NavSubItem = {
+  to: string;
+  label: string;
+};
+
+type NavItemConfig = {
+  to?: string;
+  key?: string;
+  icon: any;
+  label: string;
+  submenu?: NavSubItem[];
+};
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -57,6 +70,7 @@ export default function Layout() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchTimerRef = useRef<any>(null);
 
@@ -122,21 +136,12 @@ export default function Layout() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
-  const navItems = [
+  const navItems: NavItemConfig[] = [
     { to: "/", icon: LayoutDashboard, label: "Dashboard" },
     { to: "/entities/suppliers", icon: Users, label: "Fornecedores" },
     { to: "/entities/clients", icon: Users, label: "Clientes" },
     { to: "/processos", icon: FileText, label: "Processos" },
-    {
-      key: "avaliacoes",
-      icon: ClipboardList,
-      label: "Avaliações",
-      submenu: [
-        { to: "/avaliacoes", label: "Todas as Avaliações" },
-        { to: "/avaliacoes/cliente/satisfacao/lista", label: "Satisfação Cliente" },
-        { to: "/avaliacoes/360", label: "Avaliação 360" },
-      ]
-    },
+    { to: "/avaliacoes", icon: ClipboardList, label: "Avaliações" },
     { to: "/colaboradores", icon: UserPlus, label: "Colaboradores" },
     { to: "/relatorios", icon: BarChart3, label: "Relatórios" },
   ];

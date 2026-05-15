@@ -1,27 +1,18 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, Calendar, Trash2, Eye, BarChart3, Users, RotateCcw, Heart, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Trash2, Users, RotateCcw, Heart, Mail } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 
 export default function EvaluationList() {
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState("");
-  const [filterEvaluationType, setFilterEvaluationType] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const { addToast } = useToast();
-  const navigate = useNavigate();
 
   const fetchEvaluations = () => {
     setLoading(true);
-    let url = "/api/evaluations";
-    const params = [];
-    if (filterType) params.push(`evaluation_type=${filterType}`);
-    if (filterEvaluationType) params.push(`periodicity=${filterEvaluationType}`);
-    if (params.length > 0) url += "?" + params.join("&");
-    fetch(url, {
+    fetch("/api/evaluations", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then((res) => res.json())
@@ -37,7 +28,7 @@ export default function EvaluationList() {
 
   useEffect(() => {
     fetchEvaluations();
-  }, [filterType, filterEvaluationType]);
+  }, []);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -57,16 +48,6 @@ export default function EvaluationList() {
     }
     setDeleteTarget(null);
   };
-
-  const filtered = evaluations.filter((e) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      e.entity_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.period?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === "" || e.evaluation_type === filterType;
-    const matchesEvalType = filterEvaluationType === "" || e.periodicity === filterEvaluationType;
-    return matchesSearch && matchesType && matchesEvalType;
-  });
 
   const getClassColor = (cls: string) => {
     switch (cls) {
@@ -141,38 +122,6 @@ export default function EvaluationList() {
         </div>
 
       <div className="card overflow-hidden">
-        <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-2 sm:gap-3 flex-wrap">
-          <div className="flex-1 min-w-[180px] relative">
-            <Search className="input-icon" size={16} />
-            <input
-              type="text"
-              placeholder="Pesquisar..."
-              className="input-with-icon block w-full text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-<select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="input text-xs min-w-[100px]"
-          >
-            <option value="">Todos os Tipos</option>
-            <option value="Performance">Performance</option>
-            <option value="Satisfaction">Satisfação</option>
-          </select>
-          <select
-            value={filterEvaluationType}
-            onChange={(e) => setFilterEvaluationType(e.target.value)}
-            className="input text-xs min-w-[100px]"
-          >
-            <option value="">Periodicidade</option>
-            <option value="Anual">Anual</option>
-            <option value="Reavaliação">Reavaliação</option>
-          </select>
-        </div>
-
-        {/* Summary cards - grid responsive */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 border-b border-gray-100">
           <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100">
             <div className="text-[10px] font-medium text-blue-600 uppercase">Total</div>
@@ -220,14 +169,14 @@ export default function EvaluationList() {
                     Carregando...
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : evaluations.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
                     Nenhuma avaliação encontrada.
                   </td>
                 </tr>
               ) : (
-                filtered.map((ev) => (
+                evaluations.map((ev) => (
                   <tr key={ev.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 sm:px-4 py-2.5 text-xs sm:text-sm text-gray-500">
                       {new Date(ev.created_at).toLocaleDateString("pt-BR")}
