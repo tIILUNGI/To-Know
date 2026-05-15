@@ -208,32 +208,31 @@ export default function Dashboard() {
     <div className="space-y-10">
       <PageHeader
         title="Painel Executivo"
-        subtitle="Visão geral do sistema, com leitura rápida das áreas mais críticas da operação."
       />
 
       <div className="grid gap-5 xl:grid-cols-4 md:grid-cols-2">
         <ExecutiveCard
           title="Entidades Registadas"
           value={entityTotal}
-          subtitle="Fornecedores e clientes monitorizados no sistema"
+          subtitle=""
           icon={Users}
         />
         <ExecutiveCard
           title="Processos Pendentes"
           value={processPending}
-          subtitle="Fluxos que ainda aguardam decisão ou continuidade"
+          subtitle=""
           icon={FileText}
         />
         <ExecutiveCard
           title="Avaliações em Aberto"
           value={evaluationTotal}
-          subtitle="Avaliações pendentes e reavaliações em circulação"
+          subtitle=""
           icon={ClipboardList}
         />
         <ExecutiveCard
           title="Taxa de Aprovação"
           value={`${approvalRate}%`}
-          subtitle="Percentual calculado sobre processos aprovados e rejeitados"
+          subtitle=""
           icon={Shield}
         />
       </div>
@@ -241,7 +240,6 @@ export default function Dashboard() {
       <section className="space-y-5">
         <div>
           <h2 className="section-title">Módulos do Sistema</h2>
-          <p className="section-subtitle">Acesso rápido às áreas principais, com contexto operacional resumido.</p>
         </div>
 
         <div className="grid gap-5 xl:grid-cols-4 md:grid-cols-2">
@@ -256,7 +254,6 @@ export default function Dashboard() {
 
                 <div className="space-y-3">
                   <h3 className="module-title">{module.title}</h3>
-                  <p className="module-description">{module.description}</p>
                 </div>
 
                 <div className="module-stats">

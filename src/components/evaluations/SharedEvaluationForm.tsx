@@ -244,12 +244,18 @@ export default function SharedEvaluationForm() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              <div className="p-4 rounded-2xl bg-white border border-[#eadfcd]">
-                <p className="text-sm font-semibold text-[#5e4428]">{data.employee.name}</p>
-                <p className="text-xs text-[#8a6b49] mt-1">
-                  {data.employee.position || "Sem cargo"} {data.employee.department ? `• ${data.employee.department}` : ""}
-                </p>
-                {data.employee.email && <p className="text-xs text-[#8a6b49] mt-1">{data.employee.email}</p>}
+              <div className="p-5 rounded-2xl bg-white border border-[#eadfcd] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-[#5e4428]">{data.employee.name}</p>
+                  <p className="text-xs text-[#8a6b49] mt-1">
+                    {data.employee.position || "Sem cargo"} {data.employee.department ? `• ${data.employee.department}` : ""}
+                  </p>
+                </div>
+                {data.employee.email && (
+                  <div className="px-3 py-1 bg-[#efe1ca] text-[#7a5935] rounded-lg text-[10px] font-bold uppercase tracking-wider self-start sm:self-center">
+                    {data.employee.email}
+                  </div>
+                )}
               </div>
 
               {groupedQuestions.map((section) => (
@@ -275,23 +281,37 @@ export default function SharedEvaluationForm() {
                   <div className="space-y-5">
                     {section.questions.map((question, index) => (
                       <div key={question.id} className="p-4 bg-white border border-[#eadfcd] rounded-xl">
-                        <p className="text-base font-semibold text-[#5e4428]">
+                        <p className="text-sm font-bold text-[#5e4428] leading-relaxed">
                           {index + 1}. {question.question_text}
                         </p>
-                        <div className="mt-3 space-y-2">
-                          {data.scale.map((option) => (
-                            <label key={option.value} className="flex items-center gap-3 text-sm text-[#6e4f2f]">
-                              <input
-                                type="radio"
-                                name={`question-${question.id}`}
-                                checked={responses[question.id] === option.value}
-                                onChange={() => setResponses((prev) => ({ ...prev, [question.id]: option.value }))}
-                                className="accent-[#b68454]"
-                              />
-                              {option.label}
-                            </label>
-                          ))}
-                        </div>
+                          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {data.scale.map((option) => (
+                              <label 
+                                key={option.value} 
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                                  responses[question.id] === option.value
+                                    ? "bg-white border-[#b68454] shadow-sm shadow-amber-900/5 ring-1 ring-[#b68454]"
+                                    : "bg-[#fdfaf4] border-transparent hover:border-[#d9c4a8]"
+                                }`}
+                              >
+                                <div className="relative flex items-center justify-center shrink-0">
+                                  <input
+                                    type="radio"
+                                    name={`question-${question.id}`}
+                                    checked={responses[question.id] === option.value}
+                                    onChange={() => setResponses((prev) => ({ ...prev, [question.id]: option.value }))}
+                                    className="appearance-none w-5 h-5 border-2 border-[#d9c4a8] rounded-full checked:border-[#b68454] transition-all cursor-pointer"
+                                  />
+                                  {responses[question.id] === option.value && (
+                                    <div className="absolute w-2.5 h-2.5 bg-[#b68454] rounded-full" />
+                                  )}
+                                </div>
+                                <span className={`text-xs ${responses[question.id] === option.value ? "font-bold text-[#5e4428]" : "text-[#6e4f2f]"}`}>
+                                  {option.label}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
                       </div>
                     ))}
                   </div>
@@ -400,9 +420,7 @@ export default function SharedEvaluationForm() {
             <Send size={20} /> {submitting ? "Enviando..." : "Enviar Avaliação"}
           </button>
 
-          <p className="text-center text-xs text-gray-400">
-            Esta avaliação será registada e enviada para a nossa equipa. Obrigado!
-          </p>
+
         </form>
       </div>
     </div>

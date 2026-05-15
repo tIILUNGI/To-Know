@@ -137,8 +137,8 @@ export default function Evaluation360Dashboard({ detail }: { detail: SubmissionD
       <div className="bg-[#fdfaf4] p-8 rounded-3xl border border-[#eadfcd] text-center">
         <p className="text-sm font-bold text-[#8a6b49] uppercase tracking-widest mb-2">Pontuação Geral</p>
         <div className="flex flex-col items-center">
-          <span className="text-7xl font-black text-[#5e4428]">{overallAvg}</span>
-          <span className="text-[#8a6b49] text-lg font-medium">de 5.00</span>
+          <span className="text-3xl font-bold text-[#5e4428]">{overallAvg}</span>
+          <span className="text-[#8a6b49] text-base font-medium">de 5.00</span>
         </div>
         <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-bold">
           <CheckCircle2 size={16} /> {submission.classification}
@@ -193,7 +193,7 @@ export default function Evaluation360Dashboard({ detail }: { detail: SubmissionD
         {sectionAverages.map((s, idx) => (
           <div key={s.key} className="card p-4 bg-white border-[#eadfcd] text-center hover:bg-[#fbf7ef] transition-colors">
             <p className="text-[10px] font-bold text-[#8a6b49] uppercase mb-1">Parte {idx + 1}</p>
-            <p className="text-2xl font-black text-[#5e4428]">{s.avg.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-[#5e4428]">{s.avg.toFixed(2)}</p>
           </div>
         ))}
       </div>

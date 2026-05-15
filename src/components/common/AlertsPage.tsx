@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Bell, AlertTriangle, Clock, AlertCircle, CheckCircle, Info, Trash2 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import PageHeader from "../common/PageHeader";
 
 type Priority = "Critical" | "Warning" | "Info";
 
@@ -94,17 +95,24 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Bell size={24} className="text-amber-500" />
-            Notificações
-          </h2>
-        </div>
-      </div>
+      <PageHeader 
+        title="Notificações e Alertas"
+        actions={
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate(-1)} className="btn btn-secondary !p-2 rounded-full">
+              <ArrowLeft size={18} />
+            </button>
+            {alerts.length > 0 && (
+              <button
+                onClick={handleDismissAll}
+                className="btn btn-outline text-red-600 hover:bg-red-50"
+              >
+                <Trash2 size={16} /> Dispensar Todas
+              </button>
+            )}
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-3 gap-4">
         <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-center">

@@ -92,17 +92,17 @@ export default function Login() {
           <div className="bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mb-6 sm:mb-8 border border-white/20 p-4">
             <Logo size="xl" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">TOKNOW</h1>
-          <p className="text-blue-100 text-base sm:text-lg text-center max-w-md mb-6 sm:mb-8 px-4">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4 text-white">TOKNOW</h1>
+          <p className="text-white text-base sm:text-lg text-center max-w-md mb-6 sm:mb-8 px-4 opacity-90">
             Plataforma corporativa de Compliance e Gestão de Risco
           </p>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm text-blue-200 max-w-md">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm text-white max-w-md">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-white rounded-full opacity-60"></div>
               <span className="text-sm">Due Diligence</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
+              <div className="w-2 h-2 bg-white rounded-full opacity-60"></div>
               <span className="text-sm">Avaliação KYC/KYS</span>
             </div>
           </div>
@@ -130,17 +130,15 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Nome Completo</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                      <User className="h-5 w-5 text-gray-400" strokeWidth={2} />
-                    </div>
                     <input
                       type="text"
-                      className="input-with-icon block w-full bg-white dark:bg-[#374151] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      className="input-with-icon"
                       placeholder="Seu nome completo"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
                     />
+                    <User className="input-icon" size={18} />
                   </div>
                 </div>
               )}
@@ -149,17 +147,15 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Email</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                      <Mail className="h-5 w-5 text-gray-400" strokeWidth={2} />
-                    </div>
                     <input
                       type="email"
-                      className="input-with-icon block w-full bg-white dark:bg-[#374151] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      className="input-with-icon"
                       placeholder="seu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
+                    <Mail className="input-icon" size={18} />
                   </div>
                 </div>
               )}
@@ -168,17 +164,15 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Nome de Usuário</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                      <User className="h-5 w-5 text-gray-400" strokeWidth={2} />
-                    </div>
                     <input
                       type="text"
-                      className="input-with-icon block w-full bg-white dark:bg-[#374151] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      className="input-with-icon"
                       placeholder="Seu usuário"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
                     />
+                    <User className="input-icon" size={18} />
                   </div>
                 </div>
               )}
@@ -187,33 +181,29 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Senha</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                      <Lock className="h-5 w-5 text-gray-400" strokeWidth={2} />
-                    </div>
                     <input
                       type="password"
-                      className="input-with-icon block w-full bg-white dark:bg-[#374151] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      className="input-with-icon"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
+                    <Lock className="input-icon" size={18} />
                   </div>
                   {mode === 'register' && (
                     <div className="space-y-2 mt-3">
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Confirmar Senha</label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                          <Lock className="h-5 w-5 text-gray-400" strokeWidth={2} />
-                        </div>
                         <input
                           type="password"
-                          className="input-with-icon block w-full bg-white dark:bg-[#374151] border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                          className="input-with-icon"
                           placeholder="••••••••"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
                         />
+                        <Lock className="input-icon" size={18} />
                       </div>
                     </div>
                   )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { User, Lock, Save, LayoutDashboard, Mail } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import PageHeader from "../common/PageHeader";
 
 export default function UserProfile() {
   const { user, login } = useAuth(); // Assuming login or some fn can refresh auth, though reload is easiest
@@ -99,13 +100,20 @@ export default function UserProfile() {
 
   return (
     <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-500 pb-16">
-       <div className="flex justify-between items-center bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
-         <div>
-           <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-             <User className="text-blue-600" size={20} /> Meu Perfil
-           </h2>
-         </div>
-       </div>
+      <PageHeader 
+        title="Meu Perfil"
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+              {profileData.name.charAt(0)}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-sm font-bold text-gray-900">{profileData.username}</p>
+              <span className="badge badge-neutral text-[10px]">{profileData.role}</span>
+            </div>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         {/* Profile Info Form */}
@@ -129,12 +137,12 @@ export default function UserProfile() {
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-500">Nome Completo</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <User className="input-icon" size={16} />
                 <input
                   type="text"
                   value={profileData.name}
                   onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                  className="input-with-icon"
                   required
                 />
               </div>
@@ -143,12 +151,12 @@ export default function UserProfile() {
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-500">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <Mail className="input-icon" size={16} />
                 <input
                   type="email"
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                  className="input-with-icon"
                   required
                 />
               </div>
@@ -176,12 +184,12 @@ export default function UserProfile() {
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-500">Senha Atual</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <Lock className="input-icon" size={16} />
                 <input
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                  className="input-with-icon"
                   required
                 />
               </div>
@@ -190,13 +198,13 @@ export default function UserProfile() {
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-500">Nova Senha</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <Lock className="input-icon" size={16} />
                 <input
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   placeholder="Mínimo 6 caracteres"
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                  className="input-with-icon"
                   required
                   minLength={6}
                 />
@@ -206,12 +214,12 @@ export default function UserProfile() {
             <div className="space-y-1">
               <label className="text-xs font-medium text-gray-500">Confirmar Senha</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <Lock className="input-icon" size={16} />
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                  className="input-with-icon"
                   required
                 />
               </div>

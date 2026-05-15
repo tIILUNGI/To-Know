@@ -101,7 +101,7 @@ export default function UserList() {
 
       <div className="card overflow-hidden">
         <div className="p-3 sm:p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             <Search className="input-icon" size={16} />
             <input
               type="text"

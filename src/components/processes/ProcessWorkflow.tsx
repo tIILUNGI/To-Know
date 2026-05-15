@@ -127,7 +127,6 @@ export default function ProcessWorkflow() {
 
       <PageHeader
         title="Processos"
-        subtitle="Gestão do pipeline operacional de aprovação, análise, decisão e acompanhamento."
         actions={
           <>
             <Link to="/processos/novo?type=approval&entity=Supplier" className="btn btn-primary">
@@ -149,48 +148,48 @@ export default function ProcessWorkflow() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="metric-card">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="metric-label">Total de Processos</p>
               <p className="metric-value">{processes.length}</p>
-              <p className="metric-note">Registos operacionais carregados no fluxo</p>
+              <p className="metric-note">Registos operacionais carregados</p>
             </div>
-            <div className="module-icon">
+            <div className="module-icon shrink-0">
               <FileText size={19} />
             </div>
           </div>
         </div>
         <div className="metric-card">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="metric-label">Pendentes</p>
               <p className="metric-value">{pendingCount}</p>
-              <p className="metric-note">Processos que aguardam avanço ou decisão</p>
+              <p className="metric-note">Processos que aguardam decisão</p>
             </div>
-            <div className="module-icon">
+            <div className="module-icon shrink-0 text-amber-600 bg-amber-50">
               <Clock size={19} />
             </div>
           </div>
         </div>
         <div className="metric-card">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="metric-label">Em Análise</p>
               <p className="metric-value">{analysisCount}</p>
-              <p className="metric-note">Itens atualmente em validação interna</p>
+              <p className="metric-note">Itens em validação interna</p>
             </div>
-            <div className="module-icon">
+            <div className="module-icon shrink-0 text-blue-600 bg-blue-50">
               <AlertCircle size={19} />
             </div>
           </div>
         </div>
         <div className="metric-card">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="metric-label">Aprovados</p>
               <p className="metric-value">{approvedCount}</p>
-              <p className="metric-note">Fluxos concluídos com aceite final</p>
+              <p className="metric-note">Fluxos concluídos com aceite</p>
             </div>
-            <div className="module-icon">
+            <div className="module-icon shrink-0 text-emerald-600 bg-emerald-50">
               <CheckCircle2 size={19} />
             </div>
           </div>

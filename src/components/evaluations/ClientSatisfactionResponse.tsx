@@ -254,16 +254,17 @@ export default function ClientSatisfactionResponse() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{formData.title}</h1>
-            {formData.description && (
-              <p className="text-gray-600 mb-4">{formData.description}</p>
-            )}
-            <p className="text-sm text-gray-500">
-              Pesquisa para: <span className="font-semibold text-purple-600">{formData.client_name}</span>
-            </p>
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 text-center">
+          <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Send size={32} />
           </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{formData.title}</h1>
+          {formData.description && (
+            <p className="text-gray-600 mb-4">{formData.description}</p>
+          )}
+          <p className="text-sm text-gray-500">
+            Pesquisa para: <span className="font-semibold text-purple-600">{formData.client_name}</span>
+          </p>
         </div>
 
         {/* Form */}
@@ -297,27 +298,25 @@ export default function ClientSatisfactionResponse() {
           ))}
 
           {/* Submit Button */}
-          <div className="bg-white rounded-3xl shadow-xl p-8">
-            <div className="text-center">
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-700 text-sm">{error}</p>
-                </div>
-              )}
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-12 py-4 bg-purple-600 text-white rounded-2xl font-bold text-lg flex items-center gap-3 hover:bg-purple-700 active:scale-95 transition-all shadow-xl shadow-purple-200 disabled:opacity-50 mx-auto"
-              >
-                <Send size={24} />
-                {submitting ? 'Enviando...' : 'Enviar Respostas'}
-              </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-12 py-4 bg-purple-600 text-white rounded-2xl font-bold text-lg flex items-center gap-3 hover:bg-purple-700 active:scale-95 transition-all shadow-xl shadow-purple-200 disabled:opacity-50 mx-auto"
+            >
+              <Send size={24} />
+              {submitting ? 'Enviando...' : 'Enviar Respostas'}
+            </button>
 
-              <p className="text-xs text-gray-500 mt-4">
-                Suas respostas são confidenciais e serão usadas apenas para melhorar nossos serviços.
-              </p>
-            </div>
+            <p className="text-xs text-gray-500 mt-4">
+              Suas respostas são confidenciais e serão usadas apenas para melhorar nossos serviços.
+            </p>
           </div>
         </form>
       </div>

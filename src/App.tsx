@@ -42,7 +42,7 @@ const ProtectedRoute = ({ children }) => {
       <div className="h-screen w-screen flex items-center justify-center text-blue-600 font-bold">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <span className="text-sm font-black uppercase tracking-widest animate-pulse-soft">Carregando...</span>
+          <span className="text-sm font-bold uppercase tracking-widest animate-pulse-soft">Carregando...</span>
         </div>
       </div>
     );
@@ -90,10 +90,8 @@ export default function App() {
                <Route path="colaboradores/:id/editar" element={<EmployeeForm />} />
                <Route path="colaboradores/:id/avaliacao-360" element={<Evaluation360Form />} />
               
-
-              
               {/* Relatórios */}
-            <Route path="relatorios" element={<ReportsView />} />
+              <Route path="relatorios" element={<ReportsView />} />
               
                {/* Configurações */}
                <Route path="admin/formularios" element={<CollaborationFormsAdmin />} />

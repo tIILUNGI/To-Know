@@ -1,16 +1,18 @@
 import { Scale, GitFork, Settings, ArrowRight, Users, Bell, Database } from "lucide-react";
 import { Link } from "react-router-dom";
+import PageHeader from "../common/PageHeader";
 
 export default function SettingsSelection() {
   return (
-    <div className="h-full flex items-center justify-center p-4">
-      <div className="max-w-5xl w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 mb-4">
-            <Settings size={32} />
+    <div className="space-y-6 animate-in fade-in">
+      <PageHeader 
+        title="Configurações do Sistema"
+        actions={
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-100 text-purple-600">
+            <Settings size={24} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Configurações do Sistema</h1>
-        </div>
+        }
+      />
 
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
              <Link
@@ -78,7 +80,6 @@ export default function SettingsSelection() {
                </span>
              </Link>
           </div>
-        </div>
       </div>
     );
 }

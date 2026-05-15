@@ -18,6 +18,7 @@ import {
   Printer,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import PageHeader from "../common/PageHeader";
 import Evaluation360Dashboard from "./Evaluation360Dashboard";
 
 type Section = {
@@ -384,27 +385,27 @@ export default function Evaluation360Form() {
           </div>
         </div>
       </div>
-
       <div className="card p-6 bg-gradient-to-br from-amber-50 via-orange-50 to-stone-50 border-amber-100">
-        <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-white border border-amber-200 flex items-center justify-center text-amber-700">
-            <Mail size={22} />
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-white border border-amber-200 flex items-center justify-center text-amber-700 shadow-sm">
+            <Mail size={24} />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-bold text-gray-900">Fluxo único da avaliação 360°</h3>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Fluxo de Avaliação 360°</h3>
+            <p className="text-sm text-gray-500 mt-1">Gerencie convites por email e acompanhe o progresso das submissões.</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1.15fr,0.85fr] gap-6">
-        <div className="card p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="card p-6 flex flex-col">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
               <Send size={20} />
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">Iniciar Nova Avaliação 360°</h3>
-              <p className="text-sm text-gray-500">Nome do colaborador e email de envio.</p>
+              <p className="text-sm text-gray-500 mt-0.5">Envie um link único de acesso para o colaborador.</p>
             </div>
           </div>
 
@@ -454,14 +455,16 @@ export default function Evaluation360Form() {
             </div>
 
             {selectedEmployee && (
-              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                  <UserRound size={16} className="text-indigo-600" />
-                  {selectedEmployee.name}
+              <div className="p-5 bg-gray-50/50 rounded-2xl border border-gray-100 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
+                  <UserRound size={20} />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {selectedEmployee.position || "Sem cargo"} {selectedEmployee.department ? `• ${selectedEmployee.department}` : ""}
-                </p>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-sm font-bold text-gray-900">{selectedEmployee.name}</p>
+                  <p className="text-xs text-gray-500 font-medium">
+                    {selectedEmployee.position || "Sem cargo"} {selectedEmployee.department ? `• ${selectedEmployee.department}` : ""}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -525,7 +528,7 @@ export default function Evaluation360Form() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">Perguntas do Formulário</h3>
-              <p className="text-sm text-gray-500">As 3 partes usadas no formulário enviado por email.</p>
+              <p className="text-sm text-gray-500 mt-0.5">Critérios que compõem o formulário de avaliação.</p>
             </div>
           </div>
 
@@ -533,7 +536,6 @@ export default function Evaluation360Form() {
             {template?.sections.map((section) => (
               <div key={section.key} className="p-4 rounded-2xl bg-[#fbf7ef] border border-[#eadfcd]">
                 <h4 className="text-sm font-bold text-[#6e4f2f]">{section.title}</h4>
-                <p className="text-xs text-[#8a6b49] mt-1">{section.description}</p>
                 <ol className="mt-3 space-y-2 text-sm text-gray-700">
                   {getSectionQuestions(section.key).map((question, index) => (
                     <li key={question.id}>
@@ -549,11 +551,11 @@ export default function Evaluation360Form() {
 
       <div className="space-y-6">
         <div className="card p-6 bg-[#fdfaf4] border-[#eadfcd]">
-          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2">
             <ClipboardList size={20} className="text-[#a17e58]" />
             Avaliações Pendentes
           </h3>
-          <p className="text-sm text-[#8a6b49] mb-6">Avaliações aguardando sua revisão e avaliação</p>
+          <p className="text-sm text-[#8a6b49] mt-1 mb-6">Processos aguardando sua revisão final.</p>
           
           <div className="space-y-4">
             {links.filter(l => l.status === 'answered').length === 0 ? (
@@ -562,21 +564,26 @@ export default function Evaluation360Form() {
               </div>
             ) : (
               links.filter(l => l.status === 'answered').map(link => (
-                <div key={link.id} className="p-5 rounded-2xl bg-[#fbf7ef] border border-[#eadfcd] flex justify-between items-center group hover:shadow-md transition-all">
-                  <div>
-                    <h4 className="text-base font-bold text-[#5e4428]">{link.employee_name}</h4>
-                    <p className="text-sm text-[#8a6b49]">{link.employee_email || link.recipient_email}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">
-                        3 seções concluídas
-                      </span>
+                <div key={link.id} className="p-5 rounded-2xl bg-white border border-[#eadfcd] flex justify-between items-center group hover:shadow-md transition-all hover:border-[#a17e58]/30">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#fbf7ef] text-[#a17e58] flex items-center justify-center shrink-0">
+                       <UserRound size={18} />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <h4 className="text-sm font-bold text-[#5e4428]">{link.employee_name}</h4>
+                      <p className="text-xs text-[#8a6b49] font-medium">{link.employee_email || link.recipient_email}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">
+                          Aguardando Revisão
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <button
                     onClick={() => setConcludingLink(link)}
-                    className="bg-[#a17e58] text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-[#8a6b49] transition-all flex items-center gap-2"
+                    className="bg-[#a17e58] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#8a6b49] transition-all flex items-center gap-2 shadow-sm"
                   >
-                    Avaliar <ArrowRight size={16} />
+                    Avaliar <ArrowRight size={14} />
                   </button>
                 </div>
               ))
@@ -585,11 +592,11 @@ export default function Evaluation360Form() {
         </div>
 
         <div className="card p-6 bg-[#fdfaf4] border-[#eadfcd]">
-          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2">
             <Check size={20} className="text-[#a17e58]" />
             Avaliações Concluídas
           </h3>
-          <p className="text-sm text-[#8a6b49] mb-6">Avaliações finalizadas disponíveis para visualização</p>
+          <p className="text-sm text-[#8a6b49] mt-1 mb-6">Histórico de avaliações finalizadas no sistema.</p>
           
           <div className="space-y-4">
             {links.filter(l => l.status === 'concluded').length === 0 ? (
@@ -598,10 +605,15 @@ export default function Evaluation360Form() {
               </div>
             ) : (
               links.filter(l => l.status === 'concluded').map(link => (
-                <div key={link.id} className="p-4 rounded-2xl bg-emerald-50/30 border border-emerald-100 flex justify-between items-center group hover:shadow-sm transition-all">
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-800">{link.employee_name}</h4>
-                    <p className="text-xs text-gray-500">{link.employee_email || link.recipient_email}</p>
+                <div key={link.id} className="p-4 rounded-2xl bg-white border border-emerald-100 flex justify-between items-center group hover:shadow-sm transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                       <CheckCircle2 size={18} />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <h4 className="text-sm font-bold text-gray-800">{link.employee_name}</h4>
+                      <p className="text-xs text-gray-500 font-medium">{link.employee_email || link.recipient_email}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -609,7 +621,7 @@ export default function Evaluation360Form() {
                         await handleToggleSubmission(link.token);
                         setShowDashboard(link.token);
                       }}
-                      className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all flex items-center gap-2"
+                      className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all flex items-center gap-2"
                     >
                       Ver Dashboard <FileBarChart size={14} />
                     </button>
@@ -631,15 +643,13 @@ export default function Evaluation360Form() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-[#fdfaf4] rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in duration-300 border border-[#eadfcd]">
             <div className="p-7 border-b border-[#eadfcd] flex justify-between items-center bg-[#fbf7ef]">
-              <h3 className="text-xl font-black text-[#5e4428]">Avaliar Colaborador</h3>
+              <h3 className="text-xl font-bold text-[#5e4428]">Avaliar Colaborador</h3>
               <button onClick={() => setConcludingLink(null)} className="text-amber-700 hover:bg-amber-100 p-1 rounded-full">
                 <ArrowLeft size={20} />
               </button>
             </div>
             <form onSubmit={handleConclude} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              <p className="text-sm text-gray-600">
-                Finalize a avaliação de <strong>{concludingLink.employee_name}</strong> respondendo aos critérios abaixo.
-              </p>
+
 
               <div className="space-y-6 py-4 border-y border-gray-100">
                 <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
@@ -738,7 +748,7 @@ export default function Evaluation360Form() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900">Respostas Guardadas</h3>
-            <p className="text-sm text-gray-500">Cada submissão fica associada ao colaborador avaliado.</p>
+            <p className="text-sm text-gray-500 mt-0.5">Acompanhamento detalhado de cada submissão recebida.</p>
           </div>
         </div>
 
@@ -813,7 +823,7 @@ export default function Evaluation360Form() {
                             <div className="mt-2 grid grid-cols-1 md:grid-cols-[100px,1fr] gap-4">
                               <div className="text-center p-2 bg-white rounded-xl border border-amber-100">
                                 <p className="text-[10px] text-gray-400 uppercase">Nota</p>
-                                <p className="text-xl font-black text-amber-700">{submission.manager_score}/10</p>
+                                <p className="text-xl font-bold text-amber-700">{submission.manager_score}/10</p>
                               </div>
                               <div>
                                 <p className="text-[10px] text-gray-400 uppercase">Feedback</p>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Settings, Plus, Edit2, Trash2, X, ArrowLeft } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
+import PageHeader from "../common/PageHeader";
 
 export default function CriteriaSettings() {
   const [criteria, setCriteria] = useState<any[]>([]);
@@ -225,19 +226,19 @@ export default function CriteriaSettings() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
-        <div className="flex items-center gap-3">
-          <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
-            <ArrowLeft size={20} />
-          </button>
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Settings size={20} className="text-blue-600" /> Critérios
-          </h2>
-        </div>
-        <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-700">
-          <Plus size={16} /> Novo
-        </button>
-      </div>
+      <PageHeader 
+        title="Critérios de Avaliação"
+        actions={
+          <div className="flex items-center gap-2">
+            <button onClick={() => window.history.back()} className="btn btn-secondary !p-2 rounded-full">
+              <ArrowLeft size={18} />
+            </button>
+            <button onClick={() => handleOpenModal()} className="btn btn-primary">
+              <Plus size={16} /> Novo Critério
+            </button>
+          </div>
+        }
+      />
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-x-auto">
           <table className="w-full text-left">

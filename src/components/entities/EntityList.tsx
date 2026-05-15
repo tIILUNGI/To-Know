@@ -73,10 +73,6 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
   const highRiskCount = entities.filter((entity) => entity.final_risk_rating === "Alto").length;
 
   const pageTitle = type === "Supplier" ? "Fornecedores" : "Clientes";
-  const pageSubtitle =
-    type === "Supplier"
-      ? "Gestão centralizada da base de fornecedores, risco, relacionamento e estado de qualificação."
-      : "Gestão centralizada da carteira de clientes, estado operacional e exposição de performance.";
 
   return (
     <div className="space-y-6">
@@ -91,7 +87,6 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
 
       <PageHeader
         title={pageTitle}
-        subtitle={pageSubtitle}
         actions={
           <Link to="/entities/new" state={{ type }} className="btn btn-primary">
             <Plus size={16} strokeWidth={2} />

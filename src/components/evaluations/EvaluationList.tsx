@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Mail, Plus, RotateCcw, Trash2, Users } from "lucide-react";
+import { Heart, Mail, Plus, RotateCcw, Trash2, Users, ClipboardList, TrendingUp, Search } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 import PageHeader from "../common/PageHeader";
@@ -8,6 +8,7 @@ import PageHeader from "../common/PageHeader";
 export default function EvaluationList() {
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const { addToast } = useToast();
 
@@ -71,6 +72,16 @@ export default function EvaluationList() {
   const satisfactionCount = evaluations.filter((evaluation) => evaluation.evaluation_type === "Satisfaction").length;
   const reevaluationCount = evaluations.filter((evaluation) => evaluation.evaluation_type === "Reavaliação").length;
 
+  const filteredEvaluations = evaluations.filter(ev => {
+    const term = searchTerm.toLowerCase();
+    return (
+      ev.evaluation_number?.toLowerCase().includes(term) ||
+      ev.name?.toLowerCase().includes(term) ||
+      ev.entity_name?.toLowerCase().includes(term) ||
+      ev.type?.toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div className="space-y-6">
       <ConfirmModal
@@ -84,7 +95,6 @@ export default function EvaluationList() {
 
       <PageHeader
         title="Avaliações"
-        subtitle="Vista central das avaliações concluídas, pendentes e ciclos de reavaliação do sistema."
         actions={
           <Link to="/avaliacoes/nova" className="btn btn-primary">
             <Plus size={16} strokeWidth={2} />
@@ -95,24 +105,52 @@ export default function EvaluationList() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="metric-card">
-          <p className="metric-label">Total Registado</p>
-          <p className="metric-value">{evaluations.length}</p>
-          <p className="metric-note">Todas as avaliações atualmente registadas</p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="metric-label">Total Registado</p>
+              <p className="metric-value">{evaluations.length}</p>
+              <p className="metric-note">Todas as avaliações registadas</p>
+            </div>
+            <div className="module-icon shrink-0">
+              <ClipboardList size={19} />
+            </div>
+          </div>
         </div>
         <div className="metric-card">
-          <p className="metric-label">Performance</p>
-          <p className="metric-value">{performanceCount}</p>
-          <p className="metric-note">Avaliações orientadas à performance</p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="metric-label">Performance</p>
+              <p className="metric-value">{performanceCount}</p>
+              <p className="metric-note">Avaliações de performance</p>
+            </div>
+            <div className="module-icon shrink-0 text-emerald-600 bg-emerald-50">
+              <TrendingUp size={19} />
+            </div>
+          </div>
         </div>
         <div className="metric-card">
-          <p className="metric-label">Satisfação</p>
-          <p className="metric-value">{satisfactionCount}</p>
-          <p className="metric-note">Avaliações ligadas à satisfação das entidades</p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="metric-label">Satisfação</p>
+              <p className="metric-value">{satisfactionCount}</p>
+              <p className="metric-note">Avaliações de satisfação</p>
+            </div>
+            <div className="module-icon shrink-0 text-rose-600 bg-rose-50">
+              <Heart size={19} />
+            </div>
+          </div>
         </div>
         <div className="metric-card">
-          <p className="metric-label">Reavaliações</p>
-          <p className="metric-value">{reevaluationCount}</p>
-          <p className="metric-note">Ciclos reabertos para revisão e novo parecer</p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="metric-label">Reavaliações</p>
+              <p className="metric-value">{reevaluationCount}</p>
+              <p className="metric-note">Ciclos reabertos para revisão</p>
+            </div>
+            <div className="module-icon shrink-0 text-blue-600 bg-blue-50">
+              <RotateCcw size={19} />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -122,22 +160,37 @@ export default function EvaluationList() {
           <p className="mt-1 text-[1rem] text-slate-500">Atalhos diretos para os fluxos mais usados da área de avaliações.</p>
         </div>
 
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
+          <div className="flex flex-wrap gap-2">
+            <Link to="/avaliacoes/nova" className="btn btn-primary">
+              <Plus size={16} strokeWidth={2} />
+              Avaliar Fornecedor
+            </Link>
+            <Link to="/avaliacoes/reevaluation" className="btn btn-secondary">
+              <RotateCcw size={16} strokeWidth={2} />
+              Reavaliação
+            </Link>
+            <Link to="/avaliacoes/cliente" className="btn btn-secondary">
+              <Users size={16} strokeWidth={2} />
+              Avaliar Cliente
+            </Link>
+          </div>
+          <div className="relative w-full sm:w-64">
+            <Search className="input-icon" size={16} />
+            <input 
+              type="text" 
+              placeholder="Pesquisar avaliações..." 
+              className="input-with-icon w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        
         <div className="flex flex-wrap gap-2">
-          <Link to="/avaliacoes/nova" className="btn btn-primary">
-            <Plus size={16} strokeWidth={2} />
-            Avaliar Fornecedor
-          </Link>
-          <Link to="/avaliacoes/reevaluation" className="btn btn-secondary">
-            <RotateCcw size={16} strokeWidth={2} />
-            Reavaliação
-          </Link>
-          <Link to="/avaliacoes/cliente" className="btn btn-secondary">
-            <Users size={16} strokeWidth={2} />
-            Avaliar Cliente
-          </Link>
           <Link to="/avaliacoes/360" className="btn btn-secondary">
             <Mail size={16} strokeWidth={2} />
-            Avaliação 360° por Email
+            Avaliação 360°
           </Link>
           <Link to="/avaliacoes/nova?type=Satisfaction&entity=Supplier" className="btn btn-outline">
             <Heart size={16} strokeWidth={2} />
@@ -177,20 +230,20 @@ export default function EvaluationList() {
                     A carregar avaliações...
                   </td>
                 </tr>
-              ) : evaluations.length === 0 ? (
+              ) : filteredEvaluations.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-0">
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <Mail size={28} />
                       </div>
-                      <p className="text-[1.2rem] font-semibold text-slate-800">Nenhuma avaliação registada</p>
-                      <p>Crie a primeira avaliação para começar a alimentar o histórico do sistema.</p>
+                      <p className="text-[1.2rem] font-semibold text-slate-800">Nenhuma avaliação encontrada</p>
+                      <p>{searchTerm ? "Tente ajustar o termo de pesquisa." : "Crie a primeira avaliação para começar a alimentar o histórico do sistema."}</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                evaluations.map((evaluation) => (
+                filteredEvaluations.map((evaluation) => (
                   <tr key={evaluation.id}>
                     <td className="text-slate-500">{new Date(evaluation.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="font-semibold text-slate-900">{evaluation.evaluation_number || "-"}</td>

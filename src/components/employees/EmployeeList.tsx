@@ -113,7 +113,7 @@ export default function EmployeeList() {
     <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Know You Work</h2>
+          <h2 className="text-lg font-bold text-gray-900">Know You Work</h2>
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.length > 0 && (

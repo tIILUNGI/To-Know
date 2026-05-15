@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 // TSX-only admin view (formulários e respostas)
-import { Eye, Filter, Search, FileText, Clock } from "lucide-react";
+import { Eye, Filter, Search, FileText, Clock, Plus } from "lucide-react";
+import PageHeader from "../common/PageHeader";
 import { useToast } from "../../context/ToastContext";
 
 type CollaborationForm = {
@@ -153,46 +154,34 @@ export default function CollaborationFormsAdmin() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-900">
-            Formulários & Respostas (Admin)
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Listagem de formulários criados e visualização das respostas recebidas.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Pesquisar..."
-              className="pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:ring-2 focus:ring-blue-100 outline-none"
-              aria-label="Pesquisar respostas"
-            />
-          </div>
-
+      <PageHeader 
+        title="Formulários & Respostas"
+        actions={
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-gray-50 border border-gray-100">
-              <Filter size={14} className="text-gray-500" />
+            <div className="relative">
+              <Search size={14} className="input-icon" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Pesquisar..."
+                className="input-with-icon pl-10 pr-4 py-2 bg-white text-sm"
+                aria-label="Pesquisar respostas"
+              />
             </div>
-            <select
-              aria-label="Tipo de formulário"
-              value={formType}
-              onChange={(e) => setFormType(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:ring-2 focus:ring-blue-100 outline-none"
-            >
-              <option value="360">360°</option>
-            </select>
+
+            <div className="flex items-center gap-2">
+              <select
+                aria-label="Tipo de formulário"
+                value={formType}
+                onChange={(e) => setFormType(e.target.value)}
+                className="input py-2 text-sm"
+              >
+                <option value="360">360°</option>
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="card p-5">

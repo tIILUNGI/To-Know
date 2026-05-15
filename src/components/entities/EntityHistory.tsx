@@ -76,7 +76,6 @@ export default function EntityHistory() {
     <div className="space-y-6">
       <PageHeader
         title="Histórico Completo"
-        subtitle={entity.name}
         actions={
           <>
             <Link to={entityListHref} className="btn btn-outline">
@@ -150,8 +149,7 @@ export default function EntityHistory() {
             <FileText size={18} />
           </div>
           <div>
-            <h2 className="text-[1.45rem] font-semibold text-slate-900">Dados Cadastrais Atuais</h2>
-            <p className="text-[1rem] text-slate-500">Resumo do estado atual e do enquadramento da entidade.</p>
+            <h2 className="text-lg font-bold text-slate-900">Dados Cadastrais Atuais</h2>
           </div>
         </div>
 

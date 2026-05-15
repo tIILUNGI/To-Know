@@ -164,8 +164,7 @@ ${localStorage.getItem("user_name") || "Equipe"}`);
             <X size={20} />
           </button>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Criar Pesquisa de Satisfação</h2>
-            <p className="text-sm text-gray-500">Crie perguntas customizadas para enviar aos seus clientes</p>
+            <h2 className="text-xl font-bold text-gray-900">Criar Pesquisa de Satisfação</h2>
           </div>
         </div>
         <button

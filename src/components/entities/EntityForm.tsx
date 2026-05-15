@@ -198,7 +198,7 @@ export default function EntityForm() {
            )}
         </div>
 
-          <form id="entity-form" onSubmit={handleSubmit} className="p-10">
+          <form id="entity-form" onSubmit={handleSubmit} className="p-5 sm:p-10">
            {activeTab === "identificacao" && (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
                 <FormField label="Código" name="code" value={formData.code} onChange={handleChange} placeholder="GER-001" error={undefined} />
@@ -375,7 +375,7 @@ function DocumentSection({ entityId }) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-      <div className="flex justify-between items-center bg-blue-600 p-10 rounded-[32px] text-white shadow-xl shadow-blue-100">
+      <div className="flex flex-col sm:flex-row justify-between items-center bg-blue-600 p-6 sm:p-10 rounded-[32px] text-white shadow-xl shadow-blue-100 gap-4">
         <div className="space-y-2">
           <h4 className="text-2xl font-bold">Gestão Documental</h4>
           <p className="text-blue-100 max-w-md">Envie certificados de registo, NIF, alvarás e políticas de compliance para auditoria.</p>
