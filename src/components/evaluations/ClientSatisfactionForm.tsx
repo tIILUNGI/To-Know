@@ -125,7 +125,12 @@ ${localStorage.getItem("user_name") || "Equipe"}`);
         body: JSON.stringify({
           title: formData.title,
           description: formData.description,
-          questions: questions,
+          questions: questions.map(q => ({
+            question_text: q.text,
+            question_type: q.type,
+            is_required: q.required,
+            display_order: q.id
+          })),
           client_ids: selectedClients.map(c => c.id),
           expires_days: formData.expires_days
         })
