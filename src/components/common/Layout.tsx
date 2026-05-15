@@ -44,6 +44,7 @@ export default function Layout() {
 
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -98,6 +99,8 @@ export default function Layout() {
   const handleSidebarToggle = () => {
     if (window.innerWidth < 1024) {
       setMobileMenuOpen((prev) => !prev);
+    } else {
+      setSidebarCollapsed((prev) => !prev);
     }
   };
 
@@ -215,7 +218,7 @@ export default function Layout() {
           />
         ) : null}
 
-        <aside className={`app-sidebar ${mobileMenuOpen ? "app-sidebar-open" : ""}`}>
+        <aside className={`app-sidebar ${mobileMenuOpen ? "app-sidebar-open" : ""} ${sidebarCollapsed ? "app-sidebar-collapsed" : ""}`}>
           <div className="app-sidebar-inner">
             <nav className="space-y-1">{navItems.map(renderSidebarItem)}</nav>
 

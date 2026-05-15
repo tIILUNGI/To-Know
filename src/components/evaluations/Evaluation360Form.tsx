@@ -16,6 +16,10 @@ import {
   FileBarChart,
   ArrowRight,
   Printer,
+  Shield,
+  XCircle,
+  FileText,
+  CheckCircle2,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import PageHeader from "../common/PageHeader";
@@ -372,96 +376,85 @@ export default function Evaluation360Form() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(routeEmployeeId ? "/colaboradores" : "/avaliacoes")}
-            className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Avaliação 360° por Email</h2>
-          </div>
-        </div>
-      </div>
-      <div className="card p-6 bg-gradient-to-br from-amber-50 via-orange-50 to-stone-50 border-amber-100">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white border border-amber-200 flex items-center justify-center text-amber-700 shadow-sm">
-            <Mail size={24} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Fluxo de Avaliação 360°</h3>
-            <p className="text-sm text-gray-500 mt-1">Gerencie convites por email e acompanhe o progresso das submissões.</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate(routeEmployeeId ? "/colaboradores" : "/avaliacoes")}
+          className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 transition-colors shrink-0"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Avaliação 360° por Email</h2>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Gerencie convites e acompanhe o progresso das submissões.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card p-6 flex flex-col">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
-              <Send size={20} />
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shrink-0">
+              <Send size={18} />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Iniciar Nova Avaliação 360°</h3>
-              <p className="text-sm text-gray-500 mt-0.5">Envie um link único de acesso para o colaborador.</p>
+            <div className="flex flex-col gap-0.5">
+              <h3 className="text-base font-bold text-slate-900">Novo Convite</h3>
+              <p className="text-xs text-slate-400 font-medium">Envie um link único ao colaborador.</p>
             </div>
           </div>
 
-          <form onSubmit={handleCreateInvite} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Colaborador *</label>
-              <select
-                value={formData.employee_id}
-                onChange={(event) => handleEmployeeChange(event.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-              >
-                <option value="">Selecione...</option>
-                {employees.length === 0 && <option value="" disabled>Nenhum colaborador encontrado</option>}
-                {employees.map((employee: any) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.name} {employee.position ? `- ${employee.position}` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email *</label>
-                <input
-                  type="email"
-                  value={formData.recipient_email}
-                  onChange={(event) => setFormData((prev) => ({ ...prev, recipient_email: event.target.value }))}
-                  placeholder="colaborador@empresa.com"
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                />
+          <form onSubmit={handleCreateInvite} className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em]">Colaborador Alvo</label>
+                <select
+                  value={formData.employee_id}
+                  onChange={(event) => handleEmployeeChange(event.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all text-sm text-slate-700"
+                >
+                  <option value="">Selecione o colaborador...</option>
+                  {employees.map((employee: any) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name} {employee.position ? `— ${employee.position}` : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Validade</label>
-                <select
-                  value={formData.expires_days}
-                  onChange={(event) => setFormData((prev) => ({ ...prev, expires_days: Number(event.target.value) }))}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                >
-                  <option value={7}>7 dias</option>
-                  <option value={15}>15 dias</option>
-                  <option value={30}>30 dias</option>
-                  <option value={60}>60 dias</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr,150px] gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em]">Email do Destinatário</label>
+                  <input
+                    type="email"
+                    value={formData.recipient_email}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, recipient_email: event.target.value }))}
+                    placeholder="colaborador@empresa.com"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all text-sm text-slate-700"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em]">Expira em</label>
+                  <select
+                    value={formData.expires_days}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, expires_days: Number(event.target.value) }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all text-sm text-slate-700"
+                  >
+                    <option value={7}>7 Dias</option>
+                    <option value={15}>15 Dias</option>
+                    <option value={30}>30 Dias</option>
+                    <option value={60}>60 Dias</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             {selectedEmployee && (
-              <div className="p-5 bg-gray-50/50 rounded-2xl border border-gray-100 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
-                  <UserRound size={20} />
+              <div className="p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100/50 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
+                <div className="w-10 h-10 rounded-xl bg-white border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
+                  <Shield size={20} />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-bold text-gray-900">{selectedEmployee.name}</p>
-                  <p className="text-xs text-gray-500 font-medium">
+                  <p className="text-xs font-bold text-slate-900">{selectedEmployee.name}</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                     {selectedEmployee.position || "Sem cargo"} {selectedEmployee.department ? `• ${selectedEmployee.department}` : ""}
                   </p>
                 </div>
@@ -471,10 +464,10 @@ export default function Evaluation360Form() {
             <button
               type="submit"
               disabled={creating}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+              className="w-full bg-indigo-600 text-white px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-indigo-200"
             >
               <Send size={18} />
-              {creating ? "Gerando..." : "Gerar Link e Abrir Email"}
+              {creating ? "A processar..." : "Gerar Convite de Avaliação"}
             </button>
           </form>
 
@@ -521,67 +514,80 @@ export default function Evaluation360Form() {
           )}
         </div>
 
-        <div className="card p-6">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center">
-              <ClipboardList size={20} />
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-11 h-11 rounded-2xl bg-slate-50 text-slate-500 flex items-center justify-center border border-slate-200 shrink-0">
+              <ClipboardList size={18} />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Perguntas do Formulário</h3>
-              <p className="text-sm text-gray-500 mt-0.5">Critérios que compõem o formulário de avaliação.</p>
+            <div className="flex flex-col gap-0.5">
+              <h3 className="text-base font-bold text-slate-900">Perguntas do Formulário</h3>
+              <p className="text-xs text-slate-400 font-medium">Critérios avaliados em cada submissão.</p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {template?.sections.map((section) => (
-              <div key={section.key} className="p-4 rounded-2xl bg-[#fbf7ef] border border-[#eadfcd]">
-                <h4 className="text-sm font-bold text-[#6e4f2f]">{section.title}</h4>
-                <ol className="mt-3 space-y-2 text-sm text-gray-700">
-                  {getSectionQuestions(section.key).map((question, index) => (
-                    <li key={question.id}>
-                      {index + 1}. {question.question_text}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            ))}
+          <div className="space-y-3">
+            {template?.sections.map((section) => {
+              const sectionQuestions = template.questions.filter(q => q.section_key === section.key);
+              return (
+                <div key={section.key} className="border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-700">{section.title}</h4>
+                    <span className="text-[10px] text-slate-400 font-medium">{sectionQuestions.length} perguntas</span>
+                  </div>
+                  <ul className="divide-y divide-slate-100">
+                    {sectionQuestions.map((question, index) => (
+                      <li key={question.id} className="flex gap-3 px-4 py-3">
+                        <span className="flex-shrink-0 w-5 h-5 rounded bg-indigo-50 text-indigo-600 text-[9px] font-bold flex items-center justify-center mt-0.5">
+                          {index + 1}
+                        </span>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          {question.question_text}
+                        </p>
+                      </li>
+                    ))}
+                    {sectionQuestions.length === 0 && (
+                      <li className="px-4 py-3 text-xs text-slate-400 italic">Nenhuma pergunta nesta secção.</li>
+                    )}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="card p-6 bg-[#fdfaf4] border-[#eadfcd]">
-          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2">
-            <ClipboardList size={20} className="text-[#a17e58]" />
-            Avaliações Pendentes
-          </h3>
-          <p className="text-sm text-[#8a6b49] mt-1 mb-6">Processos aguardando sua revisão final.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-sm shrink-0">
+              <ClipboardList size={22} />
+            </div>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <h3 className="text-base font-bold text-slate-900">Avaliações Pendentes</h3>
+              <p className="text-xs text-slate-400 font-medium">Aguardando revisão e nota do gestor.</p>
+            </div>
+          </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             {links.filter(l => l.status === 'answered').length === 0 ? (
-              <div className="py-8 text-center text-[#8a6b49]/50 bg-white/50 rounded-2xl border border-dashed border-[#eadfcd]">
-                Nenhuma avaliação pendente no momento.
+              <div className="py-12 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-xs text-slate-400 font-medium">Nenhuma avaliação pendente.</p>
               </div>
             ) : (
               links.filter(l => l.status === 'answered').map(link => (
-                <div key={link.id} className="p-5 rounded-2xl bg-white border border-[#eadfcd] flex justify-between items-center group hover:shadow-md transition-all hover:border-[#a17e58]/30">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#fbf7ef] text-[#a17e58] flex items-center justify-center shrink-0">
+                <div key={link.id} className="p-4 rounded-2xl bg-white border border-slate-200 flex justify-between items-center group hover:shadow-sm transition-all hover:border-indigo-300">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 flex items-center justify-center shrink-0 transition-colors">
                        <UserRound size={18} />
                     </div>
-                    <div className="flex flex-col gap-0.5">
-                      <h4 className="text-sm font-bold text-[#5e4428]">{link.employee_name}</h4>
-                      <p className="text-xs text-[#8a6b49] font-medium">{link.employee_email || link.recipient_email}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">
-                          Aguardando Revisão
-                        </span>
-                      </div>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <h4 className="text-sm font-bold text-slate-900 truncate">{link.employee_name}</h4>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Aguardando Nota</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setConcludingLink(link)}
-                    className="bg-[#a17e58] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#8a6b49] transition-all flex items-center gap-2 shadow-sm"
+                    className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-sm shrink-0"
                   >
                     Avaliar <ArrowRight size={14} />
                   </button>
@@ -591,45 +597,49 @@ export default function Evaluation360Form() {
           </div>
         </div>
 
-        <div className="card p-6 bg-[#fdfaf4] border-[#eadfcd]">
-          <h3 className="text-lg font-bold text-[#5e4428] flex items-center gap-2">
-            <Check size={20} className="text-[#a17e58]" />
-            Avaliações Concluídas
-          </h3>
-          <p className="text-sm text-[#8a6b49] mt-1 mb-6">Histórico de avaliações finalizadas no sistema.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-sm shrink-0">
+              <CheckCircle2 size={22} />
+            </div>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <h3 className="text-base font-bold text-slate-900">Avaliações Concluídas</h3>
+              <p className="text-xs text-slate-400 font-medium">Histórico de processos finalizados.</p>
+            </div>
+          </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             {links.filter(l => l.status === 'concluded').length === 0 ? (
-              <div className="py-8 text-center text-[#8a6b49]/50 bg-white/50 rounded-2xl border border-dashed border-[#eadfcd]">
-                Nenhuma avaliação concluída ainda.
+              <div className="py-12 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-xs text-slate-400 font-medium">Sem avaliações concluídas.</p>
               </div>
             ) : (
               links.filter(l => l.status === 'concluded').map(link => (
-                <div key={link.id} className="p-4 rounded-2xl bg-white border border-emerald-100 flex justify-between items-center group hover:shadow-sm transition-all">
-                  <div className="flex items-center gap-4">
+                <div key={link.id} className="p-4 rounded-2xl bg-white border border-slate-200 flex justify-between items-center group hover:shadow-sm transition-all">
+                  <div className="flex items-center gap-4 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                       <CheckCircle2 size={18} />
+                       <Check size={18} />
                     </div>
-                    <div className="flex flex-col gap-0.5">
-                      <h4 className="text-sm font-bold text-gray-800">{link.employee_name}</h4>
-                      <p className="text-xs text-gray-500 font-medium">{link.employee_email || link.recipient_email}</p>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <h4 className="text-sm font-bold text-slate-900 truncate">{link.employee_name}</h4>
+                      <p className="text-[10px] text-slate-400 font-medium truncate uppercase tracking-widest">Concluído</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={async () => {
                         await handleToggleSubmission(link.token);
                         setShowDashboard(link.token);
                       }}
-                      className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all flex items-center gap-2"
+                      className="px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-bold hover:bg-slate-100 transition-all flex items-center gap-1.5"
                     >
-                      Ver Dashboard <FileBarChart size={14} />
+                      Dashboard <FileBarChart size={12} />
                     </button>
                     <button
                       onClick={() => handleDeleteInvite(link.id)}
-                      className="p-2 text-red-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                      className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>
@@ -640,12 +650,20 @@ export default function Evaluation360Form() {
       </div>
 
       {concludingLink && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-[#fdfaf4] rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in duration-300 border border-[#eadfcd]">
-            <div className="p-7 border-b border-[#eadfcd] flex justify-between items-center bg-[#fbf7ef]">
-              <h3 className="text-xl font-bold text-[#5e4428]">Avaliar Colaborador</h3>
-              <button onClick={() => setConcludingLink(null)} className="text-amber-700 hover:bg-amber-100 p-1 rounded-full">
-                <ArrowLeft size={20} />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in duration-300 border border-slate-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-sm">
+                  <FileText size={20} />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <h3 className="text-lg font-bold text-slate-900 leading-none">Avaliar Colaborador</h3>
+                  <p className="text-xs text-slate-400 font-medium">Finalização da Avaliação 360°</p>
+                </div>
+              </div>
+              <button onClick={() => setConcludingLink(null)} className="text-slate-400 hover:bg-slate-50 p-2 rounded-xl transition-colors">
+                <XCircle size={24} />
               </button>
             </div>
             <form onSubmit={handleConclude} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
@@ -741,7 +759,7 @@ export default function Evaluation360Form() {
         </div>
       )}
 
-      <div className="card p-6">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
         <div className="flex items-center gap-3 mb-5">
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
             <Eye size={20} />

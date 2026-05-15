@@ -98,19 +98,14 @@ export default function AlertsPage() {
       <PageHeader 
         title="Notificações e Alertas"
         actions={
-          <div className="flex items-center gap-2">
-            <button onClick={() => navigate(-1)} className="btn btn-secondary !p-2 rounded-full">
-              <ArrowLeft size={18} />
+          alerts.length > 0 && (
+            <button
+              onClick={handleDismissAll}
+              className="btn btn-outline text-red-600 hover:bg-red-50"
+            >
+              <Trash2 size={16} /> Dispensar Todas
             </button>
-            {alerts.length > 0 && (
-              <button
-                onClick={handleDismissAll}
-                className="btn btn-outline text-red-600 hover:bg-red-50"
-              >
-                <Trash2 size={16} /> Dispensar Todas
-              </button>
-            )}
-          </div>
+          )
         }
       />
 
@@ -134,7 +129,7 @@ export default function AlertsPage() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
