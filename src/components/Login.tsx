@@ -12,9 +12,9 @@ const Logo = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg" | "xl
     xl: "w-24 h-24"
   };
   return (
-    <img 
-      src="/TOKNOW.png" 
-      alt="TOKNOW" 
+    <img
+      src="/TOKNOW.png"
+      alt="TOKNOW"
       className={`${sizeClasses[size]} object-contain site-logo ${className}`}
     />
   );
@@ -27,7 +27,7 @@ export default function Login() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, user } = useAuth();
@@ -72,22 +72,27 @@ export default function Login() {
       }, 1500);
       return;
     }
-    
+
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-[#0a0f1a] flex">
-      {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] bg-gradient-to-br from-blue-700 via-blue-600 to-blue-800 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          <div className="w-full h-full" style={{backgroundImage: 'radial-gradient(circle at 25% 25%, white 2%, transparent 2%), radial-gradient(circle at 75% 75%, white 2%, transparent 2%)', backgroundSize: '60px 60px'}}></div>
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundImage: 'radial-gradient(circle at 25% 25%, white 2%, transparent 2%), radial-gradient(circle at 75% 75%, white 2%, transparent 2%)',
+              backgroundSize: '60px 60px'
+            }}
+          ></div>
         </div>
         <div className="relative z-10 flex flex-col justify-center items-center w-full p-8 xl:p-12 text-white">
           <div className="bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mb-6 sm:mb-8 border border-white/20 p-4">
             <Logo size="xl" />
           </div>
-           <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">TOKNOW</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">TOKNOW</h1>
           <p className="text-blue-100 text-base sm:text-lg text-center max-w-md mb-6 sm:mb-8 px-4">
             Plataforma corporativa de Compliance e Gestão de Risco
           </p>
@@ -104,16 +109,14 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 xl:w-[45%] flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md lg:max-w-lg">
           <div className="bg-white dark:bg-[#1f2937] rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-            {/* Mobile Logo */}
             <div className="lg:hidden text-center mb-6">
               <div className="bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 w-14 h-14 p-2">
                 <Logo size="md" className="!w-10 !h-10" />
               </div>
-               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">TOKNOW</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">TOKNOW</h2>
             </div>
 
             <div className="mb-6 sm:mb-8">
@@ -127,7 +130,7 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Nome Completo</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                       <User className="h-5 w-5 text-gray-400" strokeWidth={2} />
                     </div>
                     <input
@@ -146,7 +149,7 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Email</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                       <Mail className="h-5 w-5 text-gray-400" strokeWidth={2} />
                     </div>
                     <input
@@ -165,7 +168,7 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Nome de Usuário</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                       <User className="h-5 w-5 text-gray-400" strokeWidth={2} />
                     </div>
                     <input
@@ -184,7 +187,7 @@ export default function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Senha</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                       <Lock className="h-5 w-5 text-gray-400" strokeWidth={2} />
                     </div>
                     <input
@@ -200,7 +203,7 @@ export default function Login() {
                     <div className="space-y-2 mt-3">
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Confirmar Senha</label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                           <Lock className="h-5 w-5 text-gray-400" strokeWidth={2} />
                         </div>
                         <input
@@ -270,9 +273,9 @@ export default function Login() {
               </div>
             )}
           </div>
-          
+
           <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
-             © 2026 TOKNOW
+            © 2026 TOKNOW
           </p>
         </div>
       </div>

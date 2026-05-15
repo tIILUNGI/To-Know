@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Users, RotateCcw, Heart, Mail } from "lucide-react";
+import { Heart, Mail, Plus, RotateCcw, Trash2, Users } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
+import PageHeader from "../common/PageHeader";
 
 export default function EvaluationList() {
   const [evaluations, setEvaluations] = useState<any[]>([]);
@@ -49,19 +50,29 @@ export default function EvaluationList() {
     setDeleteTarget(null);
   };
 
-  const getClassColor = (cls: string) => {
-    switch (cls) {
-      case "Excelente": return "bg-emerald-50 text-emerald-700";
-      case "Bom": return "bg-blue-50 text-blue-700";
-      case "Satisfatório": return "bg-amber-50 text-amber-700";
-      case "Insatisfatório": return "bg-orange-50 text-orange-700";
-      case "Crítico": return "bg-red-50 text-red-700";
-      default: return "bg-gray-50 text-gray-600";
+  const getClassColor = (classification: string) => {
+    switch (classification) {
+      case "Excelente":
+        return "bg-emerald-50 text-emerald-700";
+      case "Bom":
+        return "bg-blue-50 text-blue-700";
+      case "Satisfatório":
+        return "bg-amber-50 text-amber-700";
+      case "Insatisfatório":
+        return "bg-orange-50 text-orange-700";
+      case "Crítico":
+        return "bg-red-50 text-red-700";
+      default:
+        return "bg-slate-100 text-slate-600";
     }
   };
 
+  const performanceCount = evaluations.filter((evaluation) => evaluation.evaluation_type === "Performance").length;
+  const satisfactionCount = evaluations.filter((evaluation) => evaluation.evaluation_type === "Satisfaction").length;
+  const reevaluationCount = evaluations.filter((evaluation) => evaluation.evaluation_type === "Reavaliação").length;
+
   return (
-    <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-500">
+    <div className="space-y-6">
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Avaliação"
@@ -71,151 +82,154 @@ export default function EvaluationList() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Avaliações</h2>
-          </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to="/avaliacoes/nova"
-                className="btn btn-primary text-sm"
-              >
-                <Plus size={16} strokeWidth={2} /> Avaliar Fornecedor
-              </Link>
-              <Link
-                to="/avaliacoes/reevaluation"
-                className="btn btn-secondary text-sm"
-              >
-                <RotateCcw size={16} strokeWidth={2} /> Reavaliação
-              </Link>
-              <Link
-                to="/avaliacoes/cliente"
-                className="btn btn-secondary text-sm"
-              >
-                <Users size={16} strokeWidth={2} /> Avaliar Cliente
-              </Link>
-              <Link
-                to="/avaliacoes/360"
-                className="btn btn-secondary text-sm"
-              >
-                <Mail size={16} strokeWidth={2} /> Avaliação 360° por Email
-              </Link>
-              <Link
-                to="/avaliacoes/nova?type=Satisfaction&entity=Supplier"
-                className="btn btn-secondary text-sm"
-              >
-                <Heart size={16} strokeWidth={2} /> Satisfação Fornecedor
-              </Link>
-              <Link
-                to="/avaliacoes/cliente?type=Satisfaction"
-                className="btn btn-secondary text-sm"
-              >
-                <Heart size={16} strokeWidth={2} /> Satisfação Cliente
-              </Link>
-              <Link
-                to="/avaliacoes/cliente/satisfacao"
-                className="btn btn-primary text-sm"
-              >
-                <Mail size={16} strokeWidth={2} /> Pesquisa Customizada
-              </Link>
-            </div>
+      <PageHeader
+        title="Avaliações"
+        subtitle="Vista central das avaliações concluídas, pendentes e ciclos de reavaliação do sistema."
+        actions={
+          <Link to="/avaliacoes/nova" className="btn btn-primary">
+            <Plus size={16} strokeWidth={2} />
+            Nova Avaliação
+          </Link>
+        }
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="metric-card">
+          <p className="metric-label">Total Registado</p>
+          <p className="metric-value">{evaluations.length}</p>
+          <p className="metric-note">Todas as avaliações atualmente registadas</p>
         </div>
+        <div className="metric-card">
+          <p className="metric-label">Performance</p>
+          <p className="metric-value">{performanceCount}</p>
+          <p className="metric-note">Avaliações orientadas à performance</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label">Satisfação</p>
+          <p className="metric-value">{satisfactionCount}</p>
+          <p className="metric-note">Avaliações ligadas à satisfação das entidades</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label">Reavaliações</p>
+          <p className="metric-value">{reevaluationCount}</p>
+          <p className="metric-note">Ciclos reabertos para revisão e novo parecer</p>
+        </div>
+      </div>
+
+      <div className="toolbar-card space-y-4">
+        <div>
+          <h2 className="text-[1.35rem] font-semibold text-slate-900">Ações rápidas</h2>
+          <p className="mt-1 text-[1rem] text-slate-500">Atalhos diretos para os fluxos mais usados da área de avaliações.</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Link to="/avaliacoes/nova" className="btn btn-primary">
+            <Plus size={16} strokeWidth={2} />
+            Avaliar Fornecedor
+          </Link>
+          <Link to="/avaliacoes/reevaluation" className="btn btn-secondary">
+            <RotateCcw size={16} strokeWidth={2} />
+            Reavaliação
+          </Link>
+          <Link to="/avaliacoes/cliente" className="btn btn-secondary">
+            <Users size={16} strokeWidth={2} />
+            Avaliar Cliente
+          </Link>
+          <Link to="/avaliacoes/360" className="btn btn-secondary">
+            <Mail size={16} strokeWidth={2} />
+            Avaliação 360° por Email
+          </Link>
+          <Link to="/avaliacoes/nova?type=Satisfaction&entity=Supplier" className="btn btn-outline">
+            <Heart size={16} strokeWidth={2} />
+            Satisfação Fornecedor
+          </Link>
+          <Link to="/avaliacoes/cliente?type=Satisfaction" className="btn btn-outline">
+            <Heart size={16} strokeWidth={2} />
+            Satisfação Cliente
+          </Link>
+          <Link to="/avaliacoes/cliente/satisfacao" className="btn btn-outline">
+            <Mail size={16} strokeWidth={2} />
+            Pesquisa Customizada
+          </Link>
+        </div>
+      </div>
 
       <div className="card overflow-hidden">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 border-b border-gray-100">
-          <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100">
-            <div className="text-[10px] font-medium text-blue-600 uppercase">Total</div>
-            <div className="text-lg sm:text-xl font-bold text-blue-700">{evaluations.length}</div>
-          </div>
-          <div className="bg-emerald-50 p-2 sm:p-3 rounded-lg border border-emerald-100">
-            <div className="text-[10px] font-medium text-emerald-600 uppercase">Performance</div>
-            <div className="text-lg sm:text-xl font-bold text-emerald-700">
-              {evaluations.filter((e) => e.evaluation_type === "Performance").length}
-            </div>
-          </div>
-          <div className="bg-indigo-50 p-2 sm:p-3 rounded-lg border border-indigo-100">
-            <div className="text-[10px] font-medium text-indigo-600 uppercase">Satisfação</div>
-            <div className="text-lg sm:text-xl font-bold text-indigo-700">
-              {evaluations.filter((e) => e.evaluation_type === "Satisfaction").length}
-            </div>
-          </div>
-          <div className="bg-amber-50 p-2 sm:p-3 rounded-lg border border-amber-100">
-            <div className="text-[10px] font-medium text-amber-600 uppercase">Reavaliações</div>
-            <div className="text-lg sm:text-xl font-bold text-amber-700">
-              {evaluations.filter((e) => e.evaluation_type === "Reavaliação").length}
-            </div>
-          </div>
-        </div>
-
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                <th className="px-3 sm:px-4 py-2.5">Data</th>
-                <th className="px-3 sm:px-4 py-2.5">Código</th>
-                <th className="px-3 sm:px-4 py-2.5">Nome da Avaliação</th>
-                <th className="px-3 sm:px-4 py-2.5">Entidade</th>
-                <th className="px-3 sm:px-4 py-2.5">Tipo</th>
-                <th className="px-3 sm:px-4 py-2.5 hidden sm:table-cell">Periodicidade</th>
-                <th className="px-3 sm:px-4 py-2.5">Score</th>
-                <th className="px-3 sm:px-4 py-2.5">Classificação</th>
-                <th className="px-3 sm:px-4 py-2.5 text-right">Acções</th>
+              <tr>
+                <th>Data</th>
+                <th>Código</th>
+                <th>Nome da Avaliação</th>
+                <th>Entidade</th>
+                <th>Tipo</th>
+                <th className="hidden sm:table-cell">Periodicidade</th>
+                <th>Score</th>
+                <th>Classificação</th>
+                <th className="text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
-                    Carregando...
+                  <td colSpan={9} className="py-16 text-center text-slate-400">
+                    A carregar avaliações...
                   </td>
                 </tr>
               ) : evaluations.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
-                    Nenhuma avaliação encontrada.
+                  <td colSpan={9} className="p-0">
+                    <div className="empty-state">
+                      <div className="empty-state-icon">
+                        <Mail size={28} />
+                      </div>
+                      <p className="text-[1.2rem] font-semibold text-slate-800">Nenhuma avaliação registada</p>
+                      <p>Crie a primeira avaliação para começar a alimentar o histórico do sistema.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
-                evaluations.map((ev) => (
-                  <tr key={ev.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 sm:px-4 py-2.5 text-xs sm:text-sm text-gray-500">
-                      {new Date(ev.created_at).toLocaleDateString("pt-BR")}
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-900">
-                      {ev.evaluation_number || "-"}
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-900">
-                      {ev.name || "-"}
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-900">
-                      {ev.entity_name}
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5">
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                        ev.type === "Performance" ? "bg-emerald-50 text-emerald-600" : "bg-indigo-50 text-indigo-600"
-                      }`}>
-                        {ev.type}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5 text-xs text-gray-500 hidden md:table-cell">{ev.periodicity || "—"}</td>
-                    <td className="px-3 sm:px-4 py-2.5">
-                      <span className={`text-sm font-semibold ${
-                        ev.percentage >= 90 ? "text-emerald-600" : ev.percentage >= 75 ? "text-blue-600" : ev.percentage >= 60 ? "text-amber-600" : "text-red-600"
-                      }`}>
-                        {Math.round(ev.percentage)}%
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5">
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${getClassColor(ev.classification)}`}>
-                        {ev.classification}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5 text-right">
-                      <button
-                        onClick={() => setDeleteTarget(ev)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                evaluations.map((evaluation) => (
+                  <tr key={evaluation.id}>
+                    <td className="text-slate-500">{new Date(evaluation.created_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="font-semibold text-slate-900">{evaluation.evaluation_number || "-"}</td>
+                    <td className="font-semibold text-slate-900">{evaluation.name || "-"}</td>
+                    <td className="font-medium text-slate-900">{evaluation.entity_name}</td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          evaluation.type === "Performance" ? "bg-emerald-50 text-emerald-700" : "bg-indigo-50 text-indigo-700"
+                        }`}
                       >
-                        <Trash2 size={14} />
+                        {evaluation.type}
+                      </span>
+                    </td>
+                    <td className="hidden md:table-cell text-slate-500">{evaluation.periodicity || "—"}</td>
+                    <td>
+                      <span
+                        className={`text-[1rem] font-semibold ${
+                          evaluation.percentage >= 90
+                            ? "text-emerald-600"
+                            : evaluation.percentage >= 75
+                              ? "text-blue-600"
+                              : evaluation.percentage >= 60
+                                ? "text-amber-600"
+                                : "text-red-600"
+                        }`}
+                      >
+                        {Math.round(evaluation.percentage)}%
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${getClassColor(evaluation.classification)}`}>{evaluation.classification}</span>
+                    </td>
+                    <td className="text-right">
+                      <button
+                        onClick={() => setDeleteTarget(evaluation)}
+                        className="topbar-icon-btn !h-10 !w-10 !rounded-[12px] !text-slate-400 hover:!text-red-600"
+                      >
+                        <Trash2 size={15} />
                       </button>
                     </td>
                   </tr>

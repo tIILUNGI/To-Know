@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bell, X, AlertTriangle, Clock, AlertCircle, CheckCircle, Info, Filter } from "lucide-react";
+import { AlertCircle, AlertTriangle, Bell, CheckCircle, Info, X } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
 type Alert = {
@@ -32,7 +32,6 @@ export default function AlertsPanel() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<string>("all");
   const [isOpen, setIsOpen] = useState(false);
 
   const fetchAlerts = () => {
@@ -46,7 +45,7 @@ export default function AlertsPanel() {
       })
       .then((data: Alert[]) => {
         setAlerts(data);
-        setUnreadCount(data.filter((n) => !n.is_read).length);
+        setUnreadCount(data.filter((notification) => !notification.is_read).length);
         setLoading(false);
       })
       .catch(() => {
@@ -68,7 +67,7 @@ export default function AlertsPanel() {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      setAlerts((prev) => prev.filter((a) => a.id !== id));
+      setAlerts((prev) => prev.filter((alert) => alert.id !== id));
       setUnreadCount((prev) => Math.max(0, prev - 1));
       addToast("Notificação dispensada.", "success");
     } catch {
@@ -90,101 +89,90 @@ export default function AlertsPanel() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
     if (diff < 1) return "Agora";
     if (diff < 24) return `${diff}h atrás`;
     if (diff < 48) return "Ontem";
     return date.toLocaleDateString("pt-PT", { day: "2-digit", month: "short" });
   };
 
-  const filteredAlerts = filterType === "all" 
-    ? alerts 
-    : alerts.filter((a) => a.type === filterType);
-
-  const criticalCount = alerts.filter((a) => a.priority === "Critical").length;
-  const warningCount = alerts.filter((a) => a.priority === "Warning").length;
+  const criticalCount = alerts.filter((alert) => alert.priority === "Critical").length;
+  const warningCount = alerts.filter((alert) => alert.priority === "Warning").length;
 
   return (
     <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
-      >
-        <Bell size={22} className={unreadCount > 0 ? "text-amber-600" : "text-gray-500"} />
-        {unreadCount > 0 && (
-          <span className={`absolute -top-1 -right-1 w-5 h-5 text-[10px] font-bold text-white rounded-full flex items-center justify-center ${
-            criticalCount > 0 ? "bg-red-500" : warningCount > 0 ? "bg-amber-500" : "bg-blue-500"
-          }`}>
+      <button onClick={() => setIsOpen((prev) => !prev)} className="topbar-icon-btn relative">
+        <Bell size={18} className={unreadCount > 0 ? "text-amber-600" : "text-slate-600"} />
+        {unreadCount > 0 ? (
+          <span
+            className={`absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
+              criticalCount > 0 ? "bg-red-500" : warningCount > 0 ? "bg-amber-500" : "bg-blue-500"
+            }`}
+          >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
-        )}
+        ) : null}
       </button>
 
-      {isOpen && (
+      {isOpen ? (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-96 max-h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-gray-50">
-              <div className="flex items-center justify-between">
+
+          <div className="absolute right-0 top-full z-50 mt-3 w-[24rem] overflow-hidden rounded-[20px] border border-[#dbe6f3] bg-white shadow-[0_24px_48px_rgba(15,39,70,0.14)]">
+            <div className="border-b border-slate-100 bg-slate-50/80 p-4">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Bell size={18} className="text-gray-600" />
-                  <h3 className="font-bold text-gray-900">Notificações</h3>
-                  {unreadCount > 0 && (
-                    <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                  <Bell size={18} className="text-slate-600" />
+                  <h3 className="text-[1.2rem] font-semibold text-slate-900">Notificações</h3>
+                  {unreadCount > 0 ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
                       {unreadCount} nova(s)
                     </span>
-                  )}
+                  ) : null}
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-gray-200 rounded-lg">
-                  <X size={16} className="text-gray-400" />
+                <button onClick={() => setIsOpen(false)} className="topbar-icon-btn !h-8 !w-8 !rounded-[10px]">
+                  <X size={14} className="text-slate-400" />
                 </button>
               </div>
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleDismissAll}
-                  className="mt-2 text-xs text-gray-500 hover:text-red-600 transition-colors"
-                >
+
+              {unreadCount > 0 ? (
+                <button onClick={handleDismissAll} className="mt-2 text-xs text-slate-500 transition-colors hover:text-red-600">
                   Dispensar todos
                 </button>
-              )}
+              ) : null}
             </div>
 
             <div className="max-h-80 overflow-y-auto">
               {loading ? (
-                <div className="p-6 text-center text-gray-400 text-sm">Carregando...</div>
-              ) : filteredAlerts.length === 0 ? (
-                <div className="p-6 text-center">
-                  <CheckCircle size={32} className="mx-auto text-green-300 mb-2" />
-                  <p className="text-sm text-gray-500">Nenhuma notificação</p>
+                <div className="p-8 text-center text-sm text-slate-400">Carregando...</div>
+              ) : alerts.length === 0 ? (
+                <div className="p-8 text-center">
+                  <CheckCircle size={32} className="mx-auto mb-2 text-emerald-300" />
+                  <p className="text-sm text-slate-500">Nenhuma notificação</p>
                 </div>
               ) : (
-                filteredAlerts.map((alert) => {
+                alerts.map((alert) => {
                   const config = priorityConfig[alert.priority] || priorityConfig.Info;
                   const Icon = config.icon;
                   return (
-                    <div
-                      key={alert.id}
-                      className={`p-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${config.bg}`}
-                    >
+                    <div key={alert.id} className={`border-b border-slate-50 p-3 transition-colors hover:bg-slate-50 ${config.bg}`}>
                       <div className="flex items-start gap-2">
-                        <Icon size={16} className={config.color + " mt-0.5 flex-shrink-0"} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] px-1.5 py-0.5 bg-white rounded font-medium text-gray-600">
+                        <Icon size={16} className={`${config.color} mt-0.5 shrink-0`} />
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center gap-2">
+                            <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
                               {typeLabels[alert.type] || alert.type || "Notificação"}
                             </span>
-                            <span className="text-[10px] text-gray-400">{formatDate(alert.created_at)}</span>
+                            <span className="text-[10px] text-slate-400">{formatDate(alert.created_at)}</span>
                           </div>
-                          <p className="text-sm text-gray-800 leading-tight">{alert.message}</p>
+                          <p className="text-sm leading-tight text-slate-800">{alert.message}</p>
                         </div>
-                        <button
-                          onClick={() => handleDismiss(alert.id)}
-                          className="p-1 hover:bg-gray-200 rounded-lg flex-shrink-0"
-                        >
-                          <X size={12} className="text-gray-400" />
+                        <button onClick={() => handleDismiss(alert.id)} className="topbar-icon-btn !h-8 !w-8 !rounded-[10px]">
+                          <X size={12} className="text-slate-400" />
                         </button>
                       </div>
                     </div>
@@ -193,26 +181,24 @@ export default function AlertsPanel() {
               )}
             </div>
 
-            <div className="p-2 border-t border-gray-100 bg-gray-50">
-              <div className="flex items-center justify-between text-[10px] text-gray-500">
+            <div className="border-t border-slate-100 bg-slate-50/80 p-2">
+              <div className="flex items-center justify-between text-[10px] text-slate-500">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-red-500" /> {criticalCount} críticos
+                    <span className="h-2 w-2 rounded-full bg-red-500" /> {criticalCount} críticos
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" /> {warningCount} avisos
+                    <span className="h-2 w-2 rounded-full bg-amber-500" /> {warningCount} avisos
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Link to="/alertas" onClick={() => setIsOpen(false)} className="text-blue-600 hover:text-blue-700 font-medium">
-                    Ver todas
-                  </Link>
-                </div>
+                <Link to="/alertas" onClick={() => setIsOpen(false)} className="font-medium text-blue-600 hover:text-blue-700">
+                  Ver todas
+                </Link>
               </div>
             </div>
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

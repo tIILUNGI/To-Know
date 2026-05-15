@@ -42,8 +42,10 @@ export const AuthProvider = ({ children }: any) => {
       const meData = await getCurrentUser();
       setUser(normalizeUser(meData));
       return true;
-    } catch {
-      return false;
+    } catch (error) {
+      const status = Number((error as any)?.status ?? 0);
+      if (status === 401 || status === 403) return false;
+      throw error;
     }
   };
 

@@ -1,8 +1,21 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, CheckCircle2, XCircle, Clock, AlertCircle, Trash2, ShieldCheck, Send, Lock, TrendingUp } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Lock,
+  Plus,
+  Send,
+  ShieldCheck,
+  Trash2,
+  TrendingUp,
+  XCircle,
+} from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
+import PageHeader from "../common/PageHeader";
 
 export default function ProcessWorkflow() {
   const [processes, setProcesses] = useState<any[]>([]);
@@ -55,42 +68,54 @@ export default function ProcessWorkflow() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Aprovado": return <CheckCircle2 className="text-emerald-500" size={18} />;
-      case "Aprovado com restrições": return <AlertCircle className="text-orange-500" size={18} />;
-      case "Reprovado": return <XCircle className="text-red-500" size={18} />;
-      case "Rascunho": return <Clock className="text-gray-400" size={18} />;
-      case "Pendente": return <Clock className="text-amber-400" size={18} />;
-      case "Em análise": return <AlertCircle className="text-blue-500" size={18} />;
-      case "Em aprovação": return <ShieldCheck className="text-amber-500" size={18} />;
-      case "Submetido": return <Send className="text-indigo-500" size={18} />;
-      case "Encerrado": return <Lock className="text-gray-500" size={18} />;
-      default: return <AlertCircle className="text-gray-400" size={18} />;
+      case "Aprovado":
+        return <CheckCircle2 className="text-emerald-500" size={18} />;
+      case "Aprovado com restrições":
+        return <AlertCircle className="text-orange-500" size={18} />;
+      case "Reprovado":
+        return <XCircle className="text-red-500" size={18} />;
+      case "Rascunho":
+        return <Clock className="text-slate-400" size={18} />;
+      case "Pendente":
+        return <Clock className="text-amber-500" size={18} />;
+      case "Em análise":
+        return <AlertCircle className="text-blue-500" size={18} />;
+      case "Em aprovação":
+        return <ShieldCheck className="text-amber-500" size={18} />;
+      case "Submetido":
+        return <Send className="text-indigo-500" size={18} />;
+      case "Encerrado":
+        return <Lock className="text-slate-500" size={18} />;
+      default:
+        return <AlertCircle className="text-slate-400" size={18} />;
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const map: any = {
-      "Rascunho": "bg-gray-100 text-gray-600",
-      "Pendente": "bg-amber-100 text-amber-700",
-      "Em análise": "bg-blue-100 text-blue-700",
-      "Submetido": "bg-indigo-100 text-indigo-700",
-      "Em aprovação": "bg-amber-100 text-amber-700",
-      "Aprovado": "bg-emerald-100 text-emerald-700",
-      "Aprovado com restrições": "bg-orange-100 text-orange-700",
-      "Reprovado": "bg-red-100 text-red-700",
-      "Encerrado": "bg-gray-100 text-gray-600",
+    const map: Record<string, string> = {
+      Rascunho: "bg-slate-100 text-slate-600",
+      Pendente: "bg-amber-50 text-amber-700",
+      "Em análise": "bg-blue-50 text-blue-700",
+      Submetido: "bg-indigo-50 text-indigo-700",
+      "Em aprovação": "bg-amber-50 text-amber-700",
+      Aprovado: "bg-emerald-50 text-emerald-700",
+      "Aprovado com restrições": "bg-orange-50 text-orange-700",
+      Reprovado: "bg-red-50 text-red-700",
+      Encerrado: "bg-slate-100 text-slate-600",
     };
-    return map[status] || "bg-gray-100 text-gray-600";
+    return map[status] || "bg-slate-100 text-slate-600";
   };
 
-  const filteredProcesses = filterStatus
-    ? processes.filter((p) => p.status === filterStatus)
-    : processes;
+  const filteredProcesses = filterStatus ? processes.filter((process) => process.status === filterStatus) : processes;
+  const statuses: string[] = Array.from(new Set(processes.map((process) => String(process.status)).filter(Boolean)));
 
-  const statuses = [...new Set(processes.map((p) => p.status))];
+  const approvedCount = processes.filter((process) => process.status === "Aprovado").length;
+  const pendingCount = processes.filter((process) => process.status === "Pendente").length;
+  const analysisCount = processes.filter((process) => process.status === "Em análise").length;
+  const rejectedCount = processes.filter((process) => process.status === "Reprovado").length;
 
   return (
-    <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-500">
+    <div className="space-y-6">
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Processo"
@@ -100,145 +125,180 @@ export default function ProcessWorkflow() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Processos</h2>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/processos/novo?type=approval&entity=Supplier"
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
-          >
-            <Plus size={16} />
-            Aprovar Fornecedor
-          </Link>
-          <Link
-            to="/processos/novo?type=approval&entity=Client"
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition-colors"
-          >
-            <Plus size={16} />
-            Aprovar Cliente
-          </Link>
-          <Link
-            to="/avaliacoes/nova?type=Performance&entity=Supplier"
-            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors"
-          >
-            <TrendingUp size={16} />
-            Avaliar Fornecedor
-          </Link>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg font-medium focus:ring-2 focus:ring-blue-100 outline-none"
-          >
-            <option value="">Todos os Status</option>
-            {statuses.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-         </div>
-       </div>
+      <PageHeader
+        title="Processos"
+        subtitle="Gestão do pipeline operacional de aprovação, análise, decisão e acompanhamento."
+        actions={
+          <>
+            <Link to="/processos/novo?type=approval&entity=Supplier" className="btn btn-primary">
+              <Plus size={16} />
+              Aprovar Fornecedor
+            </Link>
+            <Link to="/processos/novo?type=approval&entity=Client" className="btn btn-secondary">
+              <Plus size={16} />
+              Aprovar Cliente
+            </Link>
+            <Link to="/avaliacoes/nova?type=Performance&entity=Supplier" className="btn btn-outline">
+              <TrendingUp size={16} />
+              Avaliar Fornecedor
+            </Link>
+          </>
+        }
+      />
 
-         {/* Stats bar */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Total de Processos</p>
+              <p className="metric-value">{processes.length}</p>
+              <p className="metric-note">Registos operacionais carregados no fluxo</p>
+            </div>
+            <div className="module-icon">
+              <FileText size={19} />
+            </div>
+          </div>
+        </div>
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Pendentes</p>
+              <p className="metric-value">{pendingCount}</p>
+              <p className="metric-note">Processos que aguardam avanço ou decisão</p>
+            </div>
+            <div className="module-icon">
+              <Clock size={19} />
+            </div>
+          </div>
+        </div>
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Em Análise</p>
+              <p className="metric-value">{analysisCount}</p>
+              <p className="metric-note">Itens atualmente em validação interna</p>
+            </div>
+            <div className="module-icon">
+              <AlertCircle size={19} />
+            </div>
+          </div>
+        </div>
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Aprovados</p>
+              <p className="metric-value">{approvedCount}</p>
+              <p className="metric-note">Fluxos concluídos com aceite final</p>
+            </div>
+            <div className="module-icon">
+              <CheckCircle2 size={19} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="toolbar-card space-y-4">
         <div className="flex flex-wrap gap-2">
-          {["Rascunho", "Em análise", "Pendente", "Submetido", "Em aprovação", "Aprovado", "Aprovado com restrições", "Reprovado", "Encerrado"].map((s) => {
-            const count = processes.filter((p) => p.status === s).length;
-            if (count === 0) return null;
-            return (
-              <button
-                key={s}
-                onClick={() => setFilterStatus(filterStatus === s ? "" : s)}
-                className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium uppercase tracking-wider transition-all ${
-                  filterStatus === s
-                    ? getStatusBadge(s) + " ring-2 ring-offset-1 ring-blue-300"
-                    : getStatusBadge(s) + " opacity-70 hover:opacity-100"
-                }`}
-              >
-                {s} ({count})
-              </button>
-            );
-          })}
+          <button
+            onClick={() => setFilterStatus("")}
+            className={`badge ${filterStatus === "" ? "bg-blue-50 text-blue-700" : "badge-neutral"} px-3 py-2`}
+          >
+            Todos
+          </button>
+          {statuses.map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus((current) => (current === status ? "" : status))}
+              className={`badge px-3 py-2 ${filterStatus === status ? getStatusBadge(status) : "badge-neutral"}`}
+            >
+              {status}
+            </button>
+          ))}
+          {rejectedCount > 0 ? <span className="badge badge-danger px-3 py-2">Reprovados: {rejectedCount}</span> : null}
         </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {loading ? (
-          <div className="col-span-full text-center py-8">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-6 h-6 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-              <span className="text-sm text-gray-500 font-medium">Carregando...</span>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {loading ? (
+            <div className="empty-state col-span-full min-h-[260px]">
+              <div className="w-10 h-10 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
+              <p className="text-[1.05rem] font-medium text-slate-500">A carregar processos...</p>
             </div>
-          </div>
-        ) : filteredProcesses.length === 0 ? (
-          <div className="col-span-full text-center py-10 text-gray-400 font-medium text-sm">
-            Nenhum processo encontrado.
-          </div>
-        ) : (
-          filteredProcesses.map((process) => (
-            <div
-              key={process.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:border-blue-200 hover:shadow-md transition-all group relative"
-            >
-              {/* Delete button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteTarget(process);
-                }}
-                className="absolute top-3 right-3 p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded-lg hover:bg-red-50"
-              >
-                <Trash2 size={14} />
-              </button>
-
-              <div className="flex justify-between items-start mb-3 pr-8">
-                <span className="text-[10px] sm:text-xs font-medium text-blue-600 px-2 py-0.5 bg-blue-50 rounded">
-                  {process.process_number}
-                </span>
-                <div className="flex items-center gap-1">
-                  {getStatusIcon(process.status)}
-                </div>
+          ) : filteredProcesses.length === 0 ? (
+            <div className="empty-state col-span-full min-h-[260px]">
+              <div className="empty-state-icon">
+                <FileText size={28} />
               </div>
-
-              <h4 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors line-clamp-1">
-                {process.entity_name}
-              </h4>
-                <p className="text-xs text-gray-500 mb-3">
-                  {process.type} • Prioridade{" "}
-                  <span className={`font-medium ${
-                    process.priority === "Crítica" ? "text-red-600" : process.priority === "Alta" ? "text-amber-600" : "text-gray-600"
-                  }`}>
-                    {process.priority}
-                  </span>
-                </p>
-
-              {process.result_percentage !== null && (
-                <div className="mb-3">
-                  <div className="flex justify-between text-[10px] font-medium mb-1">
-                    <span>Score Final</span>
-                    <span>{Math.round(process.result_percentage)}%</span>
+              <p className="text-[1.2rem] font-semibold text-slate-800">Nenhum processo encontrado</p>
+              <p>Ajuste o estado selecionado ou crie um novo fluxo para iniciar o acompanhamento.</p>
+            </div>
+          ) : (
+            filteredProcesses.map((process) => (
+              <div key={process.id} className="module-card min-h-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <span className="badge bg-blue-50 text-blue-700">{process.process_number}</span>
+                    <h3 className="module-title text-[1.45rem]">{process.entity_name}</h3>
+                    <p className="module-description">
+                      {process.type} • Prioridade{" "}
+                      <span
+                        className={
+                          process.priority === "Crítica"
+                            ? "text-red-600"
+                            : process.priority === "Alta"
+                              ? "text-amber-600"
+                              : "text-slate-600"
+                        }
+                      >
+                        {process.priority}
+                      </span>
+                    </p>
                   </div>
-                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        process.result_percentage >= 75 ? "bg-green-500" : process.result_percentage >= 60 ? "bg-amber-500" : "bg-red-500"
-                      }`}
-                      style={{ width: `${process.result_percentage}%` }}
-                    ></div>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(process.status)}
+                    <button
+                      onClick={() => setDeleteTarget(process)}
+                      className="topbar-icon-btn !h-10 !w-10 !rounded-[12px] !text-slate-400 hover:!text-red-600"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
-              )}
 
-              <div className="flex justify-between items-center pt-3 border-t border-gray-50">
-                <span className="text-[10px] text-gray-400">Por {process.opener_name}</span>
-                <Link
-                   to={`/processos/${process.id}`}
-                  className="text-xs font-medium text-blue-600 hover:underline"
-                >
-                  Ver Detalhes
-                </Link>
+                <div className="flex items-center justify-between gap-3">
+                  <span className={`badge ${getStatusBadge(process.status)}`}>{process.status}</span>
+                  <span className="text-[0.95rem] text-slate-500">Por {process.opener_name}</span>
+                </div>
+
+                {process.result_percentage !== null ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[0.95rem] font-medium text-slate-600">
+                      <span>Score final</span>
+                      <span>{Math.round(process.result_percentage)}%</span>
+                    </div>
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={`h-full rounded-full ${
+                          process.result_percentage >= 75
+                            ? "bg-emerald-500"
+                            : process.result_percentage >= 60
+                              ? "bg-amber-500"
+                              : "bg-red-500"
+                        }`}
+                        style={{ width: `${process.result_percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="mt-auto flex items-center justify-end pt-2">
+                  <Link to={`/processos/${process.id}`} className="module-button w-full">
+                    Ver Detalhes
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

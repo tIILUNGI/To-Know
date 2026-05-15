@@ -12,7 +12,6 @@ import { fileURLToPath } from "url";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
 const db = new Database("toknow.db");
 const SECRET_KEY = process.env.JWT_SECRET || "toknow-secret-key";
 
@@ -428,10 +427,9 @@ const initTables = () => {
       evaluation_number TEXT,
       name TEXT,
       type TEXT,
-      evaluation_type TEXT,
-      periodicity TEXT,
-      evaluator_id INTEGER,
-      evaluation_date DATE,
+evaluation_type TEXT,
+       periodicity TEXT,
+       evaluation_date DATE,
       period_start DATE,
       period_end DATE,
       product_service TEXT,
@@ -977,6 +975,14 @@ app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const viteRoot = __dirname;
+const preferredPorts = Array.from(
+  new Set(
+    [process.env.PORT, "3000", "5173", "4173"]
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && value > 0)
+  )
+);
 
 // ============================================================
 // MIDDLEWARE: CORS
@@ -4036,7 +4042,14 @@ app.get("/api/client-satisfaction/forms/:id/responses", authenticateToken, (req:
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const [{ default: react }, { default: tailwindcss }] = await Promise.all([
+      import("@vitejs/plugin-react"),
+      import("@tailwindcss/vite"),
+    ]);
     const vite = await createViteServer({
+      root: viteRoot,
+      configFile: false,
+      plugins: [react(), tailwindcss()],
       server: { middlewareMode: true },
       appType: "spa",
     });
@@ -4048,10 +4061,28 @@ async function startServer() {
     });
   }
 
-   app.listen(PORT, "0.0.0.0", () => {
-     console.log(`Server running on http://localhost:${PORT}`);
-   });
- }
+  let lastError: unknown = null;
+  for (const port of preferredPorts) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const server = app.listen(port, "0.0.0.0");
+        server.once("listening", () => resolve());
+        server.once("error", (error) => reject(error));
+      });
+      console.log(`Server running on http://localhost:${port}`);
+      return;
+    } catch (error: any) {
+      lastError = error;
+      if (error?.code === "EADDRINUSE") {
+        console.warn(`Port ${port} already in use. Trying another port...`);
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError ?? new Error("Could not start the server on any configured port.");
+}
 
 // ============================================================
 // ERROR HANDLING & LOGGING - Ensure JSON + Debug Logs

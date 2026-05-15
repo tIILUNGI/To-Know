@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, ExternalLink, Trash2, Clock } from "lucide-react";
+import { AlertTriangle, ExternalLink, Plus, Search, Trash2, Clock, Building2, ShieldCheck, Layers3 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
+import PageHeader from "../common/PageHeader";
 
 export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
   const [entities, setEntities] = useState<any[]>([]);
@@ -56,20 +57,29 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
     setDeleteTarget(null);
   };
 
-  const sectors = [...new Set(entities.map((e) => e.sector).filter(Boolean))];
+  const sectors = [...new Set(entities.map((entity) => entity.sector).filter(Boolean))];
   const risks = ["Baixo", "Médio", "Alto"];
 
-  const filteredEntities = entities.filter((e) => {
+  const filteredEntities = entities.filter((entity) => {
     const matchesSearch =
-      e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (e.code && e.code.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesSector = filterSector === "" || e.sector === filterSector;
-    const matchesRisk = filterRisk === "" || e.final_risk_rating === filterRisk;
+      entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (entity.code && entity.code.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSector = filterSector === "" || entity.sector === filterSector;
+    const matchesRisk = filterRisk === "" || entity.final_risk_rating === filterRisk;
     return matchesSearch && matchesSector && matchesRisk;
   });
 
+  const activeCount = entities.filter((entity) => entity.status === "Ativo").length;
+  const highRiskCount = entities.filter((entity) => entity.final_risk_rating === "Alto").length;
+
+  const pageTitle = type === "Supplier" ? "Fornecedores" : "Clientes";
+  const pageSubtitle =
+    type === "Supplier"
+      ? "Gestão centralizada da base de fornecedores, risco, relacionamento e estado de qualificação."
+      : "Gestão centralizada da carteira de clientes, estado operacional e exposição de performance.";
+
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-6">
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Entidade"
@@ -79,52 +89,97 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
         onCancel={() => setDeleteTarget(null)}
       />
 
-       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-         <div>
-           <h1 className="text-lg sm:text-xl font-bold text-gray-900">
-             {type === "Supplier" ? "Fornecedores" : "Clientes"}
-           </h1>
-         </div>
-        <Link
-          to="/entities/new"
-          state={{ type }}
-          className="btn btn-primary text-sm"
-        >
-          <Plus size={16} strokeWidth={2} /> Novo
-        </Link>
+      <PageHeader
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        actions={
+          <Link to="/entities/new" state={{ type }} className="btn btn-primary">
+            <Plus size={16} strokeWidth={2} />
+            Nova Entidade
+          </Link>
+        }
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Total Registado</p>
+              <p className="metric-value">{entities.length}</p>
+              <p className="metric-note">Base total disponível para análise e operação</p>
+            </div>
+            <div className="module-icon">
+              <Building2 size={19} />
+            </div>
+          </div>
+        </div>
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Estado Ativo</p>
+              <p className="metric-value">{activeCount}</p>
+              <p className="metric-note">Entidades disponíveis para utilização imediata</p>
+            </div>
+            <div className="module-icon">
+              <ShieldCheck size={19} />
+            </div>
+          </div>
+        </div>
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Risco Alto</p>
+              <p className="metric-value">{highRiskCount}</p>
+              <p className="metric-note">Entidades que exigem observação mais apertada</p>
+            </div>
+            <div className="module-icon">
+              <AlertTriangle size={19} />
+            </div>
+          </div>
+        </div>
+        <div className="metric-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="metric-label">Sectores</p>
+              <p className="metric-value">{sectors.length}</p>
+              <p className="metric-note">Distribuição setorial atualmente registada</p>
+            </div>
+            <div className="module-icon">
+              <Layers3 size={19} />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <div className="flex-1 relative min-w-0">
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-5 lg:flex-row lg:items-center">
+          <div className="relative flex-1 min-w-0">
             <Search className="input-icon" size={16} />
             <input
               type="text"
-              placeholder="Pesquisar..."
-              className="input-with-icon block w-full text-sm"
+              placeholder="Pesquisar entidade..."
+              className="input-with-icon block w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
-            <select
-              value={filterSector}
-              onChange={(e) => setFilterSector(e.target.value)}
-              className="input text-xs min-w-[100px]"
-            >
-              <option value="">Sector</option>
-              {sectors.map((s) => (
-                <option key={s} value={s}>{s}</option>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <select value={filterSector} onChange={(e) => setFilterSector(e.target.value)} className="input min-w-[180px]">
+              <option value="">Todos os sectores</option>
+              {sectors.map((sector) => (
+                <option key={sector} value={sector}>
+                  {sector}
+                </option>
               ))}
             </select>
-            <select
-              value={filterRisk}
-              onChange={(e) => setFilterRisk(e.target.value)}
-              className="input text-xs min-w-[90px]"
-            >
-              <option value="">Risco</option>
-              {risks.map((r) => (
-                <option key={r} value={r}>{r}</option>
+
+            <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} className="input min-w-[160px]">
+              <option value="">Todo o risco</option>
+              {risks.map((risk) => (
+                <option key={risk} value={risk}>
+                  {risk}
+                </option>
               ))}
             </select>
           </div>
@@ -133,142 +188,144 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-                <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                  <th className="px-3 sm:px-4 py-2.5">Entidade</th>
-                  <th className="px-3 sm:px-4 py-2.5 hidden md:table-cell">Sector</th>
-                  <th className="px-3 sm:px-4 py-2.5 hidden lg:table-cell">NIF</th>
-                  <th className="px-3 sm:px-4 py-2.5">Estado</th>
-                  <th className="px-3 sm:px-4 py-2.5">Relacionamento</th>
-                  <th className="px-3 sm:px-4 py-2.5">Risco</th>
-                  <th className="px-3 sm:px-4 py-2.5 text-right">Acções</th>
-                </tr>
+              <tr>
+                <th>Entidade</th>
+                <th className="hidden md:table-cell">Sector</th>
+                <th className="hidden lg:table-cell">NIF</th>
+                <th>Estado</th>
+                <th>Relacionamento</th>
+                <th>Risco</th>
+                <th className="text-right">Ações</th>
+              </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
-                    Carregando dados...
+                  <td colSpan={7} className="py-16 text-center text-slate-400">
+                    A carregar entidades...
                   </td>
                 </tr>
-               ) : filteredEntities.length === 0 ? (
-                 <tr>
-                   <td colSpan={7} className="px-3 sm:px-4 py-8 text-center text-gray-400 text-sm">
-                     Nenhum registro encontrado.
-                   </td>
-                 </tr>
+              ) : filteredEntities.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    <div className="empty-state">
+                      <div className="empty-state-icon">
+                        <Building2 size={28} />
+                      </div>
+                      <p className="text-[1.2rem] font-semibold text-slate-800">Nenhuma entidade encontrada</p>
+                      <p>Ajuste os filtros ou crie um novo registo para iniciar a base.</p>
+                    </div>
+                  </td>
+                </tr>
               ) : (
                 filteredEntities.map((entity) => (
-                  <tr key={entity.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 sm:px-4 py-2.5">
-                      <div className="flex items-center gap-2 sm:gap-3">
+                  <tr key={entity.id}>
+                    <td>
+                      <div className="flex items-center gap-3">
                         <div
-                          className={`w-8 sm:w-9 h-8 sm:h-9 rounded-lg flex items-center justify-center font-semibold text-white text-sm ${
+                          className={`flex h-11 w-11 items-center justify-center rounded-[14px] text-base font-semibold text-white ${
                             type === "Supplier" ? "bg-blue-600" : "bg-indigo-600"
                           }`}
                         >
                           {entity.name.charAt(0)}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">{entity.name}</p>
-                          <p className="text-[10px] text-gray-500">{entity.code || `ID-${entity.id}`}</p>
+                          <p className="truncate text-[1.02rem] font-semibold text-slate-900">{entity.name}</p>
+                          <p className="text-[0.9rem] text-slate-500">{entity.code || `ID-${entity.id}`}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 sm:px-4 py-2.5 hidden md:table-cell">
-                      <span className="text-sm text-gray-600">{entity.sector || "N/A"}</span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5 text-sm text-gray-500 hidden lg:table-cell">
-                      {entity.tax_id || "-"}
-                    </td>
-                    <td className="px-3 sm:px-4 py-2.5">
+                    <td className="hidden md:table-cell">{entity.sector || "N/A"}</td>
+                    <td className="hidden lg:table-cell text-slate-500">{entity.tax_id || "-"}</td>
+                    <td>
                       <span
                         className={`badge ${
                           entity.status === "Ativo"
                             ? "badge-success"
                             : entity.status === "Em análise"
-                            ? "bg-blue-100 text-blue-800"
-                            : entity.status === "Bloqueado"
-                            ? "bg-red-100 text-red-800"
-                            : entity.status === "Em revisão"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "badge-neutral"
+                              ? "bg-blue-50 text-blue-700"
+                              : entity.status === "Bloqueado"
+                                ? "bg-red-50 text-red-700"
+                                : entity.status === "Em revisão"
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "badge-neutral"
                         }`}
                       >
                         {entity.status}
                       </span>
                     </td>
-                    <td className="px-3 sm:px-4 py-2.5">
+                    <td>
                       <span
                         className={`badge ${
                           entity.relationship_status === "Homologado"
                             ? "badge-success"
                             : entity.relationship_status === "Elegível"
-                            ? "bg-green-100 text-green-800"
-                            : entity.relationship_status === "Em observação"
-                            ? "bg-amber-100 text-amber-800"
-                            : entity.relationship_status === "Restrito"
-                            ? "bg-orange-100 text-orange-800"
-                            : entity.relationship_status === "Suspenso"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : entity.relationship_status === "Desqualificado"
-                            ? "bg-red-100 text-red-800"
-                            : "badge-neutral"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : entity.relationship_status === "Em observação"
+                                ? "bg-amber-50 text-amber-700"
+                                : entity.relationship_status === "Restrito"
+                                  ? "bg-orange-50 text-orange-700"
+                                  : entity.relationship_status === "Suspenso"
+                                    ? "bg-yellow-50 text-yellow-700"
+                                    : entity.relationship_status === "Desqualificado"
+                                      ? "bg-red-50 text-red-700"
+                                      : "badge-neutral"
                         }`}
                       >
                         {entity.relationship_status || "Elegível"}
                       </span>
                     </td>
-                    <td className="px-3 sm:px-4 py-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full ${
                             entity.final_risk_rating === "Alto"
                               ? "bg-red-500"
                               : entity.final_risk_rating === "Médio"
-                              ? "bg-amber-500"
-                              : entity.final_risk_rating === "Baixo"
-                              ? "bg-green-500"
-                              : "bg-gray-300"
+                                ? "bg-amber-500"
+                                : entity.final_risk_rating === "Baixo"
+                                  ? "bg-emerald-500"
+                                  : "bg-slate-300"
                           }`}
-                        ></div>
+                        />
                         <span
-                          className={`text-xs font-medium ${
+                          className={`text-[0.95rem] font-medium ${
                             entity.final_risk_rating === "Alto"
                               ? "text-red-600"
                               : entity.final_risk_rating === "Médio"
-                              ? "text-amber-600"
-                              : entity.final_risk_rating === "Baixo"
-                              ? "text-green-600"
-                              : "text-gray-400"
+                                ? "text-amber-600"
+                                : entity.final_risk_rating === "Baixo"
+                                  ? "text-emerald-600"
+                                  : "text-slate-400"
                           }`}
                         >
                           {entity.final_risk_rating || "Pendente"}
                         </span>
                       </div>
                     </td>
-                     <td className="px-3 sm:px-4 py-2.5 text-right">
-                       <div className="flex items-center justify-end gap-1">
-                         <Link
-                           to={`/entities/${entity.id}`}
-                           className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                         >
-                           <ExternalLink size={14} strokeWidth={2} />
-                         </Link>
-                         <Link
-                           to={`/entities/${entity.id}/history`}
-                           className="p-1.5 sm:p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                           title="Histórico"
-                         >
-                           <Clock size={14} strokeWidth={2} />
-                         </Link>
-                         <button
-                           onClick={() => setDeleteTarget(entity)}
-                           className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                         >
-                           <Trash2 size={14} strokeWidth={2} />
-                         </button>
-                       </div>
-                     </td>
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          to={`/entities/${entity.id}`}
+                          className="topbar-icon-btn !h-10 !w-10 !rounded-[12px] !text-slate-500 hover:!text-blue-600"
+                        >
+                          <ExternalLink size={15} strokeWidth={2} />
+                        </Link>
+                        <Link
+                          to={`/entities/${entity.id}/history`}
+                          className="topbar-icon-btn !h-10 !w-10 !rounded-[12px] !text-slate-500 hover:!text-emerald-600"
+                          title="Histórico"
+                        >
+                          <Clock size={15} strokeWidth={2} />
+                        </Link>
+                        <button
+                          onClick={() => setDeleteTarget(entity)}
+                          className="topbar-icon-btn !h-10 !w-10 !rounded-[12px] !text-slate-500 hover:!text-red-600"
+                        >
+                          <Trash2 size={15} strokeWidth={2} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -276,13 +333,11 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
           </table>
         </div>
 
-        {!loading && filteredEntities.length > 0 && (
-          <div className="px-3 sm:px-4 py-2.5 border-t border-gray-100 bg-gray-50">
-            <span className="text-xs text-gray-500">
-              {filteredEntities.length} de {entities.length} registros
-            </span>
+        {!loading && filteredEntities.length > 0 ? (
+          <div className="border-t border-slate-100 bg-slate-50/80 px-5 py-3 text-[0.95rem] text-slate-500">
+            {filteredEntities.length} de {entities.length} registos visíveis
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
