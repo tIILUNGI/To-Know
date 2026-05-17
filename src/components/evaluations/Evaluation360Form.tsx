@@ -384,7 +384,7 @@ export default function Evaluation360Form() {
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Avaliação 360° por Email</h2>
+          <h2 className="text-xl font-bold text-slate-900">Satisfação do Colaborador (360°)</h2>
           <p className="text-xs text-slate-400 font-medium mt-0.5">Gerencie convites e acompanhe o progresso das submissões.</p>
         </div>
       </div>

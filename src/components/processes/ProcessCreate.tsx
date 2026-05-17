@@ -42,8 +42,9 @@ export default function ProcessCreate() {
    const [showCriteriaSelect, setShowCriteriaSelect] = useState(false);
 
     // Get defaults from query params
-    const entityTypeParam = searchParams.get('entity') === 'Client' ? 'Client' : 'Supplier';
-    const entityTypeDisplay = searchParams.get('entity') === 'Client' ? 'Cliente' : 'Fornecedor';
+    const rawEntity = searchParams.get('entity') || 'Supplier';
+    const entityTypeParam = rawEntity === 'Client' ? 'Client' : (rawEntity === 'Employee' ? 'Employee' : 'Supplier');
+    const entityTypeDisplay = rawEntity === 'Client' ? 'Cliente' : (rawEntity === 'Employee' ? 'Colaborador' : 'Fornecedor');
     const defaultType = searchParams.get('type') === 'approval' ? 'Aprovação' : 'Avaliação';
 
    const [formData, setFormData] = useState({
@@ -89,7 +90,8 @@ export default function ProcessCreate() {
           setProcessTypes(defaultTypes);
         });
         
-       fetch(`/api/entities?type=${entityTypeParam}`, {
+       const fetchUrl = entityTypeParam === 'Employee' ? '/api/employees' : `/api/entities?type=${entityTypeParam}`;
+       fetch(fetchUrl, {
          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
        })
          .then(res => res.json())
@@ -139,7 +141,7 @@ export default function ProcessCreate() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!selectedEntity) newErrors.entity = "Entidade (Fornecedor/Cliente) é obrigatória";
+    if (!selectedEntity) newErrors.entity = `${entityTypeDisplay} é obrigatório(a)`;
     if (!formData.process_type?.trim()) newErrors.process_type = "Tipo de processo é obrigatório";
     if (!formData.open_date?.trim()) newErrors.open_date = "Data é obrigatória";
     if (!formData.responsible_name?.trim()) newErrors.responsible_name = "Responsável é obrigatório";
@@ -158,21 +160,28 @@ export default function ProcessCreate() {
     setLoading(true);
 
     try {
+      const payload: any = {
+        type: formData.process_type,
+        priority: formData.priority,
+        area: formData.requesting_area,
+        justification: formData.justification,
+        criteria_ids: selectedCriteria.map((c: any) => c.id)
+      };
+
+      if (entityTypeParam === 'Employee') {
+        payload.employee_id = selectedEntity?.id;
+      } else {
+        payload.entity_id = selectedEntity?.id;
+        payload.entity_type = entityTypeParam;
+      }
+
       const res = await fetch("/api/processes", {
         method: "POST",
         headers: { 
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          entity_id: selectedEntity?.id,
-          entity_type: entityTypeParam,
-          type: formData.process_type,
-          priority: formData.priority,
-          area: formData.requesting_area,
-          justification: formData.justification,
-          criteria_ids: selectedCriteria.map((c: any) => c.id)
-        })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -247,7 +256,9 @@ export default function ProcessCreate() {
               <div className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
                 <div>
                   <p className="text-sm font-bold text-gray-900">{selectedEntity.name}</p>
-                  <p className="text-xs text-gray-500">{selectedEntity.code} • {selectedEntity.entity_type}</p>
+                  <p className="text-xs text-gray-500">
+                    {entityTypeParam === 'Employee' ? selectedEntity.department : selectedEntity.code} • {entityTypeParam === 'Employee' ? selectedEntity.position : selectedEntity.entity_type}
+                  </p>
                 </div>
                 <button type="button" onClick={removeEntity} className="text-indigo-600 hover:text-indigo-700">
                   <X size={18} />
@@ -274,7 +285,9 @@ export default function ProcessCreate() {
                     className="p-3 text-left bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-colors"
                   >
                     <p className="text-sm font-medium text-gray-900">{entity.name}</p>
-                    <p className="text-xs text-gray-500">{entity.code} • {entity.entity_type}</p>
+                    <p className="text-xs text-gray-500">
+                      {entityTypeParam === 'Employee' ? entity.department : entity.code} • {entityTypeParam === 'Employee' ? entity.position : entity.entity_type}
+                    </p>
                   </button>
                 ))}
               </div>

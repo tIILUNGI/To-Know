@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Mail, Plus, RotateCcw, Trash2, Users, ClipboardList, TrendingUp, Search } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import { useLanguage } from "../../context/LanguageContext";
 import ConfirmModal from "../common/ConfirmModal";
 import PageHeader from "../common/PageHeader";
 
 export default function EvaluationList() {
+  const { t } = useLanguage();
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,15 +95,7 @@ export default function EvaluationList() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <PageHeader
-        title="Avaliações"
-        actions={
-          <Link to="/avaliacoes/nova" className="btn btn-primary">
-            <Plus size={16} strokeWidth={2} />
-            Nova Avaliação
-          </Link>
-        }
-      />
+      <PageHeader title={t("eval.title")} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="metric-card">
@@ -154,55 +148,40 @@ export default function EvaluationList() {
         </div>
       </div>
 
-      <div className="toolbar-card space-y-4">
-        <div>
-          <h2 className="text-[1.35rem] font-semibold text-slate-900">Ações rápidas</h2>
-          <p className="mt-1 text-[1rem] text-slate-500">Atalhos diretos para os fluxos mais usados da área de avaliações.</p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
-          <div className="flex flex-wrap gap-2">
-            <Link to="/avaliacoes/nova" className="btn btn-primary">
-              <Plus size={16} strokeWidth={2} />
-              Avaliar Fornecedor
-            </Link>
-            <Link to="/avaliacoes/reevaluation" className="btn btn-secondary">
-              <RotateCcw size={16} strokeWidth={2} />
-              Reavaliação
-            </Link>
-            <Link to="/avaliacoes/cliente" className="btn btn-secondary">
-              <Users size={16} strokeWidth={2} />
-              Avaliar Cliente
-            </Link>
+      <div className="toolbar-card">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-4">
+          <div>
+            <h2 className="text-[1.35rem] font-semibold text-slate-900">{t("eval.quick_actions")}</h2>
+            <p className="mt-1 text-[1rem] text-slate-500">Atalhos diretos para os fluxos mais usados da área de avaliações.</p>
           </div>
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-80">
             <Search className="input-icon" size={16} />
             <input 
               type="text" 
-              placeholder="Pesquisar avaliações..." 
+              placeholder={t("actions.search")} 
               className="input-with-icon w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Link to="/avaliacoes/360" className="btn btn-secondary">
-            <Mail size={16} strokeWidth={2} />
-            Avaliação 360°
+
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-slate-100">
+          <Link to="/avaliacoes/nova" className="btn btn-primary">
+            <TrendingUp size={16} strokeWidth={2} /> {t("eval.action.perf_supplier")}
           </Link>
-          <Link to="/avaliacoes/nova?type=Satisfaction&entity=Supplier" className="btn btn-outline">
-            <Heart size={16} strokeWidth={2} />
-            Satisfação Fornecedor
+          <Link to="/avaliacoes/cliente" className="btn btn-primary !bg-indigo-600 hover:!bg-indigo-700">
+            <TrendingUp size={16} strokeWidth={2} /> {t("eval.action.perf_client")}
           </Link>
-          <Link to="/avaliacoes/cliente?type=Satisfaction" className="btn btn-outline">
-            <Heart size={16} strokeWidth={2} />
-            Satisfação Cliente
+          <Link to="/avaliacoes/reevaluation" className="btn btn-secondary">
+            <RotateCcw size={16} strokeWidth={2} /> {t("eval.action.reval")}
+          </Link>
+          <div className="w-[1px] h-8 bg-slate-200 hidden lg:block mx-1"></div>
+          <Link to="/avaliacoes/360" className="btn btn-outline">
+            <Heart size={16} strokeWidth={2} /> {t("eval.action.satisf_360")}
           </Link>
           <Link to="/avaliacoes/cliente/satisfacao" className="btn btn-outline">
-            <Mail size={16} strokeWidth={2} />
-            Pesquisa Customizada
+            <Heart size={16} strokeWidth={2} /> {t("eval.action.satisf_client")}
           </Link>
         </div>
       </div>

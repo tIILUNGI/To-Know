@@ -137,9 +137,9 @@ export default function ProcessWorkflow() {
               <Plus size={16} />
               Aprovar Cliente
             </Link>
-            <Link to="/avaliacoes/nova?type=Performance&entity=Supplier" className="btn btn-outline">
-              <TrendingUp size={16} />
-              Avaliar Fornecedor
+            <Link to="/processos/novo?type=approval&entity=Employee" className="btn btn-secondary">
+              <Plus size={16} />
+              Aprovar Colaborador
             </Link>
           </>
         }
@@ -236,7 +236,7 @@ export default function ProcessWorkflow() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-2">
                     <span className="badge bg-blue-50 text-blue-700">{process.process_number}</span>
-                    <h3 className="module-title text-[1.45rem]">{process.entity_name}</h3>
+                    <h3 className="module-title text-[1.45rem]">{process.entity_name || process.employee_name || "N/A"}</h3>
                     <p className="module-description">
                       {process.type} • Prioridade{" "}
                       <span

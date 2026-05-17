@@ -17,8 +17,10 @@ import {
   Users,
   X,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import AlertsPanel from "./AlertsPanel";
 
 type NavItem = {
@@ -39,6 +41,7 @@ const Logo = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { t, toggleLanguage, language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -49,19 +52,20 @@ export default function Layout() {
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
   const navItems: NavItem[] = [
-    { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/entities/suppliers", icon: Users, label: "Fornecedores" },
-    { to: "/entities/clients", icon: Users, label: "Clientes" },
-    { to: "/processos", icon: FileText, label: "Processos" },
-    { to: "/avaliacoes", icon: ClipboardList, label: "Avaliações" },
-    { to: "/colaboradores", icon: UserPlus, label: "Colaboradores" },
-    { to: "/relatorios", icon: BarChart3, label: "Relatórios" },
-    { to: "/alertas", icon: TriangleAlert, label: "Alertas" },
+    { to: "/", icon: LayoutDashboard, label: t("menu.dashboard") },
+    { to: "/entities/suppliers", icon: Users, label: t("menu.suppliers") },
+    { to: "/entities/clients", icon: Users, label: t("menu.clients") },
+    { to: "/colaboradores", icon: UserPlus, label: t("menu.employees") },
+    { to: "/processos", icon: FileText, label: t("menu.processes") },
+    { to: "/avaliacoes", icon: ClipboardList, label: t("menu.evaluations") },
+    { to: "/documentos-legais", icon: Shield, label: t("menu.legal") },
+    { to: "/relatorios", icon: BarChart3, label: t("menu.reports") },
+    { to: "/alertas", icon: TriangleAlert, label: t("menu.alerts") },
   ];
 
   const userRole = (user?.role || "").toUpperCase();
   if (userRole === "ADMINISTRATOR" || userRole === "ADMIN") {
-    navItems.push({ to: "/configuracoes", icon: Settings, label: "Configurações" });
+    navItems.push({ to: "/configuracoes", icon: Settings, label: t("menu.settings") });
   }
 
   useEffect(() => {
@@ -109,6 +113,16 @@ export default function Layout() {
     navigate("/login");
   };
 
+  const [avatar, setAvatar] = useState<string | null>(localStorage.getItem("user_avatar"));
+
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      setAvatar(localStorage.getItem("user_avatar"));
+    };
+    window.addEventListener("avatar_updated", handleAvatarUpdate);
+    return () => window.removeEventListener("avatar_updated", handleAvatarUpdate);
+  }, []);
+
   const initials = (user?.name || "U")
     .split(" ")
     .filter(Boolean)
@@ -149,8 +163,14 @@ export default function Layout() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <button className="topbar-icon-btn hidden md:inline-flex" aria-label="Idioma">
+          <button 
+            onClick={toggleLanguage} 
+            className="topbar-icon-btn flex items-center gap-1.5 px-3 w-auto hover:bg-slate-100" 
+            aria-label="Idioma / Language"
+            title={language === "pt" ? "Switch to English" : "Mudar para Português"}
+          >
             <Globe size={18} />
+            <span className="text-[0.88rem] font-bold uppercase tracking-wider text-slate-700">{language}</span>
           </button>
 
           <button onClick={toggleDarkMode} className="topbar-icon-btn" aria-label="Alternar modo escuro">
@@ -161,7 +181,9 @@ export default function Layout() {
 
           <div ref={userDropdownRef} className="relative">
             <button onClick={() => setShowUserDropdown((prev) => !prev)} className="profile-summary">
-              <span className="profile-avatar">{initials || "U"}</span>
+              <span className="profile-avatar overflow-hidden flex items-center justify-center">
+                {avatar ? <img src={avatar} className="w-full h-full object-cover" alt="Avatar" /> : initials || "U"}
+              </span>
               <span className="profile-copy hidden sm:flex">
                 <span className="profile-name">{user?.name || "Utilizador"}</span>
                 <span className="profile-role">{user?.role || "Conta"}</span>
@@ -181,7 +203,7 @@ export default function Layout() {
                     className="flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[1rem] text-slate-700 hover:bg-slate-50"
                   >
                     <User size={16} />
-                    Meu Perfil
+                    {t("menu.profile")}
                   </Link>
                   <button
                     onClick={() => {
@@ -191,7 +213,7 @@ export default function Layout() {
                     className="flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-[1rem] text-slate-700 hover:bg-slate-50"
                   >
                     {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                    {isDarkMode ? "Modo Claro" : "Modo Escuro"}
+                    {isDarkMode ? t("menu.lightMode") : t("menu.darkMode")}
                   </button>
                 </div>
                 <div className="border-t border-slate-100 p-2">
@@ -200,7 +222,7 @@ export default function Layout() {
                     className="flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-[1rem] text-red-600 hover:bg-red-50"
                   >
                     <LogOut size={16} />
-                    Terminar Sessão
+                    {t("menu.logout")}
                   </button>
                 </div>
               </div>

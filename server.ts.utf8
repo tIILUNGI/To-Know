@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import dotenv from "dotenv";
@@ -539,17 +539,6 @@ evaluation_type TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (link_id) REFERENCES client_satisfaction_links(id) ON DELETE CASCADE,
       FOREIGN KEY (question_id) REFERENCES client_satisfaction_questions(id)
-    )`,
-    `CREATE TABLE IF NOT EXISTS legal_documents (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      type TEXT,
-      expiration_year INTEGER,
-      expiration_date DATE,
-      version_series TEXT,
-      launch_year INTEGER,
-      file_url TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`
   ];
   
@@ -582,20 +571,6 @@ evaluation_type TEXT,
        db.prepare("INSERT INTO criteria (code, name, description, entity_type, process_type, weight, max_score) VALUES (?, ?, ?, ?, ?, ?, ?)").run(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
      });
      console.log("Ô£ô Seeded default criteria");
-   }
-
-   // Seed employee criteria if not exist
-   const empCritExists = db.prepare("SELECT COUNT(*) as cnt FROM criteria WHERE entity_type = 'Employee'").get() as any;
-   if (empCritExists.cnt === 0) {
-     const empCritData = [
-       ["CRIT-EMP-001", "Integração", "Nível de integração na equipa", "Employee", "Aprovação", 10, 5],
-       ["CRIT-EMP-002", "Documentação", "Conformidade de contratos e identificação", "Employee", "Aprovação", 10, 5],
-       ["CRIT-EMP-003", "Formação", "Conclusão de formação inicial", "Employee", "Aprovação", 8, 5]
-     ];
-     empCritData.forEach((c: any[]) => {
-       db.prepare("INSERT INTO criteria (code, name, description, entity_type, process_type, weight, max_score) VALUES (?, ?, ?, ?, ?, ?, ?)").run(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
-     });
-     console.log("Ô£ô Seeded employee criteria");
    }
 
   console.log("Ô£ô Database initialized");
@@ -692,15 +667,6 @@ if (!procCols.find((c: any) => c.name === "approver_id")) {
 if (!procCols.find((c: any) => c.name === "decision_date")) {
   db.exec("ALTER TABLE processes ADD COLUMN decision_date DATETIME");
   console.log("Ô£ô Added decision_date column to processes");
-}
-
-if (!procCols.find((c: any) => c.name === "employee_id")) {
-  try {
-    db.exec("ALTER TABLE processes ADD COLUMN employee_id INTEGER REFERENCES employees(id)");
-    console.log("Ô£ô Added employee_id column to processes");
-  } catch (e) {
-    console.error("Migration error adding employee_id:", e);
-  }
 }
 
 // Ensure upload_date column exists in documents
@@ -1753,111 +1719,6 @@ app.delete("/api/documents/:id", authenticateToken, (req: any, res: any) => {
   res.json({ message: "Documento eliminado." });
 });
 
-// ============================================================
-// LEGAL DOCUMENTATION CRUD
-// ============================================================
-app.get("/api/legal-documents", authenticateToken, (req, res) => {
-  try {
-    const docs = db.prepare("SELECT * FROM legal_documents ORDER BY created_at DESC").all();
-    res.json(docs);
-  } catch (err: any) {
-    console.error("Get legal documents error:", err);
-    res.status(500).json({ error: "Erro ao carregar documentos legais.", message: err.message });
-  }
-});
-
-app.get("/api/legal-documents/:id", authenticateToken, (req, res) => {
-  try {
-    const doc = db.prepare("SELECT * FROM legal_documents WHERE id = ?").get(req.params.id);
-    if (!doc) return res.status(404).json({ message: "Documento legal não encontrado." });
-    res.json(doc);
-  } catch (err: any) {
-    console.error("Get legal document by id error:", err);
-    res.status(500).json({ error: "Erro ao carregar documento legal.", message: err.message });
-  }
-});
-
-app.post("/api/legal-documents", authenticateToken, (req: any, res) => {
-  try {
-    const { name, type, expiration_year, expiration_date, version_series, launch_year, file_url } = req.body;
-    if (!name) return res.status(400).json({ message: "O nome do documento é obrigatório." });
-
-    const result = db.prepare(`
-      INSERT INTO legal_documents (name, type, expiration_year, expiration_date, version_series, launch_year, file_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      name,
-      type || null,
-      expiration_year ? Number(expiration_year) : null,
-      expiration_date || null,
-      version_series || null,
-      launch_year ? Number(launch_year) : null,
-      file_url || null
-    );
-
-    logAction(req.user.id, null, "CREATE_LEGAL_DOC", `Created legal document: ${name}`);
-    res.status(201).json({ id: result.lastInsertRowid });
-  } catch (err: any) {
-    console.error("Create legal document error:", err);
-    res.status(500).json({ error: "Erro ao criar documento legal.", message: err.message });
-  }
-});
-
-app.put("/api/legal-documents/:id", authenticateToken, (req: any, res) => {
-  try {
-    const { name, type, expiration_year, expiration_date, version_series, launch_year, file_url } = req.body;
-    if (!name) return res.status(400).json({ message: "O nome do documento é obrigatório." });
-
-    db.prepare(`
-      UPDATE legal_documents SET
-        name = ?,
-        type = ?,
-        expiration_year = ?,
-        expiration_date = ?,
-        version_series = ?,
-        launch_year = ?,
-        file_url = ?
-      WHERE id = ?
-    `).run(
-      name,
-      type || null,
-      expiration_year ? Number(expiration_year) : null,
-      expiration_date || null,
-      version_series || null,
-      launch_year ? Number(launch_year) : null,
-      file_url || null,
-      req.params.id
-    );
-
-    logAction(req.user.id, null, "UPDATE_LEGAL_DOC", `Updated legal document ID: ${req.params.id}`);
-    res.json({ message: "Documento legal atualizado com sucesso." });
-  } catch (err: any) {
-    console.error("Update legal document error:", err);
-    res.status(500).json({ error: "Erro ao atualizar documento legal.", message: err.message });
-  }
-});
-
-app.delete("/api/legal-documents/:id", authenticateToken, (req: any, res) => {
-  try {
-    const doc: any = db.prepare("SELECT name, file_url FROM legal_documents WHERE id = ?").get(req.params.id);
-    if (!doc) return res.status(404).json({ message: "Documento legal não encontrado." });
-
-    if (doc.file_url) {
-      const filePath = path.join(__dirname, doc.file_url);
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath); } catch (e) {}
-      }
-    }
-
-    db.prepare("DELETE FROM legal_documents WHERE id = ?").run(req.params.id);
-    logAction(req.user.id, null, "DELETE_LEGAL_DOC", `Deleted legal document: ${doc.name}`);
-    res.json({ message: "Documento legal eliminado com sucesso." });
-  } catch (err: any) {
-    console.error("Delete legal document error:", err);
-    res.status(500).json({ error: "Erro ao eliminar documento legal.", message: err.message });
-  }
-});
-
 app.use("/uploads", express.static(uploadDir));
 
 // ============================================================
@@ -2017,10 +1878,9 @@ app.delete("/api/process-types/:id", authenticateToken, requireRole("Administrat
 // ============================================================
 app.get("/api/processes", authenticateToken, (req, res) => {
   const processes = db.prepare(`
-    SELECT p.*, e.name as entity_name, emp.name as employee_name, u.name as opener_name 
+    SELECT p.*, e.name as entity_name, u.name as opener_name 
     FROM processes p 
     LEFT JOIN entities e ON p.entity_id = e.id 
-    LEFT JOIN employees emp ON p.employee_id = emp.id
     LEFT JOIN users u ON p.opener_id = u.id
     ORDER BY p.created_at DESC
   `).all();
@@ -2028,20 +1888,16 @@ app.get("/api/processes", authenticateToken, (req, res) => {
 });
 
 app.post("/api/processes", authenticateToken, (req: any, res) => {
-  const { entity_id, employee_id, type, priority, area, justification, criteria_ids } = req.body;
-  if (!entity_id && !employee_id) {
-    return res.status(400).json({ message: "Selecione uma entidade ou colaborador." });
-  }
-  if (!type) {
-    return res.status(400).json({ message: "O tipo de processo é obrigatório." });
-  }
+  const error = validateRequired(req.body, ["entity_id", "type"]);
+  if (error) return res.status(400).json({ message: error });
 
+  const { entity_id, type, priority, area, justification, criteria_ids } = req.body;
   const process_number = `PROC-${Date.now()}`;
 
   const result = db.prepare(`
-    INSERT INTO processes (process_number, entity_id, employee_id, type, status, priority, area, justification, opener_id, current_step) 
-    VALUES (?, ?, ?, ?, 'Rascunho', ?, ?, ?, ?, 1)
-  `).run(process_number, entity_id || null, employee_id || null, type, priority || "Normal", area, justification, req.user.id);
+    INSERT INTO processes (process_number, entity_id, type, status, priority, area, justification, opener_id, current_step) 
+    VALUES (?, ?, ?, 'Rascunho', ?, ?, ?, ?, 1)
+  `).run(process_number, entity_id, type, priority || "Normal", area, justification, req.user.id);
 
   const processId = result.lastInsertRowid;
 
@@ -2056,14 +1912,10 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
       if (c) criteriaToUse.push(c);
     }
   } else {
-    // Auto-populate criteria based on entity type or employee
-    if (employee_id) {
-      criteriaToUse = db.prepare("SELECT id FROM criteria WHERE entity_type = 'Employee' AND process_type = ? AND is_active = 1").all(type);
-    } else if (entity_id) {
-      const entity = db.prepare("SELECT entity_type FROM entities WHERE id = ?").get(entity_id) as any;
-      if (entity) {
-        criteriaToUse = db.prepare("SELECT id FROM criteria WHERE (entity_type = ? OR entity_type IS NULL) AND process_type = ? AND is_active = 1").all(entity.entity_type, type);
-      }
+    // Auto-populate criteria based on entity type
+    const entity = db.prepare("SELECT entity_type FROM entities WHERE id = ?").get(entity_id) as any;
+    if (entity) {
+      criteriaToUse = db.prepare("SELECT id FROM criteria WHERE (entity_type = ? OR entity_type IS NULL) AND process_type = ? AND is_active = 1").all(entity.entity_type, type);
     }
   }
   
@@ -2085,15 +1937,14 @@ app.post("/api/processes", authenticateToken, (req: any, res) => {
 // GET /api/processes/:id
 app.get("/api/processes/:id", authenticateToken, (req, res) => {
   const process = db.prepare(`
-    SELECT p.*, e.name as entity_name, emp.name as employee_name, u.name as opener_name
+    SELECT p.*, e.name as entity_name, u.name as opener_name
     FROM processes p 
-    LEFT JOIN entities e ON p.entity_id = e.id 
-    LEFT JOIN employees emp ON p.employee_id = emp.id
+    JOIN entities e ON p.entity_id = e.id 
     LEFT JOIN users u ON p.opener_id = u.id
     WHERE p.id = ?
   `).get(req.params.id) as any;
 
-  if (!process) return res.status(404).json({ message: "Processo não encontrado" });
+  if (!process) return res.status(404).json({ message: "Processo n├úo encontrado" });
 
   const criteria = db.prepare(`
     SELECT c.id as criteria_id, c.name, c.description, c.weight, c.max_score,
@@ -3399,36 +3250,11 @@ const checkExpiringApprovals = () => {
   }
 };
 
-const checkExpiringLegalDocuments = () => {
-  try {
-    const users = db.prepare("SELECT id FROM users").all() as any[];
-    const expiring = db.prepare(`
-      SELECT id, name, expiration_date 
-      FROM legal_documents 
-      WHERE expiration_date IS NOT NULL 
-      AND date(expiration_date) <= date('now', '+30 days')
-    `).all() as any[];
-
-    for (const doc of expiring) {
-      for (const user of users) {
-        const message = `O documento legal "${doc.name}" está prestes a caducar em ${doc.expiration_date}`;
-        const exists = db.prepare("SELECT id FROM notifications WHERE user_id = ? AND message = ?").get(user.id, message);
-        if (!exists) {
-          db.prepare("INSERT INTO notifications (user_id, message, type) VALUES (?, ?, 'Alert')").run(user.id, message);
-        }
-      }
-    }
-  } catch (e) {
-    console.error("Error checking expiring legal documents:", e);
-  }
-};
-
 // ============================================================
 // DASHBOARD & REPORTS
 // ============================================================
 app.get("/api/reports/dashboard", authenticateToken, (req, res) => {
   checkExpiringApprovals();
-  checkExpiringLegalDocuments();
 
   const period = req.query.period as string;
   const entityType = req.query.entityType as string;

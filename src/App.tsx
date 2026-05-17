@@ -33,6 +33,8 @@ import DemoDataCreator from "./components/admin/DemoDataCreator";
 import EmployeeList from "./components/employees/EmployeeList";
 import EmployeeForm from "./components/employees/EmployeeForm";
 import CollaborationFormsAdmin from "./components/admin/CollaborationFormsAdmin";
+import LegalDocuments from "./components/legal/LegalDocuments";
+import { LanguageProvider } from "./context/LanguageContext";
 
 
 const ProtectedRoute = ({ children }) => {
@@ -52,9 +54,10 @@ const ProtectedRoute = ({ children }) => {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <Router>
+    <LanguageProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
             {/* Public evaluation link - no authentication required */}
@@ -89,6 +92,9 @@ export default function App() {
                <Route path="colaboradores/novo" element={<EmployeeForm />} />
                <Route path="colaboradores/:id/editar" element={<EmployeeForm />} />
                <Route path="colaboradores/:id/avaliacao-360" element={<Evaluation360Form />} />
+
+               {/* Documentos Legais */}
+               <Route path="documentos-legais" element={<LegalDocuments />} />
               
               {/* Relatórios */}
               <Route path="relatorios" element={<ReportsView />} />
@@ -111,5 +117,6 @@ export default function App() {
         </Router>
       </AuthProvider>
     </ToastProvider>
+   </LanguageProvider>
   );
 }
