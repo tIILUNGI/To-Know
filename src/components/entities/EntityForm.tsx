@@ -345,11 +345,11 @@ function DocumentSection({ entityId }) {
   const [uploading, setUploading] = useState(false);
 
   const fetchDocs = () => {
-    fetch(`/api/entities/${entityId}`, {
+    fetch(`/api/documents?entity_id=${entityId}`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
     .then(res => res.json())
-    .then(data => setDocuments(data.documents || []));
+    .then(data => setDocuments(data || []));
   };
 
   useEffect(fetchDocs, [entityId]);
@@ -361,9 +361,10 @@ function DocumentSection({ entityId }) {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('name', file.name);
+    formData.append('entity_id', entityId);
+    formData.append('type', 'Document');
 
-    await fetch(`/api/entities/${entityId}/documents`, {
+    await fetch(`/api/documents/upload`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       body: formData

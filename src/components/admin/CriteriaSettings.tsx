@@ -49,7 +49,7 @@ export default function CriteriaSettings() {
         process_type: c.process_type || "Evaluation",
         evaluation_type: c.evaluation_type || "",
         weight: c.weight, min_score: c.min_score || 0, max_score: c.max_score,
-        is_required: c.is_required, is_active: c.is_active, display_order: c.display_order
+        is_required: c.required, is_active: c.active, display_order: c.presentationOrder
       });
     } else {
       setEditingId(null);
@@ -284,8 +284,8 @@ export default function CriteriaSettings() {
                 </td>
                 <td className="px-2 sm:px-4 py-2.5 text-center">
                   <div className="flex flex-col gap-1">
-                    {c.is_required ? <span className="text-[9px] bg-red-50 text-red-600 px-1 rounded">Obr.</span> : null}
-                    {c.is_active ? <span className="text-[9px] bg-green-50 text-green-600 px-1 rounded">Ativo</span> : <span className="text-[9px] bg-gray-100 text-gray-500 px-1 rounded">Inativo</span>}
+                    {c.required ? <span className="text-[9px] bg-red-50 text-red-600 px-1 rounded">Obr.</span> : null}
+                    {c.active ? <span className="text-[9px] bg-green-50 text-green-600 px-1 rounded">Ativo</span> : <span className="text-[9px] bg-gray-100 text-gray-500 px-1 rounded">Inativo</span>}
                   </div>
                 </td>
                 <td className="px-2 sm:px-4 py-2.5 text-right">
