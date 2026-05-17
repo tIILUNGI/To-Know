@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { User, Lock, Save, LayoutDashboard, Mail, Camera } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -10,6 +10,8 @@ export default function UserProfile() {
   const { addToast } = useToast();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profileData, setProfileData] = useState({ name: "", email: "", username: "", role: "" });
   const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -43,14 +45,25 @@ export default function UserProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Limit size to 2.5MB to avoid exceeding localStorage quota
+    if (file.size > 2.5 * 1024 * 1024) {
+      addToast("A imagem é muito grande. Escolha uma foto menor que 2.5MB.", "warning");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      localStorage.setItem("user_avatar", base64String);
-      setAvatar(base64String);
-      // Dispatch custom event to notify Layout.tsx header avatar in real-time
-      window.dispatchEvent(new Event("avatar_updated"));
-      addToast("Foto de perfil atualizada!", "success");
+      try {
+        localStorage.setItem("user_avatar", base64String);
+        setAvatar(base64String);
+        // Dispatch custom event to notify Layout.tsx header avatar in real-time
+        window.dispatchEvent(new Event("avatar_updated"));
+        addToast("Foto de perfil atualizada!", "success");
+      } catch (err) {
+        console.error("Erro ao guardar imagem no localStorage:", err);
+        addToast("Erro ao guardar foto de perfil. Tente uma imagem mais pequena.", "error");
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -133,24 +146,29 @@ export default function UserProfile() {
           <form onSubmit={handleUpdateProfile} className="space-y-5">
             {/* Interactive Avatar Upload Container */}
             <div className="flex flex-col items-center sm:flex-row gap-4 mb-6 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100/50 dark:border-slate-800/50">
-              <div className="relative group cursor-pointer w-20 h-20 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-inner">
+              <div 
+                onClick={() => fileInputRef.current?.click()} 
+                className="relative group cursor-pointer w-20 h-20 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-inner"
+                title="Carregar imagem de perfil"
+              >
                 {avatar ? (
                   <img src={avatar} className="w-full h-full object-cover animate-fade-in" alt="Profile" />
                 ) : (
                   <span className="text-2xl font-bold text-slate-400 dark:text-slate-500">
-                    {profileData.name.charAt(0)}
+                    {profileData.name?.charAt(0) || "U"}
                   </span>
                 )}
                 {/* Hover Overlay */}
-                <label htmlFor="avatar-upload" className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[0.7rem] font-bold transition-opacity duration-200 cursor-pointer">
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[0.7rem] font-bold transition-opacity duration-200">
                   <Camera size={16} className="mb-0.5" />
                   ALTERAR
-                </label>
+                </div>
                 <input 
-                  id="avatar-upload"
+                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={handleAvatarChange}
+                  onClick={(e) => e.stopPropagation()}
                   className="hidden"
                 />
               </div>
