@@ -17,7 +17,7 @@ const translations: Record<Language, Record<string, string>> = {
     "menu.employees": "Colaboradores",
     "menu.processes": "Processos",
     "menu.evaluations": "Avaliações",
-    "menu.legal": "Documentação Legal",
+    "menu.legal": "Requisitos Legais",
     "menu.docRegistration": "Cadastramento de Documentação",
     "menu.reports": "Relatórios",
     "menu.alerts": "Alertas",
@@ -37,7 +37,7 @@ const translations: Record<Language, Record<string, string>> = {
     "actions.loading": "A carregar...",
 
     // Legal Documents
-    "legal.title": "Documentação Legal",
+    "legal.title": "Requisitos Legais",
     "legal.add": "Adicionar Documento",
     "legal.total": "Total de Documentos",
     "legal.active": "Documentos Ativos",
@@ -122,7 +122,7 @@ const translations: Record<Language, Record<string, string>> = {
     "menu.employees": "Employees",
     "menu.processes": "Processes",
     "menu.evaluations": "Evaluations",
-    "menu.legal": "Legal Documentation",
+    "menu.legal": "Legal Requirements",
     "menu.docRegistration": "Document Registration",
     "menu.reports": "Reports",
     "menu.alerts": "Alerts",
@@ -142,7 +142,7 @@ const translations: Record<Language, Record<string, string>> = {
     "actions.loading": "Loading...",
 
     // Legal Documents
-    "legal.title": "Legal Documentation",
+    "legal.title": "Legal Requirements",
     "legal.add": "Add Document",
     "legal.total": "Total Documents",
     "legal.active": "Active Documents",

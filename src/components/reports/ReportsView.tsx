@@ -131,7 +131,7 @@ export default function ReportsView() {
     }
     const headers = Object.keys(rows[0]);
     let html = `<html><head><style>
-      body { font-family: Arial, sans-serif; padding: 20px; }
+      body { font-family: var(--font-sans); padding: 20px; }
       h1 { color: #333; }
       table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }

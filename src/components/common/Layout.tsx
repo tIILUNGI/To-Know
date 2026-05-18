@@ -149,13 +149,12 @@ export default function Layout() {
     <div className="app-shell">
       <header className="app-topbar">
         <div className="flex items-center gap-3 min-w-0">
-          <Link to="/" className="app-brand">
-            <Logo size="md" />
-            <div className="app-brand-copy">
-              <span className="app-brand-title">TOKNOW</span>
-              <span className="app-brand-subtitle">Plataforma</span>
-            </div>
-          </Link>
+<Link to="/" className="app-brand">
+  <Logo size="md" />
+  <div className="app-brand-copy">
+    <span className="app-brand-title">TOKNOW</span>
+  </div>
+</Link>
 
           <button onClick={handleSidebarToggle} className="topbar-icon-btn" aria-label="Alternar menu lateral">
             <Menu size={18} />
