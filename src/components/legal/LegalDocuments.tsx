@@ -424,9 +424,9 @@ export default function LegalDocuments() {
 
       {/* Modal - Create/Edit Legal Document */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in border border-slate-100 my-8">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-[95vw] sm:max-w-4xl overflow-hidden shadow-2xl animate-fade-in border border-slate-100 my-2 sm:my-8">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-slate-50 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Shield className="text-blue-600" size={20} />
                 <h3 className="text-lg font-bold text-slate-800">
@@ -441,16 +441,16 @@ export default function LegalDocuments() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 md:col-span-2">
+            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Nome do Documento <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Certidão de Registo Comercial, Alvará de Construção"
+                    placeholder="Ex: Certidão de Registo Comercial..."
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -475,44 +475,46 @@ export default function LegalDocuments() {
                   </select>
                 </div>
 
-<div className="space-y-2">
-                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                     Versão ou Série
-                   </label>
-                   <input
-                     type="text"
-                     placeholder="Ex: Versão 2.1, Série B"
-                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                     value={formData.version_series}
-                     onChange={(e) => setFormData(prev => ({ ...prev, version_series: e.target.value }))}
-                   />
-                 </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Versão ou Série
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Versão 2.1, Série B"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    value={formData.version_series}
+                    onChange={(e) => setFormData(prev => ({ ...prev, version_series: e.target.value }))}
+                  />
+                </div>
+              </div>
 
-                 <div className="space-y-2 md:col-span-2">
-                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                     Descrição
-                   </label>
-                   <textarea
-                     rows={2}
-                     placeholder="Descreva o documento, o seu objectivo e âmbito de aplicação..."
-                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                     value={formData.description}
-                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                   />
-                 </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Descrição
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Descreva o documento..."
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
 
-                 <div className="space-y-2">
-                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                     Atendimento
-                   </label>
-                   <input
-                     type="text"
-                     placeholder="Ex: RH, Jurídico, Administração..."
-                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                     value={formData.service_area}
-                     onChange={(e) => setFormData(prev => ({ ...prev, service_area: e.target.value }))}
-                   />
-                 </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Atendimento
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: RH, Jurídico..."
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    value={formData.service_area}
+                    onChange={(e) => setFormData(prev => ({ ...prev, service_area: e.target.value }))}
+                  />
+                </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -539,60 +541,60 @@ export default function LegalDocuments() {
                     onChange={(e) => setFormData(prev => ({ ...prev, expiration_year: e.target.value }))}
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Data Exata de Caducidade
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 text-gray-400" size={16} />
-                    <input
-                      type="date"
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                      value={formData.expiration_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, expiration_date: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Documento Digital (Upload)
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-slate-100 border border-gray-200 rounded-xl cursor-pointer text-slate-600 font-medium transition-all text-sm w-full">
-                      <FileUp size={16} />
-                      <span>{uploading ? "A carregar..." : "Carregar Imagem / PDF"}</span>
-                      <input 
-                        type="file" 
-                        accept="image/*,application/pdf" 
-                        className="hidden" 
-                        onChange={handleFileUpload}
-                        disabled={uploading}
-                      />
-                    </label>
-                  </div>
-                  {formData.file_url && (
-                    <div className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-                      <CheckCircle size={12} />
-                      Ficheiro carregado com sucesso
-                    </div>
-                  )}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Data Exata de Caducidade
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 text-gray-400" size={16} />
+                  <input
+                    type="date"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    value={formData.expiration_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, expiration_date: e.target.value }))}
+                  />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Documento Digital (Upload)
+                </label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-slate-100 border border-gray-200 rounded-xl cursor-pointer text-slate-600 font-medium transition-all text-sm">
+                    <FileUp size={16} />
+                    <span>{uploading ? "A carregar..." : "Carregar Imagem / PDF"}</span>
+                    <input 
+                      type="file" 
+                      accept="image/*,application/pdf" 
+                      className="hidden" 
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
+                {formData.file_url && (
+                  <div className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
+                    <CheckCircle size={12} />
+                    Ficheiro carregado com sucesso
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all order-2 sm:order-1"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2 justify-center order-1 sm:order-2"
                 >
                   Guardar Documento
                 </button>

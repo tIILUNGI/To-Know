@@ -249,7 +249,7 @@ export default function DocumentRegistration() {
       />
 
       <PageHeader
-        title="Cadastramento de Documentação"
+        title="Requisitos Legais"
         actions={
           <button onClick={handleOpenCreateModal} className="btn btn-primary">
             <Plus size={16} strokeWidth={2} />
@@ -433,11 +433,11 @@ export default function DocumentRegistration() {
         </div>
       </div>
 
-      {/* Modal - Create/Edit Document */}
+{/* Modal - Create/Edit Document */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in border border-slate-100 my-8">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-[95vw] sm:max-w-4xl overflow-hidden shadow-2xl animate-fade-in border border-slate-100 my-2 sm:my-8">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-slate-50 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <FilePlus className="text-blue-600" size={20} />
                 <h3 className="text-lg font-bold text-slate-800">
@@ -452,16 +452,16 @@ export default function DocumentRegistration() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 md:col-span-2">
+            <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Título <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Regulamento Interno, Certidão de Registo Comercial..."
+                    placeholder="Ex: Regulamento Interno..."
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -474,7 +474,7 @@ export default function DocumentRegistration() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: Licença, Certidão, Alvará, Contrato, Apólice de Seguro..."
+                    placeholder="Ex: Licença, Certidão..."
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.type}
                     onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
@@ -487,7 +487,7 @@ export default function DocumentRegistration() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: Série A, Versão 2.1, Nº de registo..."
+                    placeholder="Ex: Série A, Versão 2.1..."
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.version}
                     onChange={(e) => setFormData(prev => ({ ...prev, version: e.target.value }))}
@@ -530,7 +530,7 @@ export default function DocumentRegistration() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: RH, Jurídico, Administração..."
+                    placeholder="Ex: RH, Jurídico..."
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     value={formData.service_area}
                     onChange={(e) => setFormData(prev => ({ ...prev, service_area: e.target.value }))}
@@ -543,9 +543,9 @@ export default function DocumentRegistration() {
                   Descrição
                 </label>
                 <textarea
-                  rows={3}
-                  placeholder="Descreva o documento, o seu objectivo e âmbito de aplicação..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+                  rows={2}
+                  placeholder="Descreva o documento..."
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 />
@@ -556,7 +556,7 @@ export default function DocumentRegistration() {
                   Anexo do Documento (Upload)
                 </label>
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-slate-100 border border-gray-200 rounded-xl cursor-pointer text-slate-600 font-medium transition-all text-sm w-full sm:w-auto">
+                  <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-slate-100 border border-gray-200 rounded-xl cursor-pointer text-slate-600 font-medium transition-all text-sm">
                     <FileUp size={16} />
                     <span>{uploading ? "A carregar..." : "Carregar Imagem / PDF"}</span>
                     <input
@@ -576,18 +576,18 @@ export default function DocumentRegistration() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all order-2 sm:order-1"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all flex items-center gap-2 justify-center order-1 sm:order-2"
                 >
                   <Save size={16} />
                   Guardar Registo
