@@ -88,11 +88,11 @@ export default function DocumentRegistration() {
       name: doc.name || "",
       type: doc.type || "",
       description: doc.description || "",
-      version: doc.version_series || doc.version || "",
-      publication_date: doc.publication_date || doc.launch_year || "",
-      validity_date: doc.validity_date || doc.expiration_date || "",
-      service_area: doc.service_area || "",
-      file_url: doc.file_url || ""
+      version: doc.versionSeries || doc.version_series || doc.version || "",
+      publication_date: doc.publicationDate || doc.publication_date || "",
+      validity_date: doc.validityDate || doc.validity_date || doc.expirationDate || doc.expiration_date || "",
+      service_area: doc.serviceArea || doc.service_area || "",
+      file_url: doc.fileUrl || doc.file_url || ""
     });
     setModalOpen(true);
   };
@@ -367,7 +367,7 @@ export default function DocumentRegistration() {
                 </tr>
               ) : (
                 filteredDocuments.map((doc) => {
-                  const status = getStatus(doc.validity_date || doc.expiration_date);
+                  const status = getStatus(doc.validityDate || doc.validity_date || doc.expirationDate || doc.expiration_date);
                   const StatusIcon = status.icon;
                   return (
                     <tr key={doc.id}>
@@ -381,25 +381,25 @@ export default function DocumentRegistration() {
                       <td className="text-slate-500 text-xs max-w-[200px] truncate" title={doc.description || ""}>
                         {doc.description || "—"}
                       </td>
-                      <td className="text-slate-500">{doc.version_series || doc.version || "—"}</td>
+                      <td className="text-slate-500">{doc.versionSeries || doc.version_series || doc.version || "—"}</td>
                       <td className="text-slate-500 font-semibold">
-                        {doc.publication_date ? new Date(doc.publication_date).toLocaleDateString("pt-BR") : "—"}
+                        {(doc.publicationDate || doc.publication_date) ? new Date(doc.publicationDate || doc.publication_date).toLocaleDateString("pt-BR") : "—"}
                       </td>
                       <td className="text-slate-700 font-medium">
-                        {(doc.validity_date || doc.expiration_date)
-                          ? new Date(doc.validity_date || doc.expiration_date).toLocaleDateString("pt-BR")
+                        {(doc.validityDate || doc.validity_date || doc.expirationDate || doc.expiration_date)
+                          ? new Date(doc.validityDate || doc.validity_date || doc.expirationDate || doc.expiration_date).toLocaleDateString("pt-BR")
                           : "—"}
                       </td>
-                      <td className="text-slate-500">{doc.service_area || "—"}</td>
+                      <td className="text-slate-500">{doc.serviceArea || doc.service_area || "—"}</td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
                           <span className={`badge flex items-center gap-1 w-fit ${status.color} mr-2`}>
                             <StatusIcon size={12} />
                             {status.label}
                           </span>
-                          {doc.file_url && (
+                          {(doc.fileUrl || doc.file_url) && (
                             <a
-                              href={doc.file_url}
+                              href={doc.fileUrl || doc.file_url}
                               target="_blank"
                               rel="noreferrer"
                               className="topbar-icon-btn !h-10 !w-10 !rounded-[12px] !text-slate-400 hover:!text-blue-600"
