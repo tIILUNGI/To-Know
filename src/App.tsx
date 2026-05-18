@@ -34,6 +34,7 @@ import EmployeeList from "./components/employees/EmployeeList";
 import EmployeeForm from "./components/employees/EmployeeForm";
 import CollaborationFormsAdmin from "./components/admin/CollaborationFormsAdmin";
 import LegalDocuments from "./components/legal/LegalDocuments";
+import DocumentRegistration from "./components/legal/DocumentRegistration";
 import { LanguageProvider } from "./context/LanguageContext";
 
 
@@ -93,8 +94,8 @@ export default function App() {
                <Route path="colaboradores/:id/editar" element={<EmployeeForm />} />
                <Route path="colaboradores/:id/avaliacao-360" element={<Evaluation360Form />} />
 
-               {/* Documentos Legais */}
-               <Route path="documentos-legais" element={<LegalDocuments />} />
+                {/* Documentos Legais */}
+                <Route path="documentos-legais" element={<DocumentRegistration />} />
               
               {/* Relatórios */}
               <Route path="relatorios" element={<ReportsView />} />

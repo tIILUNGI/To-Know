@@ -45,30 +45,42 @@ export default function ProcessCreate() {
     const rawEntity = searchParams.get('entity') || 'Supplier';
     const entityTypeParam = rawEntity === 'Client' ? 'Client' : (rawEntity === 'Employee' ? 'Employee' : 'Supplier');
     const entityTypeDisplay = rawEntity === 'Client' ? 'Cliente' : (rawEntity === 'Employee' ? 'Colaborador' : 'Fornecedor');
-    const defaultType = searchParams.get('type') === 'approval' ? 'Aprovação' : 'Avaliação';
+    const isRescission = searchParams.get('type') === 'rescission';
+    const defaultType = isRescission ? 'Rescisão' : 'Aprovação';
 
-   const [formData, setFormData] = useState({
-     process_number: "",
-     process_type: defaultType,
-     open_date: new Date().toISOString().split('T')[0],
-     status: "Rascunho",
-     responsible_name: "",
-     responsible_position: "",
-     responsible_mobile: "",
-     responsible_email: "",
-     requesting_area: "",
-     justification: "",
-     priority: "Normal"
-   });
+    const [formData, setFormData] = useState({
+      process_number: "",
+      process_type: defaultType,
+      open_date: new Date().toISOString().split('T')[0],
+      status: "Rascunho",
+      responsible_name: "",
+      responsible_position: "",
+      responsible_mobile: "",
+      responsible_email: "",
+      requesting_area: "",
+      justification: "",
+      priority: "Normal",
+      entity_type: "Employee",
+      termination_reason: "",
+      termination_date: "",
+      document_type: "",
+      document_title: "",
+      description: "",
+      registration: "",
+      publication_date: "",
+      validity_date: "",
+      service_area: ""
+    });
 
-    const defaultTypes = [
-      { value: "Aprovação", label: "Aprovação" },
-      { value: "Avaliação", label: "Avaliação" },
-      { value: "Auditoria", label: "Auditoria" },
-      { value: "Homologação", label: "Homologação" }
-    ];
+     const defaultTypes = [
+       { value: "Aprovação", label: "Aprovação" },
+       { value: "Avaliação", label: "Avaliação" },
+       { value: "Auditoria", label: "Auditoria" },
+       { value: "Homologação", label: "Homologação" },
+       { value: "Rescisão", label: "Rescisão" }
+     ];
 
-    useEffect(() => {
+useEffect(() => {
       fetch("/api/process-types", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
@@ -89,15 +101,36 @@ export default function ProcessCreate() {
           console.error("Erro ao carregar tipos:", err);
           setProcessTypes(defaultTypes);
         });
-        
-       const fetchUrl = entityTypeParam === 'Employee' ? '/api/employees' : `/api/entities?type=${entityTypeParam}`;
-       fetch(fetchUrl, {
-         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-       })
-         .then(res => res.json())
-         .then(data => setEntities(data))
-         .catch(() => {});
-        
+
+      if (isRescission) {
+        fetch("/api/employees", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }).then(res => res.json()).then(data => {
+          const formatted = data.map((e: any) => ({ ...e, entity_type_internal: 'Employee' }));
+          setEntities(prev => [...formatted, ...prev.filter((e: any) => e.entity_type_internal !== 'Employee')]);
+        }).catch(() => {});
+        fetch("/api/entities?type=Client", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }).then(res => res.json()).then(data => {
+          const formatted = data.map((e: any) => ({ ...e, entity_type_internal: 'Client' }));
+          setEntities(prev => [...formatted, ...prev.filter((e: any) => e.entity_type_internal !== 'Client')]);
+        }).catch(() => {});
+        fetch("/api/entities?type=Supplier", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }).then(res => res.json()).then(data => {
+          const formatted = data.map((e: any) => ({ ...e, entity_type_internal: 'Supplier' }));
+          setEntities(prev => [...formatted, ...prev.filter((e: any) => e.entity_type_internal !== 'Supplier')]);
+        }).catch(() => {});
+      } else {
+        const fetchUrl = entityTypeParam === 'Employee' ? '/api/employees' : `/api/entities?type=${entityTypeParam}`;
+        fetch(fetchUrl, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        })
+          .then(res => res.json())
+          .then(data => setEntities(data))
+          .catch(() => {});
+      }
+      
       fetch("/api/criteria", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
@@ -138,64 +171,88 @@ export default function ProcessCreate() {
     setSelectedCriteria(prev => prev.filter((c: any) => c.id !== criterionId));
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+   const validateForm = () => {
+     const newErrors: Record<string, string> = {};
 
-    if (!selectedEntity) newErrors.entity = `${entityTypeDisplay} é obrigatório(a)`;
-    if (!formData.process_type?.trim()) newErrors.process_type = "Tipo de processo é obrigatório";
-    if (!formData.open_date?.trim()) newErrors.open_date = "Data é obrigatória";
-    if (!formData.responsible_name?.trim()) newErrors.responsible_name = "Responsável é obrigatório";
-    if (!formData.requesting_area?.trim()) newErrors.requesting_area = "Área requisitante é obrigatória";
+     if (!selectedEntity) newErrors.entity = `${entityTypeDisplay} é obrigatório(a)`;
+     if (!formData.process_type?.trim()) newErrors.process_type = "Tipo de processo é obrigatório";
+     if (!formData.open_date?.trim()) newErrors.open_date = "Data é obrigatória";
+     if (formData.process_type === "Rescisão") {
+       if (!formData.termination_reason?.trim()) newErrors.termination_reason = "Motivo da rescisão é obrigatório";
+     } else {
+       if (!formData.responsible_name?.trim()) newErrors.responsible_name = "Responsável é obrigatório";
+       if (!formData.requesting_area?.trim()) newErrors.requesting_area = "Área requisitante é obrigatória";
+     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+     setErrors(newErrors);
+     return Object.keys(newErrors).length === 0;
+   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      addToast("Preencha todos os campos obrigatórios.", "error");
-      return;
-    }
-    setLoading(true);
+   const handleSubmit = async (e) => {
+     e.preventDefault();
+     if (!validateForm()) {
+       addToast("Preencha todos os campos obrigatórios.", "error");
+       return;
+     }
+     setLoading(true);
 
-    try {
-      const payload: any = {
-        type: formData.process_type,
-        priority: formData.priority,
-        area: formData.requesting_area,
-        justification: formData.justification,
-        criteria_ids: selectedCriteria.map((c: any) => c.id)
-      };
+     try {
+       const payload: any = {
+         type: formData.process_type,
+         priority: formData.priority,
+         area: formData.requesting_area,
+         justification: formData.justification,
+         criteria_ids: selectedCriteria.map((c: any) => c.id)
+       };
 
-      if (entityTypeParam === 'Employee') {
-        payload.employee_id = selectedEntity?.id;
-      } else {
-        payload.entity_id = selectedEntity?.id;
-        payload.entity_type = entityTypeParam;
-      }
+if (formData.process_type === "Rescisão") {
+          const entityTypeForApi = selectedEntity?.entity_type_internal || formData.entity_type;
+          if (entityTypeForApi === 'Employee') {
+            payload.employee_id = selectedEntity?.id;
+            payload.employee_name = selectedEntity?.name;
+          } else {
+            payload.entity_id = selectedEntity?.id;
+            payload.entity_type = entityTypeForApi;
+          }
+          payload.termination_reason = formData.termination_reason;
+          payload.termination_date = formData.termination_date;
+          payload.document_type = formData.document_type;
+          payload.document_title = formData.document_title;
+          payload.description = formData.description;
+          payload.registration = formData.registration;
+          payload.publication_date = formData.publication_date;
+          payload.validity_date = formData.validity_date;
+          payload.service_area = formData.service_area;
+        } else {
+          if (entityTypeParam === 'Employee') {
+            payload.employee_id = selectedEntity?.id;
+          } else {
+            payload.entity_id = selectedEntity?.id;
+            payload.entity_type = entityTypeParam;
+          }
+        }
 
-      const res = await fetch("/api/processes", {
-        method: "POST",
-        headers: { 
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+       const res = await fetch("/api/processes", {
+         method: "POST",
+         headers: { 
+           Authorization: `Bearer ${localStorage.getItem("token")}`,
+           "Content-Type": "application/json"
+         },
+         body: JSON.stringify(payload)
+       });
 
-      if (res.ok) {
-        const data = await res.json();
-        addToast("Processo criado com sucesso!", "success");
-         navigate(`/processos/${data.id}`);
-      } else {
-        addToast("Erro ao criar processo.", "error");
-      }
-    } catch {
-      addToast("Erro de conexão.", "error");
-    }
-    setLoading(false);
-  };
+       if (res.ok) {
+         const data = await res.json();
+         addToast("Processo criado com sucesso!", "success");
+          navigate(`/processos/${data.id}`);
+       } else {
+         addToast("Erro ao criar processo.", "error");
+       }
+     } catch {
+       addToast("Erro de conexão.", "error");
+     }
+     setLoading(false);
+   };
 
    const statusOptions = [
      { value: 'Rascunho', label: 'Rascunho' },
@@ -217,82 +274,162 @@ export default function ProcessCreate() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-           <button onClick={() => navigate("/processos")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
-            <ArrowLeft size={20} />
-          </button>
-           <div>
-             <h2 className="text-2xl font-bold text-gray-900">Novo Processo</h2>
-           </div>
-        </div>
-        <button
-          type="submit"
-          form="process-form"
-          disabled={loading}
-          className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-200 disabled:opacity-50"
-        >
-          <Save size={20} /> {loading ? 'Criando...' : 'Criar Processo'}
-        </button>
+<div className="flex justify-between items-center">
+         <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/processos")} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+             <ArrowLeft size={20} />
+           </button>
+<div>
+               <h2 className="text-2xl font-bold text-gray-900">{formData.process_type === "Rescisão" ? "Nova Rescisão de Contrato" : "Novo Processo"}</h2>
+               {formData.process_type === "Rescisão" && (
+                 <p className="text-sm text-gray-600 mt-1">Termino de relacionamento com colaborador, cliente ou fornecedor</p>
+               )}
+             </div>
+         </div>
+<button
+           type="submit"
+           form="process-form"
+           disabled={loading}
+           className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-200 disabled:opacity-50"
+         >
+           <Save size={20} /> {loading ? (formData.process_type === "Rescisão" ? 'Criando Rescisão...' : 'Criando...') : (formData.process_type === "Rescisão" ? 'Criar Rescisão' : 'Criar Processo')}
+         </button>
       </div>
 
-      <form id="process-form" onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-8">
-        {/* Cabeçalho do Processo */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-            <FileText size={22} className="text-blue-600" />
-            <h3 className="text-lg font-bold text-gray-900">Cabeçalho do Processo</h3>
-          </div>
+       <form id="process-form" onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-8">
+{/* Cabeçalho do Processo */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+              <FileText size={22} className="text-blue-600" />
+              <h3 className="text-lg font-bold text-gray-900">Cabeçalho do Processo</h3>
+            </div>
 
-           {/* Selecionar Entidade */}
-           <div className="space-y-4">
-             <div className="flex items-center gap-2">
-               <Package size={18} className="text-indigo-600" />
-               <label className="text-sm font-bold text-gray-700">Selecionar {entityTypeDisplay} *</label>
-             </div>
-            {errors.entity && <p className="text-xs text-red-600">{errors.entity}</p>}
-            
-            {selectedEntity ? (
-              <div className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
-                <div>
-                  <p className="text-sm font-bold text-gray-900">{selectedEntity.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {entityTypeParam === 'Employee' ? selectedEntity.department : selectedEntity.code} • {entityTypeParam === 'Employee' ? selectedEntity.position : selectedEntity.entity_type}
-                  </p>
+             {formData.process_type !== "Rescisão" && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Package size={18} className="text-indigo-600" />
+                  <label className="text-sm font-bold text-gray-700">Selecionar {entityTypeDisplay} *</label>
                 </div>
-                <button type="button" onClick={removeEntity} className="text-indigo-600 hover:text-indigo-700">
-                  <X size={18} />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowEntitySelect(!showEntitySelect)}
-                className="px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center gap-2 w-full justify-center"
-              >
-                 <Package size={18} />
-                 {showEntitySelect ? 'Fechar' : `Selecionar ${entityTypeDisplay}`}
-              </button>
-            )}
+               {errors.entity && <p className="text-xs text-red-600">{errors.entity}</p>}
+               
+               {selectedEntity ? (
+                 <div className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                   <div>
+                     <p className="text-sm font-bold text-gray-900">{selectedEntity.name}</p>
+                     <p className="text-xs text-gray-500">
+                       {entityTypeParam === 'Employee' ? selectedEntity.department : selectedEntity.code} • {entityTypeParam === 'Employee' ? selectedEntity.position : selectedEntity.entity_type}
+                     </p>
+                   </div>
+                   <button type="button" onClick={removeEntity} className="text-indigo-600 hover:text-indigo-700">
+                     <X size={18} />
+                   </button>
+                 </div>
+               ) : (
+                 <button
+                   type="button"
+                   onClick={() => setShowEntitySelect(!showEntitySelect)}
+                   className="px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center gap-2 w-full justify-center"
+                 >
+                    <Package size={18} />
+                    {showEntitySelect ? 'Fechar' : `Selecionar ${entityTypeDisplay}`}
+                 </button>
+               )}
 
-            {showEntitySelect && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
-                {entities.filter(e => !selectedEntity || selectedEntity.id !== e.id).map(entity => (
+               {showEntitySelect && (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+                   {entities.filter(e => !selectedEntity || selectedEntity.id !== e.id).map(entity => (
+                     <button
+                       type="button"
+                       key={entity.id}
+                       onClick={() => toggleEntity(entity)}
+                       className="p-3 text-left bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-colors"
+                     >
+                       <p className="text-sm font-medium text-gray-900">{entity.name}</p>
+                       <p className="text-xs text-gray-500">
+                         {entityTypeParam === 'Employee' ? entity.department : entity.code} • {entityTypeParam === 'Employee' ? entity.position : entity.entity_type}
+                       </p>
+                     </button>
+                   ))}
+                 </div>
+               )}
+               </div>
+             )}
+
+{formData.process_type === "Rescisão" && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Package size={18} className="text-red-600" />
+                    <label className="text-sm font-bold text-gray-700">Tipo de Entidade *</label>
+                    <span className="text-xs text-gray-500">(Para rescisão de contrato)</span>
+                  </div>
+                  {errors.entity && <p className="text-xs text-red-600">{errors.entity}</p>}
+                  
+                  <FormField
+                    name="entity_type"
+                    value={formData.entity_type}
+                    onChange={handleChange}
+                    options={[
+                      { value: "Employee", label: "Colaborador" },
+                      { value: "Client", label: "Cliente" },
+                      { value: "Supplier", label: "Fornecedor" }
+                    ]}
+                    error={undefined}
+                  />
+                  
+                  <div className="flex items-center gap-2 mt-4">
+                    <Package size={18} className="text-red-600" />
+                    <label className="text-sm font-bold text-gray-700">Selecionar Entidade *</label>
+                  </div>
+                  
+                {selectedEntity ? (
+                  <div className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">{selectedEntity.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {selectedEntity.entity_type_internal === 'Employee' 
+                          ? `${selectedEntity.department || '—'} • ${selectedEntity.position || '—'}` 
+                          : `${selectedEntity.code || '—'} • ${selectedEntity.entity_type || '—'}`}
+                      </p>
+                    </div>
+                    <button type="button" onClick={removeEntity} className="text-red-600 hover:text-red-700">
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    key={entity.id}
-                    onClick={() => toggleEntity(entity)}
-                    className="p-3 text-left bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-colors"
+                    onClick={() => setShowEntitySelect(!showEntitySelect)}
+                    className="px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-red-400 hover:text-red-600 transition-colors flex items-center gap-2 w-full justify-center"
                   >
-                    <p className="text-sm font-medium text-gray-900">{entity.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {entityTypeParam === 'Employee' ? entity.department : entity.code} • {entityTypeParam === 'Employee' ? entity.position : entity.entity_type}
-                    </p>
+                     <Package size={18} />
+                     {showEntitySelect ? 'Fechar' : 'Selecionar Entidade'}
                   </button>
-                ))}
+                )}
+
+                {showEntitySelect && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-100 rounded-xl">
+                    {entities
+                      .filter(e => e.entity_type_internal === formData.entity_type)
+                      .filter(e => !selectedEntity || selectedEntity.id !== e.id)
+                      .map(entity => (
+                      <button
+                        type="button"
+                        key={entity.id}
+                        onClick={() => toggleEntity(entity)}
+                        className="p-3 text-left bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-300 rounded-xl transition-colors"
+                      >
+                        <p className="text-sm font-medium text-gray-900">{entity.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {entity.entity_type_internal === 'Employee' 
+                            ? `${entity.department || '—'} • ${entity.position || '—'}` 
+                            : `${entity.code || '—'} • ${entity.entity_type || '—'}`}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+              )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FormField 
@@ -363,8 +500,102 @@ export default function ProcessCreate() {
           </div>
         </div>
 
+{formData.process_type === "Rescisão" && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+                <X size={22} className="text-red-600" />
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Rescisão de Contrato</h3>
+                  <p className="text-sm text-gray-600">Detalhes do encerramento do contrato</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <FormField
+                  label="Nº do Processo / Referência"
+                  name="process_number"
+                  value={formData.process_number}
+                  onChange={handleChange}
+                  placeholder="Ex: RES-2024-001"
+                  error={undefined}
+                />
+                <FormField
+                  label="Data de Abertura"
+                  name="open_date"
+                  value={formData.open_date}
+                  onChange={handleChange}
+                  type="date"
+                  error={undefined}
+                />
+                <FormField
+                  label="Tipo de Rescisão"
+                  name="document_type"
+                  value={formData.document_type}
+                  onChange={handleChange}
+                  placeholder="Ex: Acordo mútuo, Justa causa, Iniciativa própria..."
+                  error={undefined}
+                />
+                <FormField
+                  label="Data da Rescisão"
+                  name="termination_date"
+                  value={formData.termination_date}
+                  onChange={handleChange}
+                  type="date"
+                  error={undefined}
+                />
+                <FormField
+                  label="Registo/Documento"
+                  name="registration"
+                  value={formData.registration}
+                  onChange={handleChange}
+                  placeholder="Ex: Nº de certidão, referência legal..."
+                  error={undefined}
+                />
+                <FormField
+                  label="Departamento de Atendimento"
+                  name="service_area"
+                  value={formData.service_area}
+                  onChange={handleChange}
+                  placeholder="Ex: RH, Jurídico, Administração..."
+                  error={undefined}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Motivo da Rescisão *
+                </label>
+                <textarea
+                  name="termination_reason"
+                  value={formData.termination_reason}
+                  onChange={handleChange}
+                  rows={4}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+                  placeholder="Descreva detalhadamente o motivo da rescisão do contrato..."
+                />
+              </div>
+            </div>
+          )}
+
+        {formData.process_type !== "Rescisão" && (
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="space-y-2">
+             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Justificativa do Processo</label>
+             <textarea
+               name="justification"
+               value={formData.justification}
+               onChange={handleChange}
+               rows={4}
+               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+               placeholder="Descreva a justificativa para a criação deste processo..."
+             />
+           </div>
+         </div>
+        )}
+
         {/* Critérios de Avaliação */}
-        <div className="space-y-6">
+        {formData.process_type !== "Rescisão" && (
+         <div className="space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <Scale size={22} className="text-amber-600" />
             <h3 className="text-lg font-bold text-gray-900">Critérios de Avaliação</h3>
@@ -408,9 +639,8 @@ export default function ProcessCreate() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Responsável do Processo */}
+         </div>
+         )}
         <div className="space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <User size={22} className="text-indigo-600" />
@@ -457,10 +687,14 @@ export default function ProcessCreate() {
           </div>
         </div>
 
-        {/* Info */}
-        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-          <AlertCircle size={20} className="text-blue-600" />
-          <p className="text-sm text-blue-700">Após criar o processo, podrá selecionar o fornecedor/cliente e adicionar os critérios de avaliação.</p>
+{/* Info */}
+        <div className={`flex items-center gap-3 p-4 rounded-2xl border ${formData.process_type === "Rescisão" ? "bg-red-50 border-red-100" : "bg-blue-50 border-blue-100"}`}>
+          <AlertCircle size={20} className={formData.process_type === "Rescisão" ? "text-red-600" : "text-blue-600"} />
+          <p className={`text-sm ${formData.process_type === "Rescisão" ? "text-red-700" : "text-blue-700"}`}>
+            {formData.process_type === "Rescisão" 
+              ? "Ao criar a rescisão, o contrato com o colaborador/cliente/fornecedor será formalmente encerrado." 
+              : "Após criar o processo, podrá selecionar o fornecedor/cliente e adicionar os critérios de avaliação."}
+          </p>
         </div>
       </form>
     </div>

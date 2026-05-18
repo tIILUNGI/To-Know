@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Trash2, CheckCircle2, Shield, XCircle } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CheckCircle2, Shield, XCircle, X } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import ConfirmModal from "../common/ConfirmModal";
 import WorkflowStepper from "./WorkflowStepper";
@@ -403,56 +403,97 @@ export default function ProcessDetail() {
         </div>
       )}
 
-      {/* Criteria Section */}
-      <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
-        <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 sm:mb-5 flex items-center gap-2">
-          <Shield size={18} className="text-blue-600" /> Critérios de Avaliação
-        </h3>
-        <div className="space-y-4 sm:space-y-6">
-          {process.criteria && process.criteria.map((c: any) => (
-            <div key={c.id} className="space-y-3 group border-b border-gray-50 pb-4 last:border-0">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{c.description}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">Peso: {c.weight}x • Máx: {c.max_score}</p>
-                </div>
-                <div className="w-full sm:w-24">
-                  <label className="text-[10px] text-gray-400 block mb-1">Nota (0-{c.max_score})</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max={c.max_score}
-                    value={scores.find((s) => s.criteria_id === c.criteria_id)?.score}
-                    onChange={(e) => handleScoreChange(c.criteria_id, "score", Number(e.target.value))}
-                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg text-center font-bold"
-                  />
-                </div>
+      {/* Rescisão Details */}
+      {process.type === "Rescisão" && (
+        <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <XCircle size={18} className="text-red-600" /> Detalhes da Rescisão
+          </h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase">Motivo da Rescisão</p>
+                <p className="text-sm text-gray-900 mt-1">{process.termination_reason || "Não especificado"}</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                <div>
-                  <label className="text-[10px] text-gray-400 ml-1 block mb-1">Evidências</label>
-                  <input
-                    value={scores.find((s) => s.criteria_id === c.criteria_id)?.evidence}
-                    onChange={(e) => handleScoreChange(c.criteria_id, "evidence", e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg"
-                  />
+              {process.termination_date && (
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-xs font-bold text-gray-500 uppercase">Data da Rescisão</p>
+                  <p className="text-sm text-gray-900 mt-1">{new Date(process.termination_date).toLocaleDateString("pt-BR")}</p>
                 </div>
-                <div>
-                  <label className="text-[10px] text-gray-400 ml-1 block mb-1">Comentários</label>
-                  <input
-                    value={scores.find((s) => s.criteria_id === c.criteria_id)?.comments}
-                    onChange={(e) => handleScoreChange(c.criteria_id, "comments", e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg"
-                  />
-                </div>
-              </div>
+              )}
             </div>
-          ))}
+            {process.document_type && (
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase">Tipo de Rescisão</p>
+                <p className="text-sm text-gray-900 mt-1">{process.document_type}</p>
+              </div>
+            )}
+            {process.registration && (
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase">Registo/Documento</p>
+                <p className="text-sm text-gray-900 mt-1">{process.registration}</p>
+              </div>
+            )}
+            {process.service_area && (
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase">Departamento de Atendimento</p>
+                <p className="text-sm text-gray-900 mt-1">{process.service_area}</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Summary */}
+      {/* Critérios de Avaliação */}
+      {process.type !== "Rescisão" && (
+        <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 sm:mb-5 flex items-center gap-2">
+            <Shield size={18} className="text-blue-600" /> Critérios de Avaliação
+          </h3>
+          <div className="space-y-4 sm:space-y-6">
+            {process.criteria && process.criteria.map((c: any) => (
+              <div key={c.id} className="space-y-3 group border-b border-gray-50 pb-4 last:border-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{c.description}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Peso: {c.weight}x • Máx: {c.max_score}</p>
+                  </div>
+                  <div className="w-full sm:w-24">
+                    <label className="text-[10px] text-gray-400 block mb-1">Nota (0-{c.max_score})</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={c.max_score}
+                      value={scores.find((s) => s.criteria_id === c.criteria_id)?.score}
+                      onChange={(e) => handleScoreChange(c.criteria_id, "score", Number(e.target.value))}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg text-center font-bold"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 ml-1 block mb-1">Evidências</label>
+                    <input
+                      value={scores.find((s) => s.criteria_id === c.criteria_id)?.evidence}
+                      onChange={(e) => handleScoreChange(c.criteria_id, "evidence", e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-400 ml-1 block mb-1">Comentários</label>
+                    <input
+                      value={scores.find((s) => s.criteria_id === c.criteria_id)?.comments}
+                      onChange={(e) => handleScoreChange(c.criteria_id, "comments", e.target.value)}
+                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
         <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-4">Resumo do Estado</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

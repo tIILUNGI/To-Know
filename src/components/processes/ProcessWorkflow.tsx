@@ -125,25 +125,29 @@ export default function ProcessWorkflow() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <PageHeader
-        title="Processos"
-        actions={
-          <>
-            <Link to="/processos/novo?type=approval&entity=Supplier" className="btn btn-primary">
-              <Plus size={16} />
-              Aprovar Fornecedor
-            </Link>
-            <Link to="/processos/novo?type=approval&entity=Client" className="btn btn-secondary">
-              <Plus size={16} />
-              Aprovar Cliente
-            </Link>
-            <Link to="/processos/novo?type=approval&entity=Employee" className="btn btn-secondary">
-              <Plus size={16} />
-              Aprovar Colaborador
-            </Link>
-          </>
-        }
-      />
+<PageHeader
+         title="Processos"
+         actions={
+           <>
+             <Link to="/processos/novo?type=approval&entity=Supplier" className="btn btn-primary">
+               <Plus size={16} />
+               Aprovar Fornecedor
+             </Link>
+             <Link to="/processos/novo?type=approval&entity=Client" className="btn btn-secondary">
+               <Plus size={16} />
+               Aprovar Cliente
+             </Link>
+<Link to="/processos/novo?type=approval&entity=Employee" className="btn btn-secondary">
+                <Plus size={16} />
+                Aprovar Colaborador
+              </Link>
+              <Link to="/processos/novo?type=rescission" className="btn btn-secondary">
+                <XCircle size={16} />
+                Rescisão de Contrato
+              </Link>
+           </>
+         }
+       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="metric-card">
