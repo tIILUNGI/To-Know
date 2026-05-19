@@ -41,8 +41,18 @@ export default function ClientSatisfactionResponse() {
         if (data.message) {
           setError(data.message);
         } else {
-          setFormData(data.form);
-          setQuestions(data.questions);
+          const mappedQuestions = (data.questions || []).map((q: any) => ({
+            id: q.id,
+            text: q.text || q.questionText || q.question_text || "",
+            type: q.type || q.questionType || q.question_type || "rating",
+            required: q.required !== undefined ? q.required : (q.isRequired !== undefined ? q.isRequired : q.is_required),
+            max_score: q.max_score || q.maxScore || 5
+          }));
+          setFormData({
+            ...data.form,
+            client_name: data.form?.client_name || data.client?.name || ""
+          });
+          setQuestions(mappedQuestions);
         }
       })
       .catch(() => {

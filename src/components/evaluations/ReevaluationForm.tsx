@@ -105,14 +105,17 @@ export default function ReevaluationForm() {
     }
     setLoading(true);
 
+    const currentScore = parseFloat(formData.current_result) || 100;
+    const scoreVal = (currentScore / 100) * 5;
+
     const responses = (selectedCriteria || []).map(c => ({
       group_name: "Reavaliação",
-      criterion_name: c.name,
-      score: c.score || 0,
+      criterion_name: c,
+      score: scoreVal,
       observation: ""
     }));
 
-    const evalName = formData.name || `Reavaliação - ${selectedSupplier.name}`;
+    const evalName = `Reavaliação - ${selectedSupplier.name}`;
 
      try {
        const res = await fetch("/api/evaluations", {

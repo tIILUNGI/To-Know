@@ -39,11 +39,11 @@ const normalizeCriterion = (criterion: any) => {
     entity_type: (criterion.entity_type ?? criterion.entityType ?? "").toString(),
   };
 };
-
-const matchesEvaluationType = (evaluationType: string, targetType: string) => {
-  const normalized = (evaluationType || "").toLowerCase();
+const matchesEvaluationType = (evaluationType: string, targetType: string) => {
+  if (!evaluationType) return true;
+  const normalized = evaluationType.toLowerCase();
   const target = targetType.toLowerCase();
-  return normalized === target || normalized.includes(target);
+  return normalized === target || normalized.includes(target) || normalized === 'ambos';
 };
 
 export default function ClientEvaluationForm() {
@@ -103,8 +103,9 @@ export default function ClientEvaluationForm() {
                        matchesEvaluationType(evaluationType, currentEvalType);
               });
           setAllCriteria(filtered);
-        })
-        .catch(() => {});
+          setSelectedCriteriaIds(filtered.map((c: any) => Number(c.id)));
+       })
+       .catch(() => {});
    }, []);
 
   const handleChange = (e: any) => {
