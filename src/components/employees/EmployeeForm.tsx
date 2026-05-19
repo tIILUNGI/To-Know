@@ -20,7 +20,7 @@ export default function EmployeeForm() {
     department: "",
     hire_date: "",
     user_id: "",
-    status: "Ativo",
+    status: "Activo",
     manager_id: ""
   });
 
@@ -60,7 +60,7 @@ export default function EmployeeForm() {
             department: data.department || "",
             hire_date: data.hire_date || "",
             user_id: data.user_id ? String(data.user_id) : "",
-            status: data.status || "Ativo",
+            status: data.status || "Activo",
             manager_id: data.manager_id ? String(data.manager_id) : ""
           });
           setFetchLoading(false);
@@ -256,7 +256,7 @@ export default function EmployeeForm() {
               onChange={handleChange}
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             >
-              <option value="Ativo">Ativo</option>
+              <option value="Activo">Activo</option>
               <option value="Inactivo">Inactivo</option>
             </select>
           </div>

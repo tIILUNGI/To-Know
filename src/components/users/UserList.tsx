@@ -77,7 +77,7 @@ export default function UserList() {
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Utilizador"
-        message={`Tem certeza que deseja eliminar o utilizador ${deleteTarget?.name}? Esta ação não pode ser desfeita.`}
+        message={`Tem certeza que deseja eliminar o utilizador ${deleteTarget?.name}? Esta acção não pode ser desfeita.`}
         confirmLabel="Eliminar"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

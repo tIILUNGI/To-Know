@@ -241,7 +241,7 @@ export default function ClientSatisfactionList() {
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   form.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {form.is_active ? 'Ativo' : 'Inativo'}
+                  {form.is_active ? 'Activo' : 'Inactivo'}
                 </span>
               </div>
 

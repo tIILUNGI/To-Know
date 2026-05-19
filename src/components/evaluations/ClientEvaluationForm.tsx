@@ -127,7 +127,7 @@ export default function ClientEvaluationForm() {
     });
   };
 
-  // Atualiza criteria baseado nos critérios selecionados
+  // Actualiza criteria baseado nos critérios selecionados
   useEffect(() => {
     const selected = allCriteria
       .filter(c => selectedCriteriaIds.includes(Number(c.id)))

@@ -130,7 +130,7 @@ export default function Dashboard() {
       stats: [
         { label: "Total", value: suppliers },
         { label: "Crítico", value: criticalSuppliers, className: "text-amber-500" },
-        { label: "Ativo", value: Math.max(suppliers - criticalSuppliers, 0), className: "text-emerald-500" },
+        { label: "Activo", value: Math.max(suppliers - criticalSuppliers, 0), className: "text-emerald-500" },
       ],
     },
     {
@@ -141,7 +141,7 @@ export default function Dashboard() {
       stats: [
         { label: "Total", value: clients },
         { label: "Atenção", value: lowPerfClients, className: "text-amber-500" },
-        { label: "Ativo", value: Math.max(clients - lowPerfClients, 0), className: "text-emerald-500" },
+        { label: "Activo", value: Math.max(clients - lowPerfClients, 0), className: "text-emerald-500" },
       ],
     },
     {
@@ -174,7 +174,7 @@ export default function Dashboard() {
       stats: [
         { label: "Total", value: employees },
         { label: "Satisf.", value: clientSatisfaction, className: "text-amber-500" },
-        { label: "Ativo", value: employees, className: "text-emerald-500" },
+        { label: "Activo", value: employees, className: "text-emerald-500" },
       ],
     },
     {
@@ -185,7 +185,7 @@ export default function Dashboard() {
       stats: [
         { label: "Índice", value: supplierPerformance },
         { label: "Aprov.", value: approvalRate, className: "text-amber-500" },
-        { label: "Ativo", value: clientSatisfaction, className: "text-emerald-500" },
+        { label: "Activo", value: clientSatisfaction, className: "text-emerald-500" },
       ],
     },
   ];
@@ -199,7 +199,7 @@ export default function Dashboard() {
       stats: [
         { label: "Total", value: 0 },
         { label: "Pendente", value: 0, className: "text-amber-500" },
-        { label: "Ativo", value: 0, className: "text-emerald-500" },
+        { label: "Activo", value: 0, className: "text-emerald-500" },
       ],
     });
   }

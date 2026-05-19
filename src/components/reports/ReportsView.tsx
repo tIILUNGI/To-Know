@@ -508,7 +508,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-blue-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ativos</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Activos</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-blue-600">{data?.length || 0} Entidades</span>
               </div>
@@ -531,7 +531,7 @@ export default function ReportsView() {
                         <p className="text-sm font-bold text-gray-900 truncate group-hover:text-indigo-700 transition-colors tracking-tight">{c.name}</p>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">{c.segment || 'Geral'}</p>
                       </div>
-                      <div className="px-2.5 py-1 rounded-lg bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-tighter border border-green-100 shadow-sm shadow-green-100/50">Ativo</div>
+                      <div className="px-2.5 py-1 rounded-lg bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-tighter border border-green-100 shadow-sm shadow-green-100/50">Activo</div>
                     </div>
                     <div className="pt-5 border-t border-gray-50 flex items-center justify-between">
                        <div className="flex flex-col gap-0.5">
@@ -972,7 +972,7 @@ export default function ReportsView() {
                   <ClipboardList size={24} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 leading-none">Planos de Ação em Aberto</h3>
+                  <h3 className="text-base font-bold text-gray-900 leading-none">Planos de Acção em Aberto</h3>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-orange-100 shadow-sm">
@@ -1322,7 +1322,7 @@ export default function ReportsView() {
      { value: "rejection-rate", label: "Taxa Reprovação" },
      { value: "satisfaction-trend", label: "Tendência Satisfação" },
      { value: "performance-trend", label: "Tendência Performance" },
-     { value: "open-action-plans", label: "Planos Ação em Aberto" },
+     { value: "open-action-plans", label: "Planos Acção em Aberto" },
      { value: "processes-by-responsible", label: "Processos por Responsável" },
    ];
 

@@ -81,7 +81,7 @@ export default function FullDemoData() {
                 <Users size={18} className="text-green-600" />
                 <span className="font-medium text-gray-900">5 Clientes</span>
               </div>
-              <p className="text-xs text-gray-500">CLI-001 a CLI-005 - Clientes de vários setores</p>
+              <p className="text-xs text-gray-500">CLI-001 a CLI-005 - Clientes de vários sectores</p>
             </div>
 
             <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">

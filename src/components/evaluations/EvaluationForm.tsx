@@ -283,10 +283,10 @@ onChange={(e) => setFormData({...formData, previous_evaluation_id: e.target.valu
 
       {/* Action Plan Section */}
       <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100">
-        <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">Plano de Ação</h3>
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">Plano de Acção</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-500">Plano de Ação</label>
+            <label className="text-xs font-medium text-gray-500">Plano de Acção</label>
             <textarea 
               value={formData.action_plan} 
               onChange={(e) => setFormData({...formData, action_plan: e.target.value})} 

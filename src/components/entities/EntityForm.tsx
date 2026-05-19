@@ -134,7 +134,7 @@ export default function EntityForm() {
          throw new Error(data.message || "Erro ao salvar entidade");
        }
 
-       addToast(id && id !== "new" ? "Entidade atualizada com sucesso!" : "Entidade criada com sucesso!", "success");
+       addToast(id && id !== "new" ? "Entidade actualizada com sucesso!" : "Entidade criada com sucesso!", "success");
        navigate(-1);
      } catch (err: any) {
        console.error("Erro ao salvar:", err);
@@ -214,9 +214,9 @@ export default function EntityForm() {
                 <FormField label="NIF" name="tax_id" value={formData.tax_id} onChange={handleChange} required={true} error={errors.tax_id} />
                 <FormField label="Registo Comercial / Alvará" name="registration_number" value={formData.registration_number} onChange={handleChange} error={undefined} />
                 <FormField label="Estado" name="status" value={formData.status} onChange={handleChange} options={[
-                  { value: 'Ativo', label: 'Ativo' },
+                  { value: 'Activo', label: 'Activo' },
                   { value: 'Em análise', label: 'Em Análise' },
-                  { value: 'Inativo', label: 'Inativo' },
+                  { value: 'Inactivo', label: 'Inactivo' },
                   { value: 'Suspenso', label: 'Suspenso' },
                   { value: 'Bloqueado', label: 'Bloqueado' },
                   { value: 'Em revisão', label: 'Em Revisão' }
@@ -250,7 +250,7 @@ export default function EntityForm() {
 
            {activeTab === "classificacao" && (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2">
-               <FormField label="Sector de Atividade" name="sector" value={formData.sector} onChange={handleChange} required={true} error={errors.sector} />
+               <FormField label="Sector de Actividade" name="sector" value={formData.sector} onChange={handleChange} required={true} error={errors.sector} />
                 <FormField label="Impacto Operacional" name="operational_impact" value={formData.operational_impact} onChange={handleChange} options={[
                  { value: 'Baixo', label: 'Baixo' },
                  { value: 'Médio', label: 'Médio' },

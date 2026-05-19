@@ -69,7 +69,7 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
     return matchesSearch && matchesSector && matchesRisk;
   });
 
-  const activeCount = entities.filter((entity) => entity.status === "Ativo").length;
+  const activeCount = entities.filter((entity) => entity.status === "Activo").length;
   const highRiskCount = entities.filter((entity) => entity.final_risk_rating === "Alto").length;
 
   const pageTitle = type === "Supplier" ? "Fornecedores" : "Clientes";
@@ -111,7 +111,7 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
         <div className="metric-card">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="metric-label">Estado Ativo</p>
+              <p className="metric-label">Estado Activo</p>
               <p className="metric-value">{activeCount}</p>
               <p className="metric-note">Entidades disponíveis para utilização imediata</p>
             </div>
@@ -190,7 +190,7 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
                 <th>Estado</th>
                 <th>Relacionamento</th>
                 <th>Risco</th>
-                <th className="text-right">Ações</th>
+                <th className="text-right">Acções</th>
               </tr>
             </thead>
             <tbody>
@@ -235,7 +235,7 @@ export default function EntityList({ type }: { type: "Supplier" | "Client" }) {
                     <td>
                       <span
                         className={`badge ${
-                          entity.status === "Ativo"
+                          entity.status === "Activo"
                             ? "badge-success"
                             : entity.status === "Em análise"
                               ? "bg-blue-50 text-blue-700"

@@ -135,7 +135,7 @@ export default function EvaluationFormNew() {
     });
   };
 
-  // Atualiza criteria baseado nos critérios selecionados da API
+  // Actualiza criteria baseado nos critérios selecionados da API
   useEffect(() => {
     const selected = allCriteria
       .filter(c => selectedCriteriaIds.includes(c.id))
@@ -549,7 +549,7 @@ export default function EvaluationFormNew() {
               </p>
             </div>
             <div className={`p-6 border rounded-2xl text-center ${resultData.recommended_action === 'Manter' ? 'bg-green-50 border-green-100' : resultData.recommended_action === 'Melhorar' || resultData.recommended_action === 'Reavaliar' ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'}`}>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Ação Recomendada</p>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Acção Recomendada</p>
               <p className={`text-lg font-bold ${resultData.recommended_action === 'Manter' ? 'text-green-700' : resultData.recommended_action === 'Melhorar' || resultData.recommended_action === 'Reavaliar' ? 'text-amber-700' : 'text-red-700'}`}>
                 {resultData.recommended_action || "—"}
               </p>
@@ -558,14 +558,14 @@ export default function EvaluationFormNew() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Plano de Ação</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Plano de Acção</label>
               <textarea 
                 name="action_plan" 
                 value={resultData.action_plan} 
                 onChange={(e) => setResultData(prev => ({ ...prev, action_plan: e.target.value }))} 
                 rows={3}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                placeholder="Descreva o plano de ação..."
+                placeholder="Descreva o plano de acção..."
               />
             </div>
             <div className="space-y-2">
@@ -580,7 +580,7 @@ export default function EvaluationFormNew() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField 
-              label="Prazo do Plano de Ação" 
+              label="Prazo do Plano de Acção" 
               name="action_deadline" 
               value={resultData.action_deadline} 
               onChange={(e) => setResultData(prev => ({ ...prev, action_deadline: e.target.value }))} 

@@ -158,7 +158,7 @@ export default function EmployeeList() {
             className="input text-xs min-w-[120px]"
           >
             <option value="">Todos Status</option>
-            <option value="Ativo">Ativo</option>
+            <option value="Activo">Activo</option>
             <option value="Inactivo">Inactivo</option>
           </select>
           
@@ -202,7 +202,7 @@ export default function EmployeeList() {
                       {emp.name?.charAt(0)?.toUpperCase() || "?"}
                     </div>
                   </div>
-                  <span className={`badge text-xs ${emp.status === "Ativo" ? "badge-success" : "badge-neutral"}`}>
+                  <span className={`badge text-xs ${emp.status === "Activo" ? "badge-success" : "badge-neutral"}`}>
                     {emp.status}
                   </span>
                 </div>

@@ -221,7 +221,7 @@ ${localStorage.getItem("user_name") || "Equipe"}`);
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Descreva o objetivo da pesquisa..."
+              placeholder="Descreva o objectivo da pesquisa..."
               rows={3}
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all resize-none"
             />

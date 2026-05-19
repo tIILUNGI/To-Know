@@ -160,7 +160,7 @@ export default function DocumentRegistration() {
       });
 
       if (res.ok) {
-        addToast(editingDoc ? "Documento atualizado!" : "Documento registado com sucesso!", "success");
+        addToast(editingDoc ? "Documento actualizado!" : "Documento registado com sucesso!", "success");
         setModalOpen(false);
         fetchDocuments();
       } else {
@@ -242,7 +242,7 @@ export default function DocumentRegistration() {
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Documento"
-        message={`Tem certeza que deseja eliminar o documento "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+        message={`Tem certeza que deseja eliminar o documento "${deleteTarget?.name}"? Esta acção não pode ser desfeita.`}
         confirmLabel="Eliminar"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
@@ -343,7 +343,7 @@ export default function DocumentRegistration() {
                 <th>Data de Publicação / Emissão</th>
                 <th>Data de Validade</th>
                 <th>Atendimento</th>
-                <th className="text-right">Ações</th>
+                <th className="text-right">Acções</th>
               </tr>
             </thead>
             <tbody>

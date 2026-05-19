@@ -163,7 +163,7 @@ export default function EntityHistory() {
             <div className="mt-2">
               <span
                 className={`badge ${
-                  entity.status === "Ativo"
+                  entity.status === "Activo"
                     ? "badge-success"
                     : entity.status === "Bloqueado" || entity.status === "Desqualificado"
                       ? "badge-danger"

@@ -119,7 +119,7 @@ export default function ProcessWorkflow() {
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Processo"
-        message={`Tem certeza que deseja eliminar o processo ${deleteTarget?.process_number}? Esta ação não pode ser desfeita.`}
+        message={`Tem certeza que deseja eliminar o processo ${deleteTarget?.process_number}? Esta acção não pode ser desfeita.`}
         confirmLabel="Eliminar"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

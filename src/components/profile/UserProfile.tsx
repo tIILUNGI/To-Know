@@ -59,7 +59,7 @@ export default function UserProfile() {
         setAvatar(base64String);
         // Dispatch custom event to notify Layout.tsx header avatar in real-time
         window.dispatchEvent(new Event("avatar_updated"));
-        addToast("Foto de perfil atualizada!", "success");
+        addToast("Foto de perfil actualizada!", "success");
       } catch (err) {
         console.error("Erro ao guardar imagem no localStorage:", err);
         addToast("Erro ao guardar foto de perfil. Tente uma imagem mais pequena.", "error");
@@ -81,9 +81,9 @@ export default function UserProfile() {
         body: JSON.stringify({ name: profileData.name, email: profileData.email }),
       });
       if (res.ok) {
-        addToast("Perfil atualizado com sucesso. Faça login novamente para atualizar no menu.", "success");
+        addToast("Perfil actualizado com sucesso. Faça login novamente para actualizar no menu.", "success");
       } else {
-        addToast("Erro ao atualizar perfil.", "error");
+        addToast("Erro ao actualizar perfil.", "error");
       }
     } catch {
       addToast("Erro de conexão.", "error");

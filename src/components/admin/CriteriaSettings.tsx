@@ -87,7 +87,7 @@ export default function CriteriaSettings() {
       });
 
       if (res.ok) {
-        addToast(`Critério ${editingId ? "atualizado" : "criado"} com sucesso`, "success");
+        addToast(`Critério ${editingId ? "actualizado" : "criado"} com sucesso`, "success");
         setIsModalOpen(false);
         fetchCriteria();
       } else {
@@ -213,7 +213,7 @@ export default function CriteriaSettings() {
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="rounded" />
-                  Ativo
+                  Activo
                 </label>
               </div>
             </div>
@@ -285,7 +285,7 @@ export default function CriteriaSettings() {
                 <td className="px-2 sm:px-4 py-2.5 text-center">
                   <div className="flex flex-col gap-1">
                     {c.required ? <span className="text-[9px] bg-red-50 text-red-600 px-1 rounded">Obr.</span> : null}
-                    {c.active ? <span className="text-[9px] bg-green-50 text-green-600 px-1 rounded">Ativo</span> : <span className="text-[9px] bg-gray-100 text-gray-500 px-1 rounded">Inativo</span>}
+                    {c.active ? <span className="text-[9px] bg-green-50 text-green-600 px-1 rounded">Activo</span> : <span className="text-[9px] bg-gray-100 text-gray-500 px-1 rounded">Inactivo</span>}
                   </div>
                 </td>
                 <td className="px-2 sm:px-4 py-2.5 text-right">

@@ -158,7 +158,7 @@ export default function LegalDocuments() {
       });
 
       if (res.ok) {
-        addToast(editingDoc ? "Documento legal atualizado!" : "Documento legal criado com sucesso!", "success");
+        addToast(editingDoc ? "Documento legal actualizado!" : "Documento legal criado com sucesso!", "success");
         setModalOpen(false);
         fetchDocuments();
       } else {
@@ -236,7 +236,7 @@ export default function LegalDocuments() {
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Documento Legal"
-        message={`Tem certeza que deseja eliminar o documento legal "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+        message={`Tem certeza que deseja eliminar o documento legal "${deleteTarget?.name}"? Esta acção não pode ser desfeita.`}
         confirmLabel="Eliminar"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

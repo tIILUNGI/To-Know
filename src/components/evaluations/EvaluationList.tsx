@@ -89,7 +89,7 @@ export default function EvaluationList() {
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Avaliação"
-        message={`Tem certeza que deseja eliminar esta avaliação de ${deleteTarget?.entity_name}? Esta ação não pode ser desfeita.`}
+        message={`Tem certeza que deseja eliminar esta avaliação de ${deleteTarget?.entity_name}? Esta acção não pode ser desfeita.`}
         confirmLabel="Eliminar"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
@@ -152,7 +152,7 @@ export default function EvaluationList() {
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-4">
           <div>
             <h2 className="text-[1.35rem] font-semibold text-slate-900">{t("eval.quick_actions")}</h2>
-            <p className="mt-1 text-[1rem] text-slate-500">Atalhos diretos para os fluxos mais usados da área de avaliações.</p>
+            <p className="mt-1 text-[1rem] text-slate-500">Atalhos directos para os fluxos mais usados da área de avaliações.</p>
           </div>
           <div className="relative w-full sm:w-80">
             <Search className="input-icon" size={16} />
@@ -199,7 +199,7 @@ export default function EvaluationList() {
                 <th className="hidden sm:table-cell">Periodicidade</th>
                 <th>Score</th>
                 <th>Classificação</th>
-                <th className="text-right">Ações</th>
+                <th className="text-right">Acções</th>
               </tr>
             </thead>
             <tbody>

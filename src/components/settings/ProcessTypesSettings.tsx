@@ -118,7 +118,7 @@ export default function ProcessTypesSettings() {
       <ConfirmModal
         open={!!deleteTarget}
         title="Eliminar Tipo de Processo"
-        message={`Tem certeza que deseja eliminar o tipo "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+        message={`Tem certeza que deseja eliminar o tipo "${deleteTarget?.name}"? Esta acção não pode ser desfeita.`}
         confirmLabel="Eliminar"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
@@ -213,7 +213,7 @@ export default function ProcessTypesSettings() {
               <p className="text-xs text-gray-500 mb-3">{type.description || "Sem descrição"}</p>
               <div className="flex items-center justify-between text-xs">
                 <span className={`px-2 py-0.5 rounded ${type.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                  {type.is_active ? "Ativo" : "Inativo"}
+                  {type.is_active ? "Activo" : "Inactivo"}
                 </span>
                 <span className="text-gray-400">Ordem: {type.sort_order}</span>
               </div>

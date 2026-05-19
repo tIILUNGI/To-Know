@@ -161,8 +161,8 @@ export default function ProcessDetail() {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }).then(r => r.ok ? r.json() : null).then(data => data && setProcess(data));
       } else {
-        const err = await transitionRes.json().catch(() => ({ message: "Erro ao atualizar etapa" }));
-        addToast(err.message || "Erro ao atualizar etapa.", "error");
+        const err = await transitionRes.json().catch(() => ({ message: "Erro ao actualizar etapa" }));
+        addToast(err.message || "Erro ao actualizar etapa.", "error");
       }
     } catch (err: any) {
       addToast(err.message || "Erro de conexão.", "error");

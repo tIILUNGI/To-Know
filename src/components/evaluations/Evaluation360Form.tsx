@@ -672,7 +672,7 @@ export default function Evaluation360Form() {
               <div className="space-y-6 py-4 border-y border-gray-100">
                 <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
                   <h4 className="text-sm font-bold text-amber-900">Parte 4: Avaliação do Funcionário pelo Gestor</h4>
-                  <p className="text-[11px] text-amber-700 mt-1 uppercase tracking-wider font-medium">Por favor, avalie o desempenho e contribuições do seu subordinado direto.</p>
+                  <p className="text-[11px] text-amber-700 mt-1 uppercase tracking-wider font-medium">Por favor, avalie o desempenho e contribuições do seu subordinado directo.</p>
                 </div>
 
                 {template?.questions.filter(q => q.section_key === 'manager_eval').map((q, idx) => (
