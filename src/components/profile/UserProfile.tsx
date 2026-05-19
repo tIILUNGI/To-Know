@@ -174,7 +174,7 @@ export default function UserProfile() {
               </div>
               <div className="text-center sm:text-left">
                 <p className="text-[1.05rem] font-bold text-slate-900 dark:text-slate-200">{profileData.username}</p>
-                <span className="px-2.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-md text-[0.7rem] font-bold uppercase tracking-wider mt-1.5 inline-block">
+                <span className="px-2.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-md text-[0.7rem] font-bold  tracking-wider mt-1.5 inline-block">
                   {profileData.role}
                 </span>
                 <p className="text-[0.8rem] text-slate-400 dark:text-slate-500 mt-1">Clique no avatar para carregar imagem</p>
@@ -182,7 +182,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400  tracking-wider">
                 {t("profile.name")}
               </label>
               <div className="relative">
@@ -198,7 +198,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400  tracking-wider">
                 {t("profile.email")}
               </label>
               <div className="relative">
@@ -239,7 +239,7 @@ export default function UserProfile() {
           
           <form onSubmit={handleUpdatePassword} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400  tracking-wider">
                 {t("profile.password.current")}
               </label>
               <div className="relative">
@@ -255,7 +255,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400  tracking-wider">
                 {t("profile.password.new")}
               </label>
               <div className="relative">
@@ -273,7 +273,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <label className="text-[0.78rem] font-bold text-slate-500 dark:text-slate-400  tracking-wider">
                 {t("profile.password.confirm")}
               </label>
               <div className="relative">

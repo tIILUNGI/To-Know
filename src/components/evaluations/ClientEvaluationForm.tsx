@@ -6,7 +6,7 @@ import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
   <div className={`space-y-2 ${gridSpan}`}>
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-xs font-medium text-gray-500  tracking-wider">{label}</label>
     {options ? (
       <select name={name} value={value || ""} onChange={onChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all">
         <option value="">Selecione...</option>
@@ -422,7 +422,7 @@ export default function ClientEvaluationForm() {
                />
 
                <div className="space-y-2">
-                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Validade do Link</label>
+                 <label className="text-xs font-medium text-gray-500  tracking-wider">Validade do Link</label>
                  <select
                    value={linkExpiresDays}
                    onChange={(e) => setLinkExpiresDays(Number(e.target.value))}
@@ -535,11 +535,11 @@ export default function ClientEvaluationForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl text-center">
-              <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Pontuação Total</p>
+              <p className="text-xs font-bold text-blue-600  tracking-wider mb-2">Pontuação Total</p>
               <p className="text-3xl font-bold text-blue-700">{resultData.total_score}</p>
             </div>
             <div className="p-6 bg-green-50 border border-green-100 rounded-2xl text-center">
-              <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Percentual</p>
+              <p className="text-xs font-bold text-green-600  tracking-wider mb-2">Percentual</p>
               <p className="text-3xl font-bold text-green-700">{resultData.percentage}%</p>
             </div>
             <div className={`p-6 border rounded-2xl text-center ${
@@ -547,7 +547,7 @@ export default function ClientEvaluationForm() {
               resultData.classification === 'Regular' ? 'bg-amber-50 border-amber-100' :
               'bg-red-50 border-red-100'
             }`}>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Classificação</p>
+              <p className="text-xs font-medium text-gray-500  tracking-wider mb-2">Classificação</p>
               <p className={`text-lg font-bold ${
                 resultData.classification === 'Excelente' || resultData.classification === 'Bom' ? 'text-green-700' :
                 resultData.classification === 'Regular' ? 'text-amber-700' : 'text-red-700'
@@ -556,7 +556,7 @@ export default function ClientEvaluationForm() {
           </div>
 
           <div className="p-6 bg-gray-50 border border-gray-200 rounded-2xl">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Decisão</p>
+            <p className="text-xs font-medium text-gray-500  tracking-wider mb-2">Decisão</p>
             <p className={`text-xl font-bold ${
               resultData.decision === 'Manter' || resultData.decision === 'Desenvolver' ? 'text-green-700' :
               resultData.decision === 'Rever condições' ? 'text-amber-700' :

@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "", required = false, error }) => (
   <div className={`space-y-2 ${gridSpan}`}>
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+    <label className="text-xs font-medium text-gray-500  tracking-wider">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     {options ? (
@@ -487,7 +487,7 @@ if (formData.process_type === "Rescisão") {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Justificativa do Processo</label>
+              <label className="text-xs font-medium text-gray-500  tracking-wider">Justificativa do Processo</label>
               <textarea 
                 name="justification" 
                 value={formData.justification} 
@@ -562,7 +562,7 @@ if (formData.process_type === "Rescisão") {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-xs font-medium text-gray-500  tracking-wider">
                   Motivo da Rescisão *
                 </label>
                 <textarea
@@ -580,7 +580,7 @@ if (formData.process_type === "Rescisão") {
         {formData.process_type !== "Rescisão" && (
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            <div className="space-y-2">
-             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Justificativa do Processo</label>
+             <label className="text-xs font-medium text-gray-500  tracking-wider">Justificativa do Processo</label>
              <textarea
                name="justification"
                value={formData.justification}

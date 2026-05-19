@@ -138,7 +138,7 @@ export default function EvaluationLinksManager() {
           <form onSubmit={handleCreateLink} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Avaliação de Satisfação *</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Avaliação de Satisfação *</label>
                 <select
                   value={selectedEvaluation}
                   onChange={(e) => setSelectedEvaluation(e.target.value)}
@@ -160,7 +160,7 @@ export default function EvaluationLinksManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email do Cliente (opcional)</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Email do Cliente (opcional)</label>
                 <input
                   type="email"
                   value={clientEmail}
@@ -171,7 +171,7 @@ export default function EvaluationLinksManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nome do Cliente (opcional)</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Nome do Cliente (opcional)</label>
                 <input
                   type="text"
                   value={clientName}
@@ -182,7 +182,7 @@ export default function EvaluationLinksManager() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Validade (dias)</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Validade (dias)</label>
                 <select
                   value={expiresDays}
                   onChange={(e) => setExpiresDays(Number(e.target.value))}
@@ -228,7 +228,7 @@ export default function EvaluationLinksManager() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-50 text-[10px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                <tr className="bg-gray-50 text-[10px] font-semibold text-gray-500  tracking-wider border-b border-gray-100">
                   <th className="px-4 py-3">Avaliação</th>
                   <th className="px-4 py-3">Token / Link</th>
                   <th className="px-4 py-3">Cliente</th>

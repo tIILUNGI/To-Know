@@ -455,7 +455,7 @@ export default function DocumentRegistration() {
             <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Título <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -469,7 +469,7 @@ export default function DocumentRegistration() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Tipo do Documento
                   </label>
                   <input
@@ -482,7 +482,7 @@ export default function DocumentRegistration() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Registo / Versão
                   </label>
                   <input
@@ -495,7 +495,7 @@ export default function DocumentRegistration() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Data de Publicação / Emissão
                   </label>
                   <div className="relative">
@@ -510,7 +510,7 @@ export default function DocumentRegistration() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Data de Validade
                   </label>
                   <div className="relative">
@@ -525,7 +525,7 @@ export default function DocumentRegistration() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Atendimento
                   </label>
                   <input
@@ -539,7 +539,7 @@ export default function DocumentRegistration() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-xs font-medium text-gray-500  tracking-wider">
                   Descrição
                 </label>
                 <textarea
@@ -552,7 +552,7 @@ export default function DocumentRegistration() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-xs font-medium text-gray-500  tracking-wider">
                   Anexo do Documento (Upload)
                 </label>
                 <div className="flex items-center gap-3">

@@ -151,7 +151,7 @@ export default function ProcessTypesSettings() {
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nome *</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Nome *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -161,7 +161,7 @@ export default function ProcessTypesSettings() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Descrição</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Descrição</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -171,7 +171,7 @@ export default function ProcessTypesSettings() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ordem</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Ordem</label>
                 <input
                   type="number"
                   value={formData.sort_order}

@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
   <div className={`space-y-2 ${gridSpan}`}>
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-xs font-medium text-gray-500  tracking-wider">{label}</label>
     {options ? (
       <select name={name} value={value || ""} onChange={onChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
         <option value="">Selecione...</option>
@@ -464,11 +464,11 @@ export default function EvaluationFormNew() {
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Critério</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-20">Peso</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-28">Nota (0-{criteria.length > 0 ? criteria[0].max_score : 5})</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Observação</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Evidência</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Critério</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500  w-20">Peso</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500  w-28">Nota (0-{criteria.length > 0 ? criteria[0].max_score : 5})</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Observação</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Evidência</th>
                 </tr>
               </thead>
               <tbody>
@@ -535,21 +535,21 @@ export default function EvaluationFormNew() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl text-center">
-              <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Pontuação Total</p>
+              <p className="text-xs font-bold text-blue-600  tracking-wider mb-2">Pontuação Total</p>
               <p className="text-3xl font-bold text-blue-700">{resultData.total_score}</p>
             </div>
             <div className="p-6 bg-green-50 border border-green-100 rounded-2xl text-center">
-              <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-2">Percentual</p>
+              <p className="text-xs font-bold text-green-600  tracking-wider mb-2">Percentual</p>
               <p className="text-3xl font-bold text-green-700">{resultData.percentage}%</p>
             </div>
             <div className={`p-6 border rounded-2xl text-center ${resultData.classification === 'Excelente' || resultData.classification === 'Bom' ? 'bg-green-50 border-green-100' : resultData.classification === 'Satisfatório' ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'}`}>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Classificação</p>
+              <p className="text-xs font-medium text-gray-500  tracking-wider mb-2">Classificação</p>
               <p className={`text-lg font-bold ${resultData.classification === 'Excelente' || resultData.classification === 'Bom' ? 'text-green-700' : resultData.classification === 'Satisfatório' ? 'text-amber-700' : 'text-red-700'}`}>
                 {resultData.classification || "—"}
               </p>
             </div>
             <div className={`p-6 border rounded-2xl text-center ${resultData.recommended_action === 'Manter' ? 'bg-green-50 border-green-100' : resultData.recommended_action === 'Melhorar' || resultData.recommended_action === 'Reavaliar' ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'}`}>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Acção Recomendada</p>
+              <p className="text-xs font-medium text-gray-500  tracking-wider mb-2">Acção Recomendada</p>
               <p className={`text-lg font-bold ${resultData.recommended_action === 'Manter' ? 'text-green-700' : resultData.recommended_action === 'Melhorar' || resultData.recommended_action === 'Reavaliar' ? 'text-amber-700' : 'text-red-700'}`}>
                 {resultData.recommended_action || "—"}
               </p>
@@ -558,7 +558,7 @@ export default function EvaluationFormNew() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Plano de Acção</label>
+              <label className="text-xs font-medium text-gray-500  tracking-wider">Plano de Acção</label>
               <textarea 
                 name="action_plan" 
                 value={resultData.action_plan} 
@@ -569,7 +569,7 @@ export default function EvaluationFormNew() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Observações</label>
+              <label className="text-xs font-medium text-gray-500  tracking-wider">Observações</label>
               <textarea 
                 rows={3}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"

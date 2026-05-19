@@ -243,7 +243,7 @@ export default function CriteriaSettings() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+              <tr className="bg-gray-50 text-[10px] sm:text-xs font-semibold text-gray-500  tracking-wider border-b border-gray-100">
                 <th className="px-2 sm:px-4 py-2.5">Código</th>
                 <th className="px-2 sm:px-4 py-2.5">Nome</th>
                 <th className="px-2 sm:px-4 py-2.5 hidden sm:table-cell">Entidade</th>

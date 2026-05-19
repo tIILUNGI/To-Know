@@ -404,7 +404,7 @@ export default function Evaluation360Form() {
           <form onSubmit={handleCreateInvite} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em]">Colaborador Alvo</label>
+                <label className="text-[11px] font-bold text-slate-400  tracking-[0.05em]">Colaborador Alvo</label>
                 <select
                   value={formData.employee_id}
                   onChange={(event) => handleEmployeeChange(event.target.value)}
@@ -421,7 +421,7 @@ export default function Evaluation360Form() {
 
               <div className="grid grid-cols-1 md:grid-cols-[1fr,150px] gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em]">Email do Destinatário</label>
+                  <label className="text-[11px] font-bold text-slate-400  tracking-[0.05em]">Email do Destinatário</label>
                   <input
                     type="email"
                     value={formData.recipient_email}
@@ -432,7 +432,7 @@ export default function Evaluation360Form() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.05em]">Expira em</label>
+                  <label className="text-[11px] font-bold text-slate-400  tracking-[0.05em]">Expira em</label>
                   <select
                     value={formData.expires_days}
                     onChange={(event) => setFormData((prev) => ({ ...prev, expires_days: Number(event.target.value) }))}
@@ -454,7 +454,7 @@ export default function Evaluation360Form() {
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <p className="text-xs font-bold text-slate-900">{selectedEmployee.name}</p>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                  <p className="text-[10px] text-slate-500 font-bold  tracking-wider">
                     {selectedEmployee.position || "Sem cargo"} {selectedEmployee.department ? `• ${selectedEmployee.department}` : ""}
                   </p>
                 </div>
@@ -582,7 +582,7 @@ export default function Evaluation360Form() {
                     </div>
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <h4 className="text-sm font-bold text-slate-900 truncate">{link.employee_name}</h4>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Aguardando Nota</p>
+                      <p className="text-[10px] text-slate-400 font-bold  tracking-wider mt-1">Aguardando Nota</p>
                     </div>
                   </div>
                   <button
@@ -622,7 +622,7 @@ export default function Evaluation360Form() {
                     </div>
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <h4 className="text-sm font-bold text-slate-900 truncate">{link.employee_name}</h4>
-                      <p className="text-[10px] text-slate-400 font-medium truncate uppercase tracking-widest">Concluído</p>
+                      <p className="text-[10px] text-slate-400 font-medium truncate  tracking-widest">Concluído</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -672,7 +672,7 @@ export default function Evaluation360Form() {
               <div className="space-y-6 py-4 border-y border-gray-100">
                 <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
                   <h4 className="text-sm font-bold text-amber-900">Parte 4: Avaliação do Funcionário pelo Gestor</h4>
-                  <p className="text-[11px] text-amber-700 mt-1 uppercase tracking-wider font-medium">Por favor, avalie o desempenho e contribuições do seu subordinado directo.</p>
+                  <p className="text-[11px] text-amber-700 mt-1  tracking-wider font-medium">Por favor, avalie o desempenho e contribuições do seu subordinado directo.</p>
                 </div>
 
                 {template?.questions.filter(q => q.section_key === 'manager_eval').map((q, idx) => (
@@ -715,7 +715,7 @@ export default function Evaluation360Form() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Nota Global (1-10)</label>
+                  <label className="text-xs font-medium text-gray-500 ">Nota Global (1-10)</label>
                   <input 
                     type="number" 
                     min="1" max="10" 
@@ -730,7 +730,7 @@ export default function Evaluation360Form() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">Feedback Final do Gestor</label>
+                <label className="text-xs font-medium text-gray-500 ">Feedback Final do Gestor</label>
                 <textarea 
                   className="w-full px-4 py-2 border border-gray-200 rounded-xl h-24 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
                   placeholder="Observações sobre o desempenho..."
@@ -794,11 +794,11 @@ export default function Evaluation360Form() {
 
                     <div className="flex items-center gap-6">
                       <div>
-                        <p className="text-[11px] uppercase tracking-wider text-gray-400">Resultado</p>
+                        <p className="text-[11px]  tracking-wider text-gray-400">Resultado</p>
                         <p className="text-lg font-bold text-emerald-700">{Math.round(submission.percentage || 0)}%</p>
                       </div>
                       <div>
-                        <p className="text-[11px] uppercase tracking-wider text-gray-400">Classificação</p>
+                        <p className="text-[11px]  tracking-wider text-gray-400">Classificação</p>
                         <p className="text-sm font-semibold text-gray-700">{submission.classification}</p>
                       </div>
                       <button
@@ -814,19 +814,19 @@ export default function Evaluation360Form() {
                     <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-3 rounded-xl bg-white border border-gray-100">
-                          <p className="text-xs text-gray-400 uppercase tracking-wider">Email</p>
+                          <p className="text-xs text-gray-400  tracking-wider">Email</p>
                           <p className="text-sm font-semibold text-gray-800">
                             {detail.submission.recipient_email || detail.submission.employee_email || "—"}
                           </p>
                         </div>
                         <div className="p-3 rounded-xl bg-white border border-gray-100">
-                          <p className="text-xs text-gray-400 uppercase tracking-wider">Colega Avaliado</p>
+                          <p className="text-xs text-gray-400  tracking-wider">Colega Avaliado</p>
                           <p className="text-sm font-semibold text-gray-800">
                             {detail.responses.find((response) => response.peer_name)?.peer_name || "—"}
                           </p>
                         </div>
                           <div className="p-3 rounded-xl bg-white border border-gray-100">
-                            <p className="text-xs text-gray-400 uppercase tracking-wider">Score Final</p>
+                            <p className="text-xs text-gray-400  tracking-wider">Score Final</p>
                             <p className="text-sm font-semibold text-gray-800">
                               {Math.round(detail.submission.percentage)}% • {detail.submission.classification}
                             </p>
@@ -840,11 +840,11 @@ export default function Evaluation360Form() {
                             </h4>
                             <div className="mt-2 grid grid-cols-1 md:grid-cols-[100px,1fr] gap-4">
                               <div className="text-center p-2 bg-white rounded-xl border border-amber-100">
-                                <p className="text-[10px] text-gray-400 uppercase">Nota</p>
+                                <p className="text-[10px] text-gray-400 ">Nota</p>
                                 <p className="text-xl font-bold text-amber-700">{submission.manager_score}/10</p>
                               </div>
                               <div>
-                                <p className="text-[10px] text-gray-400 uppercase">Feedback</p>
+                                <p className="text-[10px] text-gray-400 ">Feedback</p>
                                 <p className="text-sm text-gray-700 italic">"{submission.manager_comment || "Sem comentário adicional."}"</p>
                                 <p className="text-[10px] text-gray-400 mt-2">Concluído em: {submission.concluded_at ? new Date(submission.concluded_at).toLocaleString() : '—'}</p>
                               </div>

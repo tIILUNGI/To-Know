@@ -444,7 +444,7 @@ export default function LegalDocuments() {
             <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Nome do Documento <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -458,7 +458,7 @@ export default function LegalDocuments() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Tipo de Documento
                   </label>
                   <select
@@ -476,7 +476,7 @@ export default function LegalDocuments() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Versão ou Série
                   </label>
                   <input
@@ -490,7 +490,7 @@ export default function LegalDocuments() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-xs font-medium text-gray-500  tracking-wider">
                   Descrição
                 </label>
                 <textarea
@@ -504,7 +504,7 @@ export default function LegalDocuments() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Atendimento
                   </label>
                   <input
@@ -517,7 +517,7 @@ export default function LegalDocuments() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Ano de Lançamento / Atribuição
                   </label>
                   <input
@@ -530,7 +530,7 @@ export default function LegalDocuments() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-xs font-medium text-gray-500  tracking-wider">
                     Ano de Caducidade / Revogação
                   </label>
                   <input
@@ -544,7 +544,7 @@ export default function LegalDocuments() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-xs font-medium text-gray-500  tracking-wider">
                   Data Exata de Caducidade
                 </label>
                 <div className="relative">
@@ -559,7 +559,7 @@ export default function LegalDocuments() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-xs font-medium text-gray-500  tracking-wider">
                   Documento Digital (Upload)
                 </label>
                 <div className="flex items-center gap-3">

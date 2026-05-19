@@ -135,7 +135,7 @@ export default function Evaluation360Dashboard({ detail }: { detail: SubmissionD
 
       {/* Main Score */}
       <div className="bg-[#fdfaf4] p-8 rounded-3xl border border-[#eadfcd] text-center">
-        <p className="text-sm font-bold text-[#8a6b49] uppercase tracking-widest mb-2">Pontuação Geral</p>
+        <p className="text-sm font-bold text-[#8a6b49]  tracking-widest mb-2">Pontuação Geral</p>
         <div className="flex flex-col items-center">
           <span className="text-3xl font-bold text-[#5e4428]">{overallAvg}</span>
           <span className="text-[#8a6b49] text-base font-medium">de 5.00</span>
@@ -149,7 +149,7 @@ export default function Evaluation360Dashboard({ detail }: { detail: SubmissionD
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bar Chart */}
         <div className="card p-6 bg-white border-[#eadfcd]">
-          <h3 className="text-sm font-bold text-[#5e4428] mb-6 uppercase tracking-wider">Comparação por Seção</h3>
+          <h3 className="text-sm font-bold text-[#5e4428] mb-6  tracking-wider">Comparação por Seção</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
@@ -168,7 +168,7 @@ export default function Evaluation360Dashboard({ detail }: { detail: SubmissionD
 
         {/* Radar Chart */}
         <div className="card p-6 bg-white border-[#eadfcd]">
-          <h3 className="text-sm font-bold text-[#5e4428] mb-6 uppercase tracking-wider">Visão Radar</h3>
+          <h3 className="text-sm font-bold text-[#5e4428] mb-6  tracking-wider">Visão Radar</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
@@ -192,7 +192,7 @@ export default function Evaluation360Dashboard({ detail }: { detail: SubmissionD
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {sectionAverages.map((s, idx) => (
           <div key={s.key} className="card p-4 bg-white border-[#eadfcd] text-center hover:bg-[#fbf7ef] transition-colors">
-            <p className="text-[10px] font-bold text-[#8a6b49] uppercase mb-1">Parte {idx + 1}</p>
+            <p className="text-[10px] font-bold text-[#8a6b49]  mb-1">Parte {idx + 1}</p>
             <p className="text-2xl font-bold text-[#5e4428]">{s.avg.toFixed(2)}</p>
           </div>
         ))}

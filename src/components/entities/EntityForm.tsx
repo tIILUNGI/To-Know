@@ -17,7 +17,7 @@ const TabButton = ({ active, onClick, icon: Icon, label }) => (
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", required = false, error }) => (
   <div className="space-y-2">
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+    <label className="text-xs font-medium text-gray-500  tracking-wider">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     {options ? (
@@ -158,9 +158,9 @@ export default function EntityForm() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">{id && id !== "new" ? `Editar ${formData.name}` : `Novo ${isClient ? 'Cliente' : 'Fornecedor'}`}</h2>
             <div className="flex items-center gap-2 mt-1">
-               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${isClient ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>{formData.entity_type}</span>
+               <span className={`px-2 py-0.5 rounded text-[10px] font-bold  tracking-widest ${isClient ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>{formData.entity_type}</span>
                <span className="text-gray-300">•</span>
-               <span className="text-xs font-bold text-gray-500">{formData.status}</span>
+               <span className="text-xs font-medium text-gray-500">{formData.status}</span>
             </div>
           </div>
         </div>
@@ -327,7 +327,7 @@ export default function EntityForm() {
                </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Observações / Due Diligence</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Observações / Due Diligence</label>
                 <textarea name="observations" value={formData.observations || ""} onChange={handleChange} rows={5} className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Relatório resumido da análise reputacional e judicial..." />
               </div>
             </div>
@@ -400,7 +400,7 @@ function DocumentSection({ entityId }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-gray-900 truncate">{doc.name}</p>
-              <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">{new Date(doc.upload_date).toLocaleDateString('pt-BR')}</p>
+              <p className="text-[10px] font-bold text-gray-400  mt-1">{new Date(doc.upload_date).toLocaleDateString('pt-BR')}</p>
             </div>
             <a href={doc.url} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-blue-100 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all">
               <Globe size={18} />

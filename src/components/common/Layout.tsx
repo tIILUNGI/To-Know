@@ -169,7 +169,7 @@ export default function Layout() {
             title={language === "pt" ? "Switch to English" : "Mudar para Português"}
           >
             <Globe size={18} />
-            <span className="text-[0.88rem] font-bold uppercase tracking-wider text-slate-700">{language}</span>
+            <span className="text-[0.88rem] font-medium tracking-wider text-slate-700">{language}</span>
           </button>
 
           <button onClick={toggleDarkMode} className="topbar-icon-btn" aria-label="Alternar modo escuro">
@@ -251,7 +251,7 @@ export default function Layout() {
                 <span className="sidebar-icon">
                   <LogOut size={18} />
                 </span>
-                <span className="sidebar-label text-red-600">Terminar Sessão</span>
+                <span className="sidebar-label text-red-600">{t("menu.logout")}</span>
                 <X size={16} className="text-red-400" />
               </button>
             </div>

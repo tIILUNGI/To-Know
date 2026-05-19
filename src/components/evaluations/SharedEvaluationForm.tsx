@@ -238,7 +238,7 @@ export default function SharedEvaluationForm() {
               </div>
               <h1 className="text-2xl font-bold text-[#5e4428]">{data.form.title}</h1>
               <p className="text-sm text-[#8a6b49] mt-2">{data.form.description}</p>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#a17e58] mt-4">
+              <p className="text-xs  tracking-[0.18em] text-[#a17e58] mt-4">
                 Colaborador avaliado: {data.employee.name}
               </p>
             </div>
@@ -252,7 +252,7 @@ export default function SharedEvaluationForm() {
                   </p>
                 </div>
                 {data.employee.email && (
-                  <div className="px-3 py-1 bg-[#efe1ca] text-[#7a5935] rounded-lg text-[10px] font-bold uppercase tracking-wider self-start sm:self-center">
+                  <div className="px-3 py-1 bg-[#efe1ca] text-[#7a5935] rounded-lg text-[10px] font-bold  tracking-wider self-start sm:self-center">
                     {data.employee.email}
                   </div>
                 )}
@@ -347,7 +347,7 @@ export default function SharedEvaluationForm() {
         <form onSubmit={handleSubmit} className="bg-white rounded-b-3xl shadow-lg border border-t-0 border-gray-100 p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Seu Nome *</label>
+              <label className="text-xs font-medium text-gray-500  tracking-wider">Seu Nome *</label>
               <input
                 type="text"
                 value={clientName}
@@ -358,7 +358,7 @@ export default function SharedEvaluationForm() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Seu Email *</label>
+              <label className="text-xs font-medium text-gray-500  tracking-wider">Seu Email *</label>
               <input
                 type="email"
                 value={clientEmail}

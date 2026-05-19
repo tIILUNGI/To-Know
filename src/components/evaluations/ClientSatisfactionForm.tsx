@@ -188,7 +188,7 @@ ${localStorage.getItem("user_name") || "Equipe"}`);
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Título da Pesquisa *</label>
+              <label className="text-xs font-medium text-gray-500  tracking-wider">Título da Pesquisa *</label>
               <input
                 type="text"
                 value={formData.title}
@@ -200,7 +200,7 @@ ${localStorage.getItem("user_name") || "Equipe"}`);
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="expires-days" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Validade (dias)</label>
+              <label htmlFor="expires-days" className="text-xs font-medium text-gray-500  tracking-wider">Validade (dias)</label>
               <select
                 id="expires-days"
                 value={formData.expires_days}
@@ -217,7 +217,7 @@ ${localStorage.getItem("user_name") || "Equipe"}`);
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Descrição (opcional)</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Descrição (opcional)</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}

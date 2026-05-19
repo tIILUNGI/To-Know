@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
   <div className={`space-y-2 ${gridSpan}`}>
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-xs font-medium text-gray-500  tracking-wider">{label}</label>
     {options ? (
       <select name={name} value={value || ""} onChange={onChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
         <option value="">Selecione...</option>
@@ -333,7 +333,7 @@ export default function ClientApprovalForm() {
           )}
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Motivo da Aprovação</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Motivo da Aprovação</label>
             <textarea
               name="approval_reason"
               value={formData.approval_reason}
@@ -403,12 +403,12 @@ export default function ClientApprovalForm() {
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Critério</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Descrição</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-20">Peso</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-24">Máx</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase w-28">Pontuação</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Evidência / Comentário</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Critério</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Descrição</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500  w-20">Peso</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500  w-24">Máx</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500  w-28">Pontuação</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Evidência / Comentário</th>
                 </tr>
               </thead>
               <tbody>
@@ -471,11 +471,11 @@ export default function ClientApprovalForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl text-center">
-              <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Pontuação Total</p>
+              <p className="text-xs font-bold text-blue-600  tracking-wider mb-2">Pontuação Total</p>
               <p className="text-3xl font-bold text-blue-700">{resultData.total_score}</p>
             </div>
             <div className="p-6 bg-amber-50 border border-amber-100 rounded-2xl text-center">
-              <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">Classificação de Risco</p>
+              <p className="text-xs font-bold text-amber-600  tracking-wider mb-2">Classificação de Risco</p>
               <p className="text-lg font-bold text-amber-700">{resultData.risk_classification || "—"}</p>
             </div>
             <div className={`p-6 border rounded-2xl text-center ${
@@ -483,7 +483,7 @@ export default function ClientApprovalForm() {
               resultData.decision === 'Aprovado com restrições' ? 'bg-amber-50 border-amber-100' :
               resultData.decision === 'Reprovado' ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100'
             }`}>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Decisão</p>
+              <p className="text-xs font-medium text-gray-500  tracking-wider mb-2">Decisão</p>
               <p className={`text-lg font-bold ${
                 resultData.decision === 'Aprovado' ? 'text-green-700' :
                 resultData.decision === 'Aprovado com restrições' ? 'text-amber-700' :
@@ -517,7 +517,7 @@ export default function ClientApprovalForm() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Condições Especiais</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Condições Especiais</label>
             <textarea 
               name="special_conditions" 
               value={formData.special_conditions} 

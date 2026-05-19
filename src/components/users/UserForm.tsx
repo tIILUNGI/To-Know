@@ -163,7 +163,7 @@ export default function UserForm() {
       <form id="user-form" onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-8 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Username *</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Username *</label>
             <input
               type="text"
               name="username"
@@ -176,7 +176,7 @@ export default function UserForm() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nome Completo *</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Nome Completo *</label>
             <input
               type="text"
               name="name"
@@ -189,7 +189,7 @@ export default function UserForm() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Email</label>
             <input
               type="email"
               name="email"
@@ -201,7 +201,7 @@ export default function UserForm() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Papel *</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Papel *</label>
             <select
               name="role"
               value={formData.role}
@@ -218,7 +218,7 @@ export default function UserForm() {
           {!isEditing && (
             <>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Senha *</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Senha *</label>
                 <input
                   type="password"
                   name="password"
@@ -231,7 +231,7 @@ export default function UserForm() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Confirmar Senha *</label>
+                <label className="text-xs font-medium text-gray-500  tracking-wider">Confirmar Senha *</label>
                 <input
                   type="password"
                   name="confirmPassword"
@@ -247,7 +247,7 @@ export default function UserForm() {
 
           {isEditing && (
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nova Senha (opcional)</label>
+              <label className="text-xs font-medium text-gray-500  tracking-wider">Nova Senha (opcional)</label>
               <input
                 type="password"
                 name="password"

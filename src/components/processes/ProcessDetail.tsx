@@ -412,31 +412,31 @@ export default function ProcessDetail() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase">Motivo da Rescisão</p>
+                <p className="text-xs font-medium text-gray-500 ">Motivo da Rescisão</p>
                 <p className="text-sm text-gray-900 mt-1">{process.termination_reason || "Não especificado"}</p>
               </div>
               {process.termination_date && (
                 <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <p className="text-xs font-bold text-gray-500 uppercase">Data da Rescisão</p>
+                  <p className="text-xs font-medium text-gray-500 ">Data da Rescisão</p>
                   <p className="text-sm text-gray-900 mt-1">{new Date(process.termination_date).toLocaleDateString("pt-BR")}</p>
                 </div>
               )}
             </div>
             {process.document_type && (
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase">Tipo de Rescisão</p>
+                <p className="text-xs font-medium text-gray-500 ">Tipo de Rescisão</p>
                 <p className="text-sm text-gray-900 mt-1">{process.document_type}</p>
               </div>
             )}
             {process.registration && (
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase">Registo/Documento</p>
+                <p className="text-xs font-medium text-gray-500 ">Registo/Documento</p>
                 <p className="text-sm text-gray-900 mt-1">{process.registration}</p>
               </div>
             )}
             {process.service_area && (
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase">Departamento de Atendimento</p>
+                <p className="text-xs font-medium text-gray-500 ">Departamento de Atendimento</p>
                 <p className="text-sm text-gray-900 mt-1">{process.service_area}</p>
               </div>
             )}
@@ -514,21 +514,21 @@ export default function ProcessDetail() {
                 return isNaN(res) ? 0 : res;
               })()}%
             </div>
-            <div className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Conformidade (Real-time)</div>
+            <div className="text-[10px] text-gray-400 mt-1  font-bold tracking-wider">Conformidade (Real-time)</div>
           </div>
           
           <div className="flex flex-col items-center py-4 bg-gray-50 rounded-lg border border-gray-100">
             <div className="text-3xl sm:text-4xl font-bold text-indigo-600">
               {Math.round(((process.current_step || 1) / 8) * 100)}%
             </div>
-            <div className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Progresso do Workflow</div>
+            <div className="text-[10px] text-gray-400 mt-1  font-bold tracking-wider">Progresso do Workflow</div>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="flex justify-between items-center p-3 rounded-xl bg-gray-50 border border-gray-100">
-            <span className="text-xs font-bold text-gray-500 uppercase">Classificação</span>
-            <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase ${
+            <span className="text-xs font-medium text-gray-500 ">Classificação</span>
+            <span className={`text-[10px] font-bold px-2 py-1 rounded  ${
               process.classification === "Aprovado" ? "bg-emerald-100 text-emerald-700" :
               process.classification === "Reprovado" ? "bg-red-100 text-red-700" :
               process.classification === "Condicionado" ? "bg-amber-100 text-amber-700" :
@@ -538,8 +538,8 @@ export default function ProcessDetail() {
             </span>
           </div>
           <div className="flex justify-between items-center p-3 rounded-xl bg-gray-50 border border-gray-100">
-            <span className="text-xs font-bold text-gray-500 uppercase">Etapa Atual</span>
-            <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded uppercase">
+            <span className="text-xs font-medium text-gray-500 ">Etapa Atual</span>
+            <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded ">
               Passo {process.current_step || 1} de 8
             </span>
           </div>

@@ -54,11 +54,11 @@ export default function FormPreviewModal({
         <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-blue-50">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Pontuação Final</p>
+              <p className="text-sm font-medium text-gray-600  tracking-wide">Pontuação Final</p>
               <p className="text-3xl font-bold text-emerald-700">{totalPercentage.toFixed(1)}%</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Classificação</p>
+              <p className="text-sm font-medium text-gray-600  tracking-wide">Classificação</p>
               <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${
                 classification === 'Excelente' ? 'bg-emerald-100 text-emerald-800' :
                 classification === 'Bom' ? 'bg-blue-100 text-blue-800' :
@@ -69,7 +69,7 @@ export default function FormPreviewModal({
               </span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Perguntas Respondidas</p>
+              <p className="text-sm font-medium text-gray-600  tracking-wide">Perguntas Respondidas</p>
               <p className="text-2xl font-bold text-gray-900">
                 {questions.filter(q => q.score && q.score > 0).length}/{questions.length}
               </p>

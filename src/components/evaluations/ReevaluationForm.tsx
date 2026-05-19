@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 
 const FormField = ({ label, name, value, onChange, type = "text", options = null, placeholder = "", gridSpan = "" }) => (
   <div className={`space-y-2 ${gridSpan}`}>
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="text-xs font-medium text-gray-500  tracking-wider">{label}</label>
     {options ? (
       <select name={name} value={value || ""} onChange={onChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
         <option value="">Selecione...</option>
@@ -331,7 +331,7 @@ export default function ReevaluationForm() {
               placeholder="0-100" 
             />
             <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Diferença</p>
+              <p className="text-xs font-medium text-gray-500  tracking-wider mb-2">Diferença</p>
               <div className="flex items-center gap-2">
                 <span className={`text-2xl font-bold ${formData.score_difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formData.score_difference > 0 ? '+' : ''}{formData.score_difference}%
@@ -358,7 +358,7 @@ export default function ReevaluationForm() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Observações</label>
+            <label className="text-xs font-medium text-gray-500  tracking-wider">Observações</label>
             <textarea 
               name="observations" 
               value={formData.observations} 

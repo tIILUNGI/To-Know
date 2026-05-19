@@ -155,11 +155,11 @@ export default function EntityHistory() {
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-[16px] border border-slate-100 bg-slate-50/70 p-4">
-            <span className="text-[0.82rem] uppercase tracking-wide text-slate-500">Denominação Social</span>
+            <span className="text-[0.82rem]  tracking-wide text-slate-500">Denominação Social</span>
             <p className="mt-2 text-[1.08rem] font-semibold text-slate-900">{entity.name}</p>
           </div>
           <div className="rounded-[16px] border border-slate-100 bg-slate-50/70 p-4">
-            <span className="text-[0.82rem] uppercase tracking-wide text-slate-500">Estado</span>
+            <span className="text-[0.82rem]  tracking-wide text-slate-500">Estado</span>
             <div className="mt-2">
               <span
                 className={`badge ${
@@ -177,7 +177,7 @@ export default function EntityHistory() {
             </div>
           </div>
           <div className="rounded-[16px] border border-slate-100 bg-slate-50/70 p-4">
-            <span className="text-[0.82rem] uppercase tracking-wide text-slate-500">Relacionamento</span>
+            <span className="text-[0.82rem]  tracking-wide text-slate-500">Relacionamento</span>
             <div className="mt-2">
               <span
                 className={`badge ${
@@ -195,7 +195,7 @@ export default function EntityHistory() {
             </div>
           </div>
           <div className="rounded-[16px] border border-slate-100 bg-slate-50/70 p-4">
-            <span className="text-[0.82rem] uppercase tracking-wide text-slate-500">Risco Final</span>
+            <span className="text-[0.82rem]  tracking-wide text-slate-500">Risco Final</span>
             <div className="mt-2 flex items-center gap-2">
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
@@ -227,7 +227,7 @@ export default function EntityHistory() {
                   <div className="absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-600" />
                   <div className="flex-1 space-y-2">
                     <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                      <span className="text-[0.9rem] font-semibold uppercase tracking-wide text-slate-900">{item.action}</span>
+                      <span className="text-[0.9rem] font-semibold  tracking-wide text-slate-900">{item.action}</span>
                       <span className="text-[0.82rem] text-slate-400">{new Date(item.timestamp).toLocaleString("pt-BR")}</span>
                     </div>
                     <p className="text-[1rem] text-slate-600">{item.details}</p>

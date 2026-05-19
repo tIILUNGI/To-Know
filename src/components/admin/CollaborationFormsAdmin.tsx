@@ -316,19 +316,19 @@ export default function CollaborationFormsAdmin() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="p-4 rounded-2xl border border-gray-100 bg-white">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Colaborador</p>
+                <p className="text-xs text-gray-400  tracking-wider">Colaborador</p>
                 <p className="text-sm font-bold text-gray-900 mt-1">
                   {selectedDetail.submission.employee_name}
                 </p>
               </div>
               <div className="p-4 rounded-2xl border border-gray-100 bg-white">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Classificação</p>
+                <p className="text-xs text-gray-400  tracking-wider">Classificação</p>
                 <p className="text-sm font-bold text-gray-900 mt-1">
                   {selectedDetail.submission.classification}
                 </p>
               </div>
               <div className="p-4 rounded-2xl border border-gray-100 bg-white">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Percentual</p>
+                <p className="text-xs text-gray-400  tracking-wider">Percentual</p>
                 <p className="text-sm font-bold text-gray-900 mt-1">
                   {Math.round(selectedDetail.submission.percentage)}%
                 </p>
@@ -360,12 +360,12 @@ export default function CollaborationFormsAdmin() {
                           className="flex items-start justify-between gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-gray-900 truncate">
+                            <p className="text-xs font-medium text-gray-900 truncate">
                               {idx + 1}. {r.question_text}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[11px] uppercase tracking-wider text-gray-500">Nota</p>
+                            <p className="text-[11px]  tracking-wider text-gray-500">Nota</p>
                             <p className="text-sm font-bold text-blue-700">{r.score}</p>
                           </div>
                         </div>

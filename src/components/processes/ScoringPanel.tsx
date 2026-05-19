@@ -90,7 +90,7 @@ export default function ScoringPanel({ processId, criteria, onScoresChange, onAu
         <div className="flex items-center gap-3">
           <div className="text-right">
             <p className="text-2xl font-bold text-emerald-600">{percentage.toFixed(1)}%</p>
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Score Final</p>
+            <p className="text-xs text-gray-500  tracking-wide">Score Final</p>
           </div>
           <button
             onClick={saveScores}
@@ -107,11 +107,11 @@ export default function ScoringPanel({ processId, criteria, onScoresChange, onAu
         <table className="w-full min-w-[800px] bg-white rounded-2xl shadow-sm border border-gray-200">
           <thead>
             <tr className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Critério</th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-20">Peso</th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-24">Pontuação</th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-32">Evidência</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Comentários</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-700  tracking-wider">Critério</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-700  tracking-wider w-20">Peso</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-700  tracking-wider w-24">Pontuação</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-700  tracking-wider w-32">Evidência</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700  tracking-wider">Comentários</th>
             </tr>
           </thead>
           <tbody>
@@ -138,7 +138,7 @@ export default function ScoringPanel({ processId, criteria, onScoresChange, onAu
                         onChange={(e) => handleScoreChange(criterion.id, 'score', e.target.value)}
                         className="w-20 h-2 bg-gray-200 rounded-lg cursor-pointer accent-blue-600 hover:accent-blue-500"
                       />
-                      <span className="text-xs font-bold text-gray-900 mt-1">{criterion.score}/{criterion.max_score}</span>
+                      <span className="text-xs font-medium text-gray-900 mt-1">{criterion.score}/{criterion.max_score}</span>
                       <span className="text-[10px] text-gray-400">{weightedScore.toFixed(1)} pts</span>
                     </div>
                   </td>

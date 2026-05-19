@@ -173,7 +173,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Total</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-green-600">{data?.length || 0} Entidades</span>
               </div>
@@ -194,14 +194,14 @@ export default function ReportsView() {
                     <div className="flex items-start justify-between mb-5">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-gray-900 truncate group-hover:text-green-700 transition-colors tracking-tight">{s.name}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">{s.sector || 'Geral'}</p>
+                        <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-1.5">{s.sector || 'Geral'}</p>
                       </div>
                       <div className="w-2 h-2 rounded-full bg-green-500 shadow-sm shadow-green-200 ml-3 mt-1"></div>
                     </div>
                     <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
                        <div className="flex flex-col gap-0.5">
-                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Status Relacional</span>
-                         <span className="text-xs font-bold text-gray-700">{s.relationship_status || 'Regular'}</span>
+                         <span className="text-[10px] text-gray-400  font-bold tracking-tighter">Status Relacional</span>
+                         <span className="text-xs font-medium text-gray-700">{s.relationship_status || 'Regular'}</span>
                        </div>
                        <div className="p-2 bg-green-50 rounded-xl text-green-600 opacity-40 group-hover:opacity-100 transition-all transform group-hover:scale-110">
                          <TrendingUp size={16} />
@@ -226,7 +226,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-red-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Total</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-red-600">{data?.length || 0} Entidades</span>
               </div>
@@ -247,12 +247,12 @@ export default function ReportsView() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-gray-900 truncate group-hover:text-red-700 transition-colors tracking-tight">{s.name}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">{s.sector || 'Geral'}</p>
+                        <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-1.5">{s.sector || 'Geral'}</p>
                       </div>
                       <div className="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-200 ml-3 mt-1"></div>
                     </div>
                     <div className="mt-4 p-4 bg-red-50 rounded-2xl border border-red-100/50">
-                       <span className="text-[10px] text-red-400 uppercase font-bold tracking-tighter">Motivo Crítico</span>
+                       <span className="text-[10px] text-red-400  font-bold tracking-tighter">Motivo Crítico</span>
                        <p className="text-xs text-red-700 mt-1 font-medium leading-relaxed italic">"{s.rejection_reason || 'Motivo não especificado'}"</p>
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export default function ReportsView() {
                 <div key={s.sector} className="p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all flex items-center justify-between group">
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-gray-900 tracking-tight">{s.sector || 'Não Definido'}</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Volume de Entidades</p>
+                    <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-1">Volume de Entidades</p>
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-bold text-blue-600 group-hover:scale-110 transition-transform">{s.count}</p>
@@ -308,9 +308,9 @@ export default function ReportsView() {
                   <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-amber-600 group-hover:scale-110 transition-transform">
                     <AlertTriangle size={24} />
                   </div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{c.criticality}</p>
+                  <p className="text-xs font-medium text-gray-400  tracking-widest mb-1">{c.criticality}</p>
                   <p className="text-2xl font-bold text-gray-900">{c.count}</p>
-                  <p className="text-[10px] text-gray-400 font-bold mt-2 uppercase tracking-tighter">Entidades Registadas</p>
+                  <p className="text-[10px] text-gray-400 font-bold mt-2  tracking-tighter">Entidades Registadas</p>
                 </div>
               ))}
             </div>
@@ -329,7 +329,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Crítico</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Crítico</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-amber-600">{data?.length || 0} Entidades</span>
               </div>
@@ -343,7 +343,7 @@ export default function ReportsView() {
               <div className="overflow-hidden border border-gray-100 rounded-2xl bg-white shadow-sm">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-medium text-gray-400  tracking-widest">
                       <th className="px-6 py-4">Entidade</th>
                       <th className="px-6 py-4 hidden md:table-cell">Sector</th>
                       <th className="px-6 py-4">Última Avaliação</th>
@@ -355,12 +355,12 @@ export default function ReportsView() {
                       <tr key={e.entity_id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-6 py-4">
                            <p className="text-sm font-bold text-gray-900 tracking-tight">{e.entity_name}</p>
-                           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Registo Activo</p>
+                           <p className="text-[10px] text-gray-400 font-bold  tracking-tighter">Registo Activo</p>
                         </td>
-                        <td className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-tighter hidden md:table-cell">{e.sector}</td>
-                        <td className="px-6 py-4 text-xs font-bold text-gray-400">{new Date(e.last_evaluation).toLocaleDateString('pt-PT')}</td>
+                        <td className="px-6 py-4 text-xs font-medium text-gray-600  tracking-tighter hidden md:table-cell">{e.sector}</td>
+                        <td className="px-6 py-4 text-xs font-medium text-gray-400">{new Date(e.last_evaluation).toLocaleDateString('pt-PT')}</td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${parseInt(e.days_until_expiry) < 30 ? "bg-red-50 text-red-600 shadow-sm shadow-red-100" : "bg-amber-50 text-amber-600"}`}>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium  tracking-tighter ${parseInt(e.days_until_expiry) < 30 ? "bg-red-50 text-red-600 shadow-sm shadow-red-100" : "bg-amber-50 text-amber-600"}`}>
                             {e.days_until_expiry} dias
                           </span>
                         </td>
@@ -388,16 +388,16 @@ export default function ReportsView() {
             <div className="space-y-3">
               {data?.map((e: any, idx: number) => (
                 <div key={e.evaluation_id} className="flex items-center gap-4 p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-lg hover:border-blue-200 transition-all group">
-                  <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-bold flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                  <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-medium flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
                     #{idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-gray-900 truncate tracking-tight">{e.entity_name}</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{e.period}</p>
+                    <p className="text-[10px] font-medium text-gray-400 tracking-widest mt-1">{e.period}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-blue-600">{Math.round(e.percentage)}%</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{e.classification}</p>
+                    <p className="text-[10px] font-medium text-gray-400  tracking-tighter">{e.classification}</p>
                   </div>
                 </div>
               ))}
@@ -420,16 +420,16 @@ export default function ReportsView() {
             <div className="space-y-3">
               {data?.map((e: any, idx: number) => (
                 <div key={e.evaluation_id} className="flex items-center gap-4 p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-lg hover:border-indigo-200 transition-all group">
-                  <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-bold flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
+                  <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-medium flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
                     #{idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-gray-900 truncate tracking-tight">{e.entity_name}</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{e.period}</p>
+                    <p className="text-[10px] font-medium text-gray-400 tracking-widest mt-1">{e.period}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-indigo-600">{Math.round(e.percentage)}%</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{e.classification}</p>
+                    <p className="text-[10px] font-medium text-gray-400  tracking-tighter">{e.classification}</p>
                   </div>
                 </div>
               ))}
@@ -449,7 +449,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-amber-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Total</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-amber-600">{data?.length || 0} Entidades</span>
               </div>
@@ -470,16 +470,16 @@ export default function ReportsView() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-gray-900 truncate tracking-tight">{s.name}</p>
-                        <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-1.5">Bloqueio Temporário</p>
+                        <p className="text-[10px] font-medium text-amber-600  tracking-widest mt-1.5">Bloqueio Temporário</p>
                       </div>
                       <div className="w-2 h-2 rounded-full bg-amber-500 shadow-sm shadow-amber-200 ml-3 mt-1"></div>
                     </div>
                     <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100/50">
-                       <p className="text-[10px] text-amber-400 uppercase font-bold tracking-tighter">Motivo da Suspensão</p>
+                       <p className="text-[10px] text-amber-400  font-bold tracking-tighter">Motivo da Suspensão</p>
                        <p className="text-xs text-amber-800 mt-1 font-medium leading-relaxed italic">"{s.reason || 'Não especificado'}"</p>
                        <div className="mt-3 pt-3 border-t border-amber-100 flex justify-between items-center">
-                         <span className="text-[10px] text-amber-400 font-bold uppercase">Data de Início</span>
-                         <span className="text-[10px] font-bold text-amber-700">{new Date(s.suspension_date).toLocaleDateString('pt-PT')}</span>
+                         <span className="text-[10px] text-amber-400 font-bold ">Data de Início</span>
+                         <span className="text-[10px] font-medium text-amber-700">{new Date(s.suspension_date).toLocaleDateString('pt-PT')}</span>
                        </div>
                     </div>
                   </div>
@@ -508,7 +508,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-blue-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Activos</span>
+                <span className="text-[10px] font-medium text-gray-400 tracking-widest">Activos</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-blue-600">{data?.length || 0} Entidades</span>
               </div>
@@ -529,14 +529,14 @@ export default function ReportsView() {
                     <div className="flex items-start justify-between mb-5">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-gray-900 truncate group-hover:text-indigo-700 transition-colors tracking-tight">{c.name}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">{c.segment || 'Geral'}</p>
+                        <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-1.5">{c.segment || 'Geral'}</p>
                       </div>
-                      <div className="px-2.5 py-1 rounded-lg bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-tighter border border-green-100 shadow-sm shadow-green-100/50">Activo</div>
+                      <div className="px-2.5 py-1 rounded-lg bg-green-50 text-green-600 text-[10px] font-medium  tracking-tighter border border-green-100 shadow-sm shadow-green-100/50">Activo</div>
                     </div>
                     <div className="pt-5 border-t border-gray-50 flex items-center justify-between">
                        <div className="flex flex-col gap-0.5">
-                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Relacionamento</span>
-                         <span className="text-xs font-bold text-gray-700">{c.relationship_status || 'Regular'}</span>
+                         <span className="text-[10px] text-gray-400  font-bold tracking-tighter">Relacionamento</span>
+                         <span className="text-xs font-medium text-gray-700">{c.relationship_status || 'Regular'}</span>
                        </div>
                        <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600 opacity-40 group-hover:opacity-100 transition-all transform group-hover:scale-110">
                          <TrendingUp size={16} />
@@ -571,9 +571,9 @@ export default function ReportsView() {
                 {data?.map((r: any) => (
                   <div key={r.final_risk_rating} className="p-8 bg-white border border-gray-100 rounded-3xl text-center hover:shadow-xl transition-all group">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-4 shadow-sm ${r.final_risk_rating === "Alto" ? "bg-red-500 shadow-red-200" : r.final_risk_rating === "Médio" ? "bg-amber-500 shadow-amber-200" : "bg-green-500 shadow-green-200"}`}></div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{r.final_risk_rating}</p>
+                    <p className="text-xs font-medium text-gray-400  tracking-widest mb-1">{r.final_risk_rating}</p>
                     <p className="text-2xl font-bold text-gray-900">{r.count}</p>
-                    <p className="text-[10px] text-gray-400 font-bold mt-2 uppercase tracking-tighter">Entidades Classificadas</p>
+                    <p className="text-[10px] text-gray-400 font-bold mt-2  tracking-tighter">Entidades Classificadas</p>
                   </div>
                 ))}
               </div>
@@ -604,7 +604,7 @@ export default function ReportsView() {
                   <div key={s.segment} className="p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all flex items-center justify-between group">
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-gray-900 tracking-tight">{s.segment || 'Não Definido'}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Total de Clientes</p>
+                      <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-1">Total de Clientes</p>
                     </div>
                     <div className="text-right">
                       <p className="text-3xl font-bold text-blue-600 group-hover:scale-110 transition-transform">{s.count}</p>
@@ -637,16 +637,16 @@ export default function ReportsView() {
               <div className="space-y-3">
                 {data?.map((e: any, idx: number) => (
                   <div key={e.evaluation_id} className="flex items-center gap-4 p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all group">
-                    <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-bold flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-all shadow-inner">
+                    <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-medium flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-all shadow-inner">
                       #{idx + 1}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-gray-900 truncate tracking-tight">{e.entity_name}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{e.period}</p>
+                      <p className="text-[10px] font-medium text-gray-400 tracking-widest mt-1">{e.period}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-green-600">{Math.round(e.percentage)}%</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Índice de Performance</p>
+                      <p className="text-[10px] font-medium text-gray-400  tracking-tighter">Índice de Performance</p>
                     </div>
                   </div>
                 ))}
@@ -676,16 +676,16 @@ export default function ReportsView() {
               <div className="space-y-3">
                 {data?.map((e: any, idx: number) => (
                   <div key={e.evaluation_id} className="flex items-center gap-4 p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all group">
-                    <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-bold flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
+                    <span className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 text-xs font-medium flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
                       #{idx + 1}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-gray-900 truncate tracking-tight">{e.entity_name}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{e.period}</p>
+                      <p className="text-[10px] font-medium text-gray-400 tracking-widest mt-1">{e.period}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-indigo-600">{Math.round(e.percentage)}%</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Índice NPS</p>
+                      <p className="text-[10px] font-medium text-gray-400 tracking-tight">Índice NPS</p>
                     </div>
                   </div>
                 ))}
@@ -706,7 +706,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Total</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-blue-600">{data?.length || 0} Entidades</span>
               </div>
@@ -724,7 +724,7 @@ export default function ReportsView() {
               <div className="overflow-hidden border border-gray-100 rounded-2xl bg-white shadow-sm">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-medium text-gray-400  tracking-widest">
                       <th className="px-6 py-4">Cliente</th>
                       <th className="px-6 py-4 hidden md:table-cell">Última Avaliação</th>
                       <th className="px-6 py-4 text-right">Dias sem Avaliar</th>
@@ -735,13 +735,13 @@ export default function ReportsView() {
                       <tr key={c.entity_id} className="hover:bg-gray-50/50 transition-colors group">
                         <td className="px-6 py-4">
                           <p className="text-sm font-bold text-gray-900 tracking-tight">{c.entity_name}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Entidade Activa</p>
+                          <p className="text-[10px] text-gray-400 font-bold  tracking-tighter">Entidade Activa</p>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600 font-medium hidden md:table-cell">
                           {new Date(c.last_evaluation).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${c.days_without_evaluation > 180 ? "bg-red-50 text-red-600 shadow-sm shadow-red-100" : "bg-gray-100 text-gray-600"}`}>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium  tracking-tighter ${c.days_without_evaluation > 180 ? "bg-red-50 text-red-600 shadow-sm shadow-red-100" : "bg-gray-100 text-gray-600"}`}>
                             {c.days_without_evaluation} dias
                           </span>
                         </td>
@@ -766,7 +766,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-orange-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Total</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-orange-600">{data?.length || 0} Entidades</span>
               </div>
@@ -787,12 +787,12 @@ export default function ReportsView() {
                     <div className="flex items-start justify-between mb-5">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-gray-900 truncate tracking-tight">{c.name}</p>
-                        <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest mt-1.5">{c.relationship_status}</p>
+                        <p className="text-[10px] font-medium text-orange-600  tracking-widest mt-1.5">{c.relationship_status}</p>
                       </div>
                       <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-200 ml-3 mt-1.5"></div>
                     </div>
                     <div className="mt-5 p-5 bg-orange-50/50 rounded-2xl border border-orange-100/50">
-                       <p className="text-[10px] text-orange-400 uppercase font-bold tracking-widest">Observação de Restrição</p>
+                       <p className="text-[10px] text-orange-400  font-bold tracking-widest">Observação de Restrição</p>
                        <p className="text-xs text-orange-900 mt-1.5 font-semibold leading-relaxed italic">"{c.restriction_reason || 'Restrição aplicada'}"</p>
                     </div>
                   </div>
@@ -825,7 +825,7 @@ export default function ReportsView() {
             <div className="overflow-hidden border border-gray-100 rounded-2xl bg-white shadow-sm">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-medium text-gray-400  tracking-widest">
                     <th className="px-6 py-4">Responsável</th>
                     <th className="px-6 py-4 text-center">Processos Aprovados</th>
                     <th className="px-6 py-4 text-right">Tempo Médio</th>
@@ -841,16 +841,16 @@ export default function ReportsView() {
                            </div>
                            <div className="min-w-0">
                              <p className="text-sm font-bold text-gray-900 tracking-tight truncate">{row.responsible}</p>
-                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Analista de Compliance</p>
+                             <p className="text-[10px] text-gray-400 font-bold  tracking-tighter">Analista de Compliance</p>
                            </div>
                          </div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold">{row.approved_count}</span>
+                        <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">{row.approved_count}</span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <span className="text-2xl font-bold text-blue-600">{row.avg_days ? row.avg_days.toFixed(1) : '0.0'}</span>
-                        <span className="text-[10px] font-bold text-gray-400 ml-1.5 uppercase tracking-tighter">dias</span>
+                        <span className="text-[10px] font-medium text-gray-400 ml-1.5  tracking-tighter">dias</span>
                       </td>
                     </tr>
                   ))}
@@ -884,10 +884,10 @@ export default function ReportsView() {
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-3xl font-bold text-green-600 leading-none">{Math.round(row.approval_rate)}%</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{row.approved}/{row.total} Processos</p>
+                      <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-2">{row.approved}/{row.total} Processos</p>
                     </div>
                     <div className="text-right border-l border-gray-50 pl-4">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Média</p>
+                      <p className="text-[10px] font-medium text-gray-400  tracking-widest">Média</p>
                       <p className="text-sm font-bold text-gray-700">{row.avg_days ? row.avg_days.toFixed(1) : '0.0'}d</p>
                     </div>
                   </div>
@@ -921,11 +921,11 @@ export default function ReportsView() {
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-3xl font-bold text-red-600 leading-none">{Math.round(row.rejection_rate)}%</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{row.rejected}/{row.total} Reprovados</p>
+                      <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-2">{row.rejected}/{row.total} Reprovados</p>
                     </div>
                     <div className="text-right border-l border-gray-50 pl-4 max-w-[120px]">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Causa</p>
-                      <p className="text-[10px] font-bold text-red-700 truncate" title={row.common_reason}>{row.common_reason || "N/A"}</p>
+                      <p className="text-[10px] font-medium text-gray-400  tracking-widest">Causa</p>
+                      <p className="text-[10px] font-medium text-red-700 truncate" title={row.common_reason}>{row.common_reason || "N/A"}</p>
                     </div>
                   </div>
                 </div>
@@ -952,7 +952,7 @@ export default function ReportsView() {
               {data?.map((row: any) => (
                 <div key={row.period} className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{row.period}</span>
+                    <span className="text-xs font-medium text-gray-400  tracking-widest">{row.period}</span>
                     <span className="text-2xl font-bold text-blue-600">{Math.round(row.avg_score)}%</span>
                   </div>
                   <div className="w-full bg-gray-50 rounded-full h-2.5 overflow-hidden border border-gray-100 shadow-inner">
@@ -976,7 +976,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-orange-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pendente</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Pendente</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-orange-600">{data?.length || 0} Planos</span>
               </div>
@@ -994,7 +994,7 @@ export default function ReportsView() {
               <div className="overflow-hidden border border-gray-100 rounded-2xl bg-white shadow-sm">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-medium text-gray-400  tracking-widest">
                       <th className="px-6 py-4">Entidade / Acção</th>
                       <th className="px-6 py-4">Responsável</th>
                       <th className="px-6 py-4">Prazo</th>
@@ -1010,18 +1010,18 @@ export default function ReportsView() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                             <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[8px] font-bold border border-gray-200 uppercase">{a.responsible.charAt(0)}</div>
-                             <span className="text-xs font-bold text-gray-700 tracking-tighter uppercase">{a.responsible}</span>
+                             <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[8px] font-bold border border-gray-200 ">{a.responsible.charAt(0)}</div>
+                             <span className="text-xs font-medium text-gray-700 tracking-tighter ">{a.responsible}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Vencimento</span>
-                             <span className="text-xs font-bold text-gray-700 mt-0.5">{new Date(a.deadline).toLocaleDateString('pt-PT')}</span>
+                             <span className="text-[10px] font-medium text-gray-400  tracking-tighter">Vencimento</span>
+                             <span className="text-xs font-medium text-gray-700 mt-0.5">{new Date(a.deadline).toLocaleDateString('pt-PT')}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${a.status === "Concluído" ? "bg-green-50 text-green-600 shadow-sm shadow-green-100 border border-green-100" : a.status === "Atrasado" ? "bg-red-50 text-red-600 shadow-sm shadow-red-100 border border-red-100" : "bg-amber-50 text-amber-600 shadow-sm shadow-amber-100 border border-amber-100"}`}>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-medium  tracking-tighter ${a.status === "Concluído" ? "bg-green-50 text-green-600 shadow-sm shadow-green-100 border border-green-100" : a.status === "Atrasado" ? "bg-red-50 text-red-600 shadow-sm shadow-red-100 border border-red-100" : "bg-amber-50 text-amber-600 shadow-sm shadow-amber-100 border border-amber-100"}`}>
                             {a.status}
                           </span>
                         </td>
@@ -1064,19 +1064,19 @@ export default function ReportsView() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 bg-gray-50/50 rounded-xl border border-gray-100">
                         <p className="text-xl font-bold text-gray-900 leading-none">{p.total}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">Total</p>
+                        <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-1.5">Total</p>
                       </div>
                       <div className="p-3 bg-green-50/50 rounded-xl border border-green-100/50">
                         <p className="text-xl font-bold text-green-600 leading-none">{p.approved}</p>
-                        <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest mt-1.5">Aprovados</p>
+                        <p className="text-[10px] font-medium text-green-500  tracking-widest mt-1.5">Aprovados</p>
                       </div>
                       <div className="p-3 bg-red-50/50 rounded-xl border border-red-100/50">
                         <p className="text-xl font-bold text-red-600 leading-none">{p.rejected}</p>
-                        <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1.5">Reprovados</p>
+                        <p className="text-[10px] font-medium text-red-500  tracking-widest mt-1.5">Reprovados</p>
                       </div>
                       <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-100/50">
                         <p className="text-xl font-bold text-amber-600 leading-none">{p.pending}</p>
-                        <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mt-1.5">Pendentes</p>
+                        <p className="text-[10px] font-medium text-amber-500  tracking-widest mt-1.5">Pendentes</p>
                       </div>
                     </div>
                   </div>
@@ -1105,7 +1105,7 @@ export default function ReportsView() {
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-indigo-100 shadow-sm">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+                <span className="text-[10px] font-medium text-gray-400  tracking-widest">Total</span>
                 <div className="w-px h-4 bg-gray-100 mx-1"></div>
                 <span className="text-sm font-bold text-indigo-600">{data?.length || 0} Avaliações</span>
               </div>
@@ -1126,14 +1126,14 @@ export default function ReportsView() {
                     <div className="flex items-start justify-between mb-5">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-gray-900 truncate tracking-tight">{ev.evaluated_name || ev.employee_name || "Colaborador"}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">{ev.form_title || "Avaliação 360°"}</p>
+                        <p className="text-[10px] font-medium text-gray-400  tracking-widest mt-1.5">{ev.form_title || "Avaliação 360°"}</p>
                       </div>
-                      <div className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-tighter ${ev.percentage >= 75 ? "bg-green-50 text-green-600 shadow-sm shadow-green-100" : ev.percentage >= 60 ? "bg-blue-50 text-blue-600 shadow-sm shadow-blue-100" : "bg-amber-50 text-amber-600 shadow-sm shadow-amber-100"}`}>
+                      <div className={`px-2.5 py-1 rounded-lg text-[10px] font-medium  tracking-tighter ${ev.percentage >= 75 ? "bg-green-50 text-green-600 shadow-sm shadow-green-100" : ev.percentage >= 60 ? "bg-blue-50 text-blue-600 shadow-sm shadow-blue-100" : "bg-amber-50 text-amber-600 shadow-sm shadow-amber-100"}`}>
                         {Math.round(ev.percentage)}%
                       </div>
                     </div>
                     <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{new Date(ev.response_date).toLocaleDateString('pt-PT')}</span>
+                       <span className="text-[10px] text-gray-400 font-bold  tracking-tighter">{new Date(ev.response_date).toLocaleDateString('pt-PT')}</span>
                        <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600 opacity-40 group-hover:opacity-100 transition-all">
                          <TrendingUp size={16} />
                        </div>
@@ -1165,9 +1165,9 @@ export default function ReportsView() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {data.map((row: any) => (
                   <div key={row.department} className="p-8 bg-white border border-gray-100 rounded-3xl text-center hover:shadow-xl transition-all group">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{row.department || "Geral"}</p>
+                    <p className="text-xs font-medium text-gray-400  tracking-widest mb-1">{row.department || "Geral"}</p>
                     <p className="text-4xl font-bold text-purple-600">{row.count}</p>
-                    <p className="text-[10px] text-gray-400 font-bold mt-2 uppercase tracking-tighter">Feedbacks Recebidos</p>
+                    <p className="text-[10px] text-gray-400 font-bold mt-2  tracking-tighter">Feedbacks Recebidos</p>
                   </div>
                 ))}
               </div>
@@ -1182,7 +1182,7 @@ export default function ReportsView() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-gray-50 text-[10px] font-semibold text-gray-500 uppercase">
+                    <tr className="bg-gray-50 text-[10px] font-semibold text-gray-500 ">
                       <th className="px-4 py-2.5">Posição</th>
                       <th className="px-4 py-2.5 text-center">Qtd</th>
                       <th className="px-4 py-2.5 text-center">Média %</th>
@@ -1242,11 +1242,11 @@ export default function ReportsView() {
             {data?.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-center">
-                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">Total de Colaboradores</p>
+                  <p className="text-xs font-medium text-indigo-600  tracking-wider mb-2">Total de Colaboradores</p>
                   <p className="text-3xl font-bold text-indigo-700">{data[0]?.total_employees || 0}</p>
                 </div>
                 <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">
-                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Avaliados</p>
+                  <p className="text-xs font-medium text-emerald-600  tracking-wider mb-2">Avaliados</p>
                   <p className="text-3xl font-bold text-emerald-700">{data[0]?.evaluated_count || 0}</p>
                 </div>
               </div>
@@ -1357,7 +1357,7 @@ export default function ReportsView() {
        <div className="flex flex-wrap gap-2 p-1 bg-gray-100/50 rounded-2xl w-fit border border-gray-100">
          <button
            onClick={() => setCategory("suppliers")}
-           className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+           className={`px-6 py-2.5 rounded-xl text-xs font-medium  tracking-widest transition-all duration-300 ${
              category === "suppliers" ? "bg-white text-blue-600 shadow-sm border border-blue-100" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
            }`}
          >
@@ -1365,7 +1365,7 @@ export default function ReportsView() {
          </button>
          <button
            onClick={() => setCategory("clients")}
-           className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+           className={`px-6 py-2.5 rounded-xl text-xs font-medium  tracking-widest transition-all duration-300 ${
              category === "clients" ? "bg-white text-indigo-600 shadow-sm border border-indigo-100" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
            }`}
          >
@@ -1373,7 +1373,7 @@ export default function ReportsView() {
          </button>
          <button
            onClick={() => setCategory("management")}
-           className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+           className={`px-6 py-2.5 rounded-xl text-xs font-medium  tracking-widest transition-all duration-300 ${
              category === "management" ? "bg-white text-purple-600 shadow-sm border border-purple-100" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
            }`}
          >
@@ -1381,7 +1381,7 @@ export default function ReportsView() {
          </button>
          <button
            onClick={() => setCategory("collaboration")}
-           className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+           className={`px-6 py-2.5 rounded-xl text-xs font-medium  tracking-widest transition-all duration-300 ${
              category === "collaboration" ? "bg-white text-emerald-600 shadow-sm border border-emerald-100" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
            }`}
          >
@@ -1392,28 +1392,28 @@ export default function ReportsView() {
         {/* Report Type Selector */}
         <div className="relative group w-full sm:w-auto mt-2">
           {category === "suppliers" && (
-            <select value={supplierType} onChange={(e) => setSupplierType(e.target.value as SupplierReportType)} className="input text-xs font-bold min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-blue-400 transition-colors shadow-sm pr-10">
+            <select value={supplierType} onChange={(e) => setSupplierType(e.target.value as SupplierReportType)} className="input text-xs font-medium min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-blue-400 transition-colors shadow-sm pr-10">
               {supplierOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           )}
           {category === "clients" && (
-            <select value={clientType} onChange={(e) => setClientType(e.target.value as ClientReportType)} className="input text-xs font-bold min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-indigo-400 transition-colors shadow-sm pr-10">
+            <select value={clientType} onChange={(e) => setClientType(e.target.value as ClientReportType)} className="input text-xs font-medium min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-indigo-400 transition-colors shadow-sm pr-10">
               {clientOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           )}
           {category === "management" && (
-            <select value={managementType} onChange={(e) => setManagementType(e.target.value as ManagementReportType)} className="input text-xs font-bold min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-purple-400 transition-colors shadow-sm pr-10">
+            <select value={managementType} onChange={(e) => setManagementType(e.target.value as ManagementReportType)} className="input text-xs font-medium min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-purple-400 transition-colors shadow-sm pr-10">
               {managementOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           )}
           {category === "collaboration" && (
-            <select value={collaborationType} onChange={(e) => setCollaborationType(e.target.value as CollaborationReportType)} className="input text-xs font-bold min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-emerald-400 transition-colors shadow-sm pr-10">
+            <select value={collaborationType} onChange={(e) => setCollaborationType(e.target.value as CollaborationReportType)} className="input text-xs font-medium min-w-[240px] appearance-none bg-white border-gray-200 rounded-xl hover:border-emerald-400 transition-colors shadow-sm pr-10">
               {collaborationOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}

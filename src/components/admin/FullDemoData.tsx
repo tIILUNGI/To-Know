@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Users, Package, FileText, Plus, AlertTriangle, Calendar, CheckCircle, Star, TrendingUp } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 
-const formFieldStyle = "text-xs font-bold uppercase tracking-wider text-gray-500 mb-1";
+const formFieldStyle = "text-xs font-bold  tracking-wider text-gray-500 mb-1";
 const inputStyle = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm";
 
 export default function FullDemoData() {
